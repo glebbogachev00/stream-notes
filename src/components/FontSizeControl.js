@@ -2,10 +2,10 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useSettings } from '../contexts/SettingsContext';
 
-const FontSizeControl = () => {
+const FontSizeControl = ({ isAlwaysEditing = false }) => {
   const { theme } = useTheme();
   const { settings, updateSettings } = useSettings();
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(isAlwaysEditing);
   const [tempFontSize, setTempFontSize] = useState(settings.fontSize);
   const inputRef = useRef(null);
   const containerRef = useRef(null);
@@ -24,7 +24,7 @@ const FontSizeControl = () => {
       }
     };
 
-    if (isEditing) {
+    if (isEditing && !isAlwaysEditing) {
       document.addEventListener('mousedown', handleClickOutside);
       inputRef.current?.focus();
       inputRef.current?.select();
@@ -75,7 +75,7 @@ const FontSizeControl = () => {
     updateSettings({ fontSize: clampedSize });
   };
 
-  if (isEditing) {
+  if (isEditing || isAlwaysEditing) {
     return (
       <div
         ref={containerRef}

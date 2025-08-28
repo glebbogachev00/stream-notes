@@ -1,6 +1,8 @@
 import React from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useSettings, ORGANIZATION_STYLES, DELETE_TIMERS } from '../contexts/SettingsContext';
+import CollapsibleSection from './CollapsibleSection';
+import FontSizeControl from './FontSizeControl';
 
 const SettingsModal = ({ isOpen, onClose }) => {
   const { theme } = useTheme();
@@ -40,29 +42,11 @@ const SettingsModal = ({ isOpen, onClose }) => {
         </div>
 
         <div className="space-y-6">
-          <div>
-            <h3 className={`dynamic-text-sm font-light ${theme.text} mb-3`}>font size</h3>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => updateSettings({ fontSize: Math.max(12, settings.fontSize - 2) })}
-                className={`dynamic-text-xs font-light ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} transition-colors`}
-              >
-                [-]
-              </button>
-              <span className={`dynamic-text-xs font-light ${theme.text} min-w-[3rem] text-center`}>
-                {settings.fontSize}px
-              </span>
-              <button
-                onClick={() => updateSettings({ fontSize: Math.min(24, settings.fontSize + 2) })}
-                className={`dynamic-text-xs font-light ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} transition-colors`}
-              >
-                [+]
-              </button>
-            </div>
-          </div>
+          <CollapsibleSection title="font size">
+            <FontSizeControl isAlwaysEditing={true} />
+          </CollapsibleSection>
 
-          <div>
-            <h3 className={`dynamic-text-sm font-light ${theme.text} mb-3`}>list style</h3>
+          <CollapsibleSection title="list style">
             <div className="space-y-2">
               {Object.entries(ORGANIZATION_STYLES).map(([key, style]) => (
                 <button
@@ -81,30 +65,34 @@ const SettingsModal = ({ isOpen, onClose }) => {
                 </button>
               ))}
             </div>
-          </div>
+          </CollapsibleSection>
 
-          <div>
-            <h3 className={`dynamic-text-sm font-light ${theme.text} mb-3`}>auto-delete</h3>
-            <div className="space-y-1">
-              {Object.entries(DELETE_TIMERS).map(([key, timer]) => (
-                <button
-                  key={key}
-                  onClick={() => updateSettings({ deleteTimer: key })}
-                  className={`w-full text-left dynamic-text-xs font-light transition-all duration-200 py-1 ${
-                    settings.deleteTimer === key ? theme.text : theme.textTertiary
-                  } hover:${theme.text.replace('text-', 'hover:text-')}`}
-                >
-                  {timer.name.toLowerCase()}
-                </button>
-              ))}
+          <CollapsibleSection title="auto-delete">
+            <div className="relative">
+              <select
+                value={settings.deleteTimer}
+                onChange={(e) => updateSettings({ deleteTimer: e.target.value })}
+                className={`w-full appearance-none ${theme.bg} ${theme.border} ${theme.text} dynamic-text-xs font-light border py-2 px-3 pr-8 leading-tight focus:outline-none focus:ring-1 focus:${theme.ring}`}
+              >
+                {Object.entries(DELETE_TIMERS).map(([key, timer]) => (
+                  <option key={key} value={key}>
+                    {timer.name}
+                  </option>
+                ))}
+              </select>
+              <div className={`pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 ${theme.text}`}>
+                <svg className={`fill-current h-4 w-4 ${theme.text}`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                  <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                </svg>
+              </div>
             </div>
-          </div>
+          </CollapsibleSection>
         </div>
 
         <div className={`mt-6 pt-4 border-t ${theme.borderSecondary}`}>
           <button
             onClick={handleReset}
-            className={`dynamic-text-xs font-light ${theme.textTertiary} hover:text-red-500 transition-colors`}
+            className={`dynamic-text-xs font-light ${theme.textTertiary} ${theme.textDestructive} transition-colors`}
           >
             reset preferences
           </button>

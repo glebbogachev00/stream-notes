@@ -14,7 +14,9 @@ const THEMES = {
     borderSecondary: 'border-gray-100',
     borderSecondaryHover: 'hover:border-gray-200',
     buttonHover: 'hover:bg-gray-50',
-    inputBg: 'bg-transparent'
+    inputBg: 'bg-transparent',
+    ring: 'ring-gray-300',
+    textDestructive: 'hover:text-red-500'
   },
   black: {
     name: 'black',
@@ -27,20 +29,9 @@ const THEMES = {
     borderSecondary: 'border-gray-900',
     borderSecondaryHover: 'hover:border-gray-800',
     buttonHover: 'hover:bg-gray-900',
-    inputBg: 'bg-transparent'
-  },
-  grey: {
-    name: 'grey',
-    bg: 'bg-gray-100',
-    text: 'text-gray-900',
-    textSecondary: 'text-gray-700',
-    textTertiary: 'text-gray-500',
-    border: 'border-gray-300',
-    borderHover: 'hover:border-gray-400',
-    borderSecondary: 'border-gray-200',
-    borderSecondaryHover: 'hover:border-gray-300',
-    buttonHover: 'hover:bg-gray-200',
-    inputBg: 'bg-transparent'
+    inputBg: 'bg-transparent',
+    ring: 'ring-gray-700',
+    textDestructive: 'hover:text-red-500'
   },
   beige: {
     name: 'beige',
@@ -53,7 +44,9 @@ const THEMES = {
     borderSecondary: 'border-amber-100',
     borderSecondaryHover: 'hover:border-amber-200',
     buttonHover: 'hover:bg-amber-100',
-    inputBg: 'bg-transparent'
+    inputBg: 'bg-transparent',
+    ring: 'ring-amber-300',
+    textDestructive: 'hover:text-red-500'
   }
 };
 
