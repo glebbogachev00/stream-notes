@@ -34,6 +34,8 @@ export const DELETE_TIMERS = {
 };
 
 const DEFAULT_SETTINGS = {
+  theme: 'white',
+  fontSize: 16,
   organizationStyle: 'bullets',
   deleteTimer: '24h',
   onboardingCompleted: false
@@ -65,6 +67,8 @@ export const SettingsProvider = ({ children }) => {
   useEffect(() => {
     try {
       localStorage.setItem('stream-settings', JSON.stringify({
+        theme: settings.theme,
+        fontSize: settings.fontSize,
         organizationStyle: settings.organizationStyle,
         deleteTimer: settings.deleteTimer
       }));

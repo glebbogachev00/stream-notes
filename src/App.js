@@ -6,6 +6,7 @@ import NoteInput from './components/NoteInput';
 import NoteList from './components/NoteList';
 import SavedNotes from './components/SavedNotes';
 import ThemeToggle from './components/ThemeToggle';
+import FontSizeControl from './components/FontSizeControl';
 import Onboarding from './components/Onboarding';
 import SettingsModal from './components/SettingsModal';
 
@@ -30,13 +31,19 @@ function AppContent() {
   }
 
   return (
-    <div className={`min-h-screen ${theme.bg} transition-all duration-200`}>
+    <div 
+      className={`min-h-screen ${theme.bg} transition-all duration-200`}
+      style={{ fontSize: `${settings.fontSize}px` }}
+    >
       <div className="max-w-2xl mx-auto px-4 py-8 sm:py-12">
         <header className="flex items-start justify-between mb-12 sm:mb-16">
           <div>
-            <h1 className={`text-xl font-light ${theme.text} tracking-tight mb-2`}>
-              [stream]
-            </h1>
+            <div className="flex items-center gap-3 mb-2">
+              <h1 className={`text-xl font-light ${theme.text} tracking-tight`}>
+                [stream]
+              </h1>
+              <FontSizeControl />
+            </div>
             <p className={`text-sm ${theme.textSecondary} font-light`}>
               self-managing notes
             </p>

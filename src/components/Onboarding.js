@@ -3,15 +3,21 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useSettings, ORGANIZATION_STYLES, DELETE_TIMERS } from '../contexts/SettingsContext';
 
 const Onboarding = () => {
-  const { theme } = useTheme();
+  const { theme, switchTheme, themes } = useTheme();
   const { completeOnboarding } = useSettings();
   const [currentStep, setCurrentStep] = useState(0);
   const [selections, setSelections] = useState({
+    theme: 'white',
+    fontSize: 16,
     organizationStyle: 'bullets',
     deleteTimer: '24h'
   });
 
   const steps = [
+    {
+      title: "Choose your theme",
+      subtitle: "Pick a color scheme that feels right"
+    },
     {
       title: "How do you prefer lists organized?",
       subtitle: "Don't worry - you can change this anytime in settings"
@@ -30,6 +36,8 @@ const Onboarding = () => {
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
+      // Apply theme selection before completing onboarding
+      switchTheme(selections.theme);
       completeOnboarding(selections);
     }
   };
@@ -54,6 +62,29 @@ const Onboarding = () => {
   );
 
   const renderStep1 = () => (
+    <div className="space-y-3">
+      {themes.map((themeName) => (
+        <button
+          key={themeName}
+          onClick={() => {
+            setSelections({ ...selections, theme: themeName });
+            switchTheme(themeName);
+          }}
+          className={`w-full text-left pb-3 border-b transition-all duration-200 ${
+            selections.theme === themeName
+              ? `${theme.borderSecondary} ${theme.text}`
+              : `${theme.borderSecondary} ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')}`
+          }`}
+        >
+          <div className="text-sm font-light">
+            [{themeName}]
+          </div>
+        </button>
+      ))}
+    </div>
+  );
+
+  const renderStep2 = () => (
     <div className="space-y-4">
       {Object.entries(ORGANIZATION_STYLES).map(([key, style]) => (
         <button
@@ -76,7 +107,7 @@ const Onboarding = () => {
     </div>
   );
 
-  const renderStep2 = () => (
+  const renderStep3 = () => (
     <div className="space-y-3">
       {Object.entries(DELETE_TIMERS).map(([key, timer]) => (
         <button
@@ -96,7 +127,7 @@ const Onboarding = () => {
     </div>
   );
 
-  const renderStep3 = () => {
+  const renderStep4 = () => {
     const sampleText = "Buy groceries\nCall mom\nFinish project";
     const formattedSample = ORGANIZATION_STYLES[selections.organizationStyle].format(
       sampleText.split('\n')
@@ -124,7 +155,10 @@ const Onboarding = () => {
   };
 
   return (
-    <div className={`min-h-screen ${theme.bg} flex items-center justify-center p-4`}>
+    <div 
+      className={`min-h-screen ${theme.bg} flex items-center justify-center p-4`}
+      style={{ fontSize: `${selections.fontSize}px` }}
+    >
       <div className="max-w-sm w-full">
         {renderProgressBar()}
         
@@ -141,6 +175,7 @@ const Onboarding = () => {
           {currentStep === 0 && renderStep1()}
           {currentStep === 1 && renderStep2()}
           {currentStep === 2 && renderStep3()}
+          {currentStep === 3 && renderStep4()}
         </div>
 
         <div className="flex items-center justify-between">

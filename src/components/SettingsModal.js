@@ -41,6 +41,27 @@ const SettingsModal = ({ isOpen, onClose }) => {
 
         <div className="space-y-8">
           <div>
+            <h3 className={`text-sm font-light ${theme.text} mb-4`}>font size</h3>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => updateSettings({ fontSize: Math.max(12, settings.fontSize - 2) })}
+                className={`text-xs font-light ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} transition-colors`}
+              >
+                [-]
+              </button>
+              <span className={`text-xs font-light ${theme.text} min-w-[3rem] text-center`}>
+                {settings.fontSize}px
+              </span>
+              <button
+                onClick={() => updateSettings({ fontSize: Math.min(24, settings.fontSize + 2) })}
+                className={`text-xs font-light ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} transition-colors`}
+              >
+                [+]
+              </button>
+            </div>
+          </div>
+
+          <div>
             <h3 className={`text-sm font-light ${theme.text} mb-4`}>list style</h3>
             <div className="space-y-3">
               {Object.entries(ORGANIZATION_STYLES).map(([key, style]) => (
