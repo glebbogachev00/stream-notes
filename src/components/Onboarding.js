@@ -54,21 +54,21 @@ const Onboarding = () => {
   );
 
   const renderStep1 = () => (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {Object.entries(ORGANIZATION_STYLES).map(([key, style]) => (
         <button
           key={key}
           onClick={() => setSelections({ ...selections, organizationStyle: key })}
-          className={`w-full p-4 rounded-lg border-2 text-left transition-all duration-200 ${
+          className={`w-full text-left pb-4 border-b transition-all duration-200 ${
             selections.organizationStyle === key
-              ? `${theme.border} ${theme.buttonHover}`
-              : `${theme.borderSecondary} ${theme.borderSecondaryHover}`
+              ? `${theme.borderSecondary} ${theme.text}`
+              : `${theme.borderSecondary} ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')}`
           }`}
         >
-          <div className={`font-medium ${theme.text} mb-2`}>
-            {style.name}
+          <div className="text-sm font-light mb-2">
+            {style.name.toLowerCase()}
           </div>
-          <div className={`text-sm ${theme.textSecondary} font-mono whitespace-pre-line`}>
+          <div className={`text-xs ${theme.textTertiary} font-mono whitespace-pre-line leading-relaxed`}>
             {style.example}
           </div>
         </button>
@@ -77,19 +77,19 @@ const Onboarding = () => {
   );
 
   const renderStep2 = () => (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {Object.entries(DELETE_TIMERS).map(([key, timer]) => (
         <button
           key={key}
           onClick={() => setSelections({ ...selections, deleteTimer: key })}
-          className={`w-full p-4 rounded-lg border-2 text-left transition-all duration-200 ${
+          className={`w-full text-left pb-3 border-b transition-all duration-200 ${
             selections.deleteTimer === key
-              ? `${theme.border} ${theme.buttonHover}`
-              : `${theme.borderSecondary} ${theme.borderSecondaryHover}`
+              ? `${theme.borderSecondary} ${theme.text}`
+              : `${theme.borderSecondary} ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')}`
           }`}
         >
-          <div className={`font-medium ${theme.text}`}>
-            {timer.name}
+          <div className="text-sm font-light">
+            {timer.name.toLowerCase()}
           </div>
         </button>
       ))}
@@ -104,23 +104,20 @@ const Onboarding = () => {
     
     return (
       <div className="space-y-6">
-        <div className={`p-6 rounded-lg ${theme.borderSecondary} border`}>
-          <div className={`text-sm ${theme.textTertiary} mb-3`}>
-            Sample note with your preferences:
+        <div className={`pb-4 border-b ${theme.borderSecondary}`}>
+          <div className={`text-xs ${theme.textTertiary} mb-3 font-light`}>
+            sample note:
           </div>
-          <div className={`${theme.text} font-mono whitespace-pre-line text-sm leading-relaxed`}>
+          <div className={`${theme.text} font-mono whitespace-pre-line text-sm font-light leading-relaxed`}>
             {formattedSample}
           </div>
-          <div className={`text-xs ${theme.textTertiary} mt-3`}>
-            Auto-deletes in: {DELETE_TIMERS[selections.deleteTimer].name.toLowerCase()}
+          <div className={`text-xs ${theme.textTertiary} mt-3 font-light`}>
+            deletes in: {DELETE_TIMERS[selections.deleteTimer].name.toLowerCase()}
           </div>
         </div>
         
-        <div className={`p-4 rounded-lg ${theme.bg === 'bg-white' ? 'bg-blue-50' : theme.buttonHover} border ${theme.borderSecondary}`}>
-          <div className={`text-sm ${theme.textSecondary}`}>
-            <strong>Smart formatting:</strong> Notes will only be organized when they look like lists. 
-            Long paragraphs and detailed thoughts stay as-is.
-          </div>
+        <div className={`text-xs ${theme.textTertiary} font-light leading-relaxed`}>
+          notes are organized automatically when they look like lists. paragraphs stay as-is.
         </div>
       </div>
     );
@@ -128,19 +125,19 @@ const Onboarding = () => {
 
   return (
     <div className={`min-h-screen ${theme.bg} flex items-center justify-center p-4`}>
-      <div className="max-w-md w-full">
+      <div className="max-w-sm w-full">
         {renderProgressBar()}
         
-        <div className="text-center mb-8">
-          <h1 className={`text-2xl font-light ${theme.text} mb-2`}>
+        <div className="text-center mb-12">
+          <h1 className={`text-lg font-light ${theme.text} mb-3 lowercase`}>
             {steps[currentStep].title}
           </h1>
-          <p className={`text-sm ${theme.textSecondary}`}>
-            {steps[currentStep].subtitle}
+          <p className={`text-xs ${theme.textTertiary} font-light`}>
+            {steps[currentStep].subtitle.toLowerCase()}
           </p>
         </div>
 
-        <div className="mb-8">
+        <div className="mb-12">
           {currentStep === 0 && renderStep1()}
           {currentStep === 1 && renderStep2()}
           {currentStep === 2 && renderStep3()}
@@ -150,20 +147,20 @@ const Onboarding = () => {
           <button
             onClick={handleBack}
             disabled={currentStep === 0}
-            className={`px-4 py-2 text-sm font-light transition-all duration-200 ${
+            className={`text-xs font-light transition-all duration-200 ${
               currentStep === 0
                 ? `${theme.textTertiary} cursor-not-allowed`
-                : `${theme.textSecondary} hover:${theme.text.replace('text-', 'hover:text-')} ${theme.buttonHover}`
+                : `${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')}`
             }`}
           >
-            Back
+            {currentStep > 0 ? 'back' : ''}
           </button>
 
           <button
             onClick={handleNext}
-            className={`px-6 py-2 text-sm font-light ${theme.text} border ${theme.border} rounded ${theme.buttonHover} transition-all duration-200`}
+            className={`text-xs font-light ${theme.text} hover:${theme.textSecondary.replace('text-', 'hover:text-')} transition-all duration-200`}
           >
-            {currentStep === steps.length - 1 ? 'Get Started' : 'Next'}
+            {currentStep === steps.length - 1 ? 'get started' : 'next'}
           </button>
         </div>
       </div>

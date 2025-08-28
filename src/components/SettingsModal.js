@@ -25,111 +25,67 @@ const SettingsModal = ({ isOpen, onClose }) => {
 
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+      className="fixed inset-0 bg-black bg-opacity-20 flex items-center justify-center p-4 z-50"
       onClick={handleOverlayClick}
     >
-      <div className={`${theme.bg} rounded-lg border ${theme.border} max-w-md w-full max-h-[80vh] overflow-y-auto`}>
-        <div className={`p-6 border-b ${theme.borderSecondary}`}>
-          <div className="flex items-center justify-between">
-            <h2 className={`text-xl font-light ${theme.text}`}>Settings</h2>
-            <button
-              onClick={onClose}
-              className={`p-1 ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} transition-colors`}
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-        </div>
-
-        <div className="p-6 space-y-8">
-          {/* Organization Style */}
-          <div>
-            <h3 className={`font-medium ${theme.text} mb-4`}>List Organization</h3>
-            <div className="space-y-3">
-              {Object.entries(ORGANIZATION_STYLES).map(([key, style]) => (
-                <label
-                  key={key}
-                  className={`flex items-start gap-3 p-3 rounded-lg cursor-pointer transition-all duration-200 ${
-                    settings.organizationStyle === key
-                      ? `${theme.buttonHover} border ${theme.border}`
-                      : `hover:${theme.buttonHover}`
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="organizationStyle"
-                    value={key}
-                    checked={settings.organizationStyle === key}
-                    onChange={(e) => updateSettings({ organizationStyle: e.target.value })}
-                    className="mt-1"
-                  />
-                  <div className="flex-1">
-                    <div className={`font-medium ${theme.text} text-sm mb-1`}>
-                      {style.name}
-                    </div>
-                    <div className={`text-xs ${theme.textSecondary} font-mono whitespace-pre-line`}>
-                      {style.example}
-                    </div>
-                  </div>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {/* Delete Timer */}
-          <div>
-            <h3 className={`font-medium ${theme.text} mb-4`}>Auto-Delete Timer</h3>
-            <div className="space-y-2">
-              {Object.entries(DELETE_TIMERS).map(([key, timer]) => (
-                <label
-                  key={key}
-                  className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-200 ${
-                    settings.deleteTimer === key
-                      ? `${theme.buttonHover} border ${theme.border}`
-                      : `hover:${theme.buttonHover}`
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="deleteTimer"
-                    value={key}
-                    checked={settings.deleteTimer === key}
-                    onChange={(e) => updateSettings({ deleteTimer: e.target.value })}
-                  />
-                  <span className={`${theme.text} text-sm`}>
-                    {timer.name}
-                  </span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {/* Smart Formatting Info */}
-          <div className={`p-4 rounded-lg border ${theme.borderSecondary}`}>
-            <h4 className={`font-medium ${theme.text} text-sm mb-2`}>
-              Smart Formatting
-            </h4>
-            <p className={`text-xs ${theme.textSecondary} leading-relaxed`}>
-              Notes are automatically organized when they look like lists (short lines or multiple tasks). 
-              Long paragraphs and detailed thoughts remain unformatted.
-            </p>
-          </div>
-        </div>
-
-        <div className={`p-6 border-t ${theme.borderSecondary} flex items-center justify-between`}>
-          <button
-            onClick={handleReset}
-            className={`px-4 py-2 text-sm font-light ${theme.textTertiary} hover:text-red-500 transition-colors`}
-          >
-            Reset Preferences
-          </button>
+      <div className={`${theme.bg} max-w-sm w-full p-6`}>
+        <div className="flex items-center justify-between mb-8">
+          <h2 className={`text-lg font-light ${theme.text}`}>settings</h2>
           <button
             onClick={onClose}
-            className={`px-6 py-2 text-sm font-light ${theme.text} border ${theme.border} rounded ${theme.buttonHover} transition-all duration-200`}
+            className={`text-xs font-light ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} transition-colors`}
           >
-            Done
+            close
+          </button>
+        </div>
+
+        <div className="space-y-8">
+          <div>
+            <h3 className={`text-sm font-light ${theme.text} mb-4`}>list style</h3>
+            <div className="space-y-3">
+              {Object.entries(ORGANIZATION_STYLES).map(([key, style]) => (
+                <button
+                  key={key}
+                  onClick={() => updateSettings({ organizationStyle: key })}
+                  className={`w-full text-left transition-all duration-200 ${
+                    settings.organizationStyle === key ? theme.text : theme.textTertiary
+                  } hover:${theme.text.replace('text-', 'hover:text-')}`}
+                >
+                  <div className="text-xs font-light mb-1">
+                    {style.name.toLowerCase()}
+                  </div>
+                  <div className={`text-xs ${theme.textTertiary} font-mono whitespace-pre-line leading-relaxed`}>
+                    {style.example}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <h3 className={`text-sm font-light ${theme.text} mb-4`}>auto-delete</h3>
+            <div className="space-y-2">
+              {Object.entries(DELETE_TIMERS).map(([key, timer]) => (
+                <button
+                  key={key}
+                  onClick={() => updateSettings({ deleteTimer: key })}
+                  className={`w-full text-left text-xs font-light transition-all duration-200 ${
+                    settings.deleteTimer === key ? theme.text : theme.textTertiary
+                  } hover:${theme.text.replace('text-', 'hover:text-')}`}
+                >
+                  {timer.name.toLowerCase()}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className={`mt-8 pt-6 border-t ${theme.borderSecondary}`}>
+          <button
+            onClick={handleReset}
+            className={`text-xs font-light ${theme.textTertiary} hover:text-red-500 transition-colors`}
+          >
+            reset preferences
           </button>
         </div>
       </div>
