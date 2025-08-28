@@ -27,7 +27,7 @@ function AppContent() {
     deleteSavedNote,
     getTimeInfo,
     updateNoteContent
-  } = useNotes(settings.deleteTimer, showToast);
+  } = useNotes(settings.deleteTimer, showToast, settings.personalityEnabled);
 
   // Show onboarding if not completed
   if (!settings.onboardingCompleted) {

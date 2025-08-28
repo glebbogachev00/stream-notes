@@ -1,5 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
+import { useSettings } from '../contexts/SettingsContext';
 import { getRandomMessage, EMPTY_STATE_MESSAGES } from '../utils/messages';
 
 const NoteList = ({ 
@@ -12,6 +13,7 @@ const NoteList = ({
   onUpdateNoteContent 
 }) => {
   const { theme } = useTheme();
+  const { settings } = useSettings();
   const editingTextareaRef = useRef(null);
 
   useEffect(() => {
@@ -32,7 +34,7 @@ const NoteList = ({
     return (
       <div className="text-center py-16">
         <p className={`text-sm ${theme.textTertiary} font-light`}>
-          {getRandomMessage(EMPTY_STATE_MESSAGES)}
+          {getRandomMessage(EMPTY_STATE_MESSAGES, settings.personalityEnabled)}
         </p>
       </div>
     );

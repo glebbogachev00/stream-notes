@@ -37,7 +37,8 @@ const DEFAULT_SETTINGS = {
   letterSpacing: 0,
   organizationStyle: 'bullets',
   deleteTimer: '24h',
-  onboardingCompleted: false
+  onboardingCompleted: false,
+  personalityEnabled: true
 };
 
 export const useSettings = () => {
@@ -70,7 +71,8 @@ export const SettingsProvider = ({ children }) => {
         fontSize: settings.fontSize,
         letterSpacing: settings.letterSpacing,
         organizationStyle: settings.organizationStyle,
-        deleteTimer: settings.deleteTimer
+        deleteTimer: settings.deleteTimer,
+        personalityEnabled: settings.personalityEnabled
       }));
       localStorage.setItem('stream-onboarding-completed', settings.onboardingCompleted.toString());
     } catch (error) {
@@ -94,6 +96,10 @@ export const SettingsProvider = ({ children }) => {
     setSettings(DEFAULT_SETTINGS);
     localStorage.removeItem('stream-settings');
     localStorage.removeItem('stream-onboarding-completed');
+  };
+
+  const togglePersonality = () => {
+    setSettings(prev => ({ ...prev, personalityEnabled: !prev.personalityEnabled }));
   };
 
   const shouldOrganizeText = (text) => {
@@ -160,6 +166,7 @@ export const SettingsProvider = ({ children }) => {
       updateSettings,
       completeOnboarding,
       resetSettings,
+      togglePersonality,
       formatText,
       shouldOrganizeText,
       ORGANIZATION_STYLES,

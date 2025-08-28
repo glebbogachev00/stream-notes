@@ -5,8 +5,8 @@ import CollapsibleSection from './CollapsibleSection';
 import FontSizeControl from './FontSizeControl';
 
 const SettingsModal = ({ isOpen, onClose }) => {
-  const { theme } = useTheme();
-  const { settings, updateSettings, resetSettings } = useSettings();
+  const { theme, switchTheme, themes } = useTheme();
+  const { settings, updateSettings, resetSettings, togglePersonality } = useSettings();
 
   if (!isOpen) return null;
 
@@ -32,7 +32,14 @@ const SettingsModal = ({ isOpen, onClose }) => {
     >
       <div className={`${theme.bg} max-w-sm w-full p-4 sm:p-6 max-h-[80vh] sm:max-h-[70vh] overflow-y-auto`}>
         <div className="flex items-center justify-between mb-6">
-          <h2 className={`dynamic-text-lg font-light ${theme.text}`}>settings</h2>
+          <div>
+            <h2 className={`dynamic-text-lg font-light ${theme.text}`}>
+              {settings.personalityEnabled ? "Stream's Command Center" : "Application Settings"}
+            </h2>
+            <p className={`dynamic-text-sm ${theme.textSecondary} font-light mt-1`}>
+              {settings.personalityEnabled ? "Let's tweak how I help your brain flow!" : "Adjust application preferences."}
+            </p>
+          </div>
           <button
             onClick={onClose}
             className={`dynamic-text-xs font-light ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} transition-colors`}
@@ -42,11 +49,16 @@ const SettingsModal = ({ isOpen, onClose }) => {
         </div>
 
         <div className="space-y-6">
-          <CollapsibleSection title="font size">
+          <CollapsibleSection title={settings.personalityEnabled ? "How big should I make your thoughts appear?" : "Font Size"}>
+            {settings.personalityEnabled && (
+              <p className={`dynamic-text-xs ${theme.textSecondary} font-light mb-3`}>
+                Too tiny? Too huge? Let me adjust!
+              </p>
+            )}
             <FontSizeControl isAlwaysEditing={true} />
           </CollapsibleSection>
 
-          <CollapsibleSection title="letter spacing">
+          <CollapsibleSection title={settings.personalityEnabled ? "How much space should I give your words?" : "Letter Spacing"}>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => updateSettings({ letterSpacing: Math.max(-1, settings.letterSpacing - 0.5) })}
@@ -66,7 +78,12 @@ const SettingsModal = ({ isOpen, onClose }) => {
             </div>
           </CollapsibleSection>
 
-          <CollapsibleSection title="list style">
+          <CollapsibleSection title={settings.personalityEnabled ? "When your brain rapid-fires, how should I catch it all?" : "List Style"}>
+            {settings.personalityEnabled && (
+              <p className={`dynamic-text-xs ${theme.textSecondary} font-light mb-3`}>
+                I love organizing chaos - pick your favorite style!
+              </p>
+            )}
             <div className="space-y-2">
               {Object.entries(ORGANIZATION_STYLES).map(([key, style]) => (
                 <button
@@ -87,7 +104,12 @@ const SettingsModal = ({ isOpen, onClose }) => {
             </div>
           </CollapsibleSection>
 
-          <CollapsibleSection title="auto-delete">
+          <CollapsibleSection title={settings.personalityEnabled ? "How long should I babysit your thoughts before cleanup time?" : "Auto-Delete"}>
+            {settings.personalityEnabled && (
+              <p className={`dynamic-text-xs ${theme.textSecondary} font-light mb-3`}>
+                I'm a tidy helper - when should I sweep up?
+              </p>
+            )}
             <div className="relative">
               <select
                 value={settings.deleteTimer}
@@ -106,6 +128,41 @@ const SettingsModal = ({ isOpen, onClose }) => {
                 </svg>
               </div>
             </div>
+          </CollapsibleSection>
+
+          <CollapsibleSection title={settings.personalityEnabled ? "What colors make your thoughts feel at home?" : "Theme"}>
+            {settings.personalityEnabled && (
+              <p className={`dynamic-text-xs ${theme.textSecondary} font-light mb-3`}>
+                I look good in anything, but what makes YOU happy?
+              </p>
+            )}
+            <div className="space-y-2">
+              {themes.map((themeName) => (
+                <button
+                  key={themeName}
+                  onClick={() => {
+                    updateSettings({ theme: themeName });
+                    switchTheme(themeName);
+                  }}
+                  className={`w-full text-left transition-all duration-200 px-2 py-1 rounded ${
+                    settings.theme === themeName ? theme.text : theme.textTertiary
+                  } hover:${theme.text.replace('text-', 'hover:text-')}`}
+                >
+                  <div className="dynamic-text-xs font-light">
+                    [{themeName}]
+                  </div>
+                </button>
+              ))}
+            </div>
+          </CollapsibleSection>
+
+          <CollapsibleSection title={settings.personalityEnabled ? "Stream's Personality" : "Personality"}>
+            <button
+              onClick={togglePersonality}
+              className={`w-full text-left transition-all duration-200 px-3 py-2 rounded ${theme.text} border ${theme.border} ${theme.buttonHover}`}
+            >
+              {settings.personalityEnabled ? 'Turn off personality - give Stream a vacation' : 'Bring Stream back from vacation'}
+            </button>
           </CollapsibleSection>
         </div>
 

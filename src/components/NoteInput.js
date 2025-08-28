@@ -6,20 +6,27 @@ import { getRotatingMessage, INPUT_PLACEHOLDER_MESSAGES } from '../utils/message
 const NoteInput = ({ onAddNote }) => {
   const [content, setContent] = useState('');
   const [isFocused, setIsFocused] = useState(false);
-  const [placeholder, setPlaceholder] = useState(getRotatingMessage(INPUT_PLACEHOLDER_MESSAGES));
-  const textareaRef = useRef(null);
   const { theme } = useTheme();
   const { formatText, settings } = useSettings();
+  const [placeholder, setPlaceholder] = useState(() => 
+    getRotatingMessage(INPUT_PLACEHOLDER_MESSAGES, settings?.personalityEnabled ?? true)
+  );
+  const textareaRef = useRef(null);
 
-  // Rotate placeholder every few seconds when not focused
+  // Update placeholder when personality setting changes
   useEffect(() => {
-    if (!isFocused) {
+    setPlaceholder(getRotatingMessage(INPUT_PLACEHOLDER_MESSAGES, settings.personalityEnabled));
+  }, [settings.personalityEnabled]);
+
+  // Rotate placeholder every few seconds when not focused and personality is enabled
+  useEffect(() => {
+    if (!isFocused && settings.personalityEnabled) {
       const interval = setInterval(() => {
-        setPlaceholder(getRotatingMessage(INPUT_PLACEHOLDER_MESSAGES));
+        setPlaceholder(getRotatingMessage(INPUT_PLACEHOLDER_MESSAGES, settings.personalityEnabled));
       }, 3000);
       return () => clearInterval(interval);
     }
-  }, [isFocused]);
+  }, [isFocused, settings.personalityEnabled]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -81,7 +88,10 @@ const NoteInput = ({ onAddNote }) => {
       
       {!isFocused && (
         <div className={`mt-2 text-xs ${theme.textTertiary} font-light`}>
-          notes expire in {settings.deleteTimer === '1h' ? '1 hour' : settings.deleteTimer === '6h' ? '6 hours' : '24 hours'}
+          {settings.personalityEnabled ? 
+            `Notes expire in ${settings.deleteTimer === '1h' ? '1 hour' : settings.deleteTimer === '6h' ? '6 hours' : '24 hours'}` : 
+            `Notes expire in ${settings.deleteTimer === '1h' ? '1 hour' : settings.deleteTimer === '6h' ? '6 hours' : '24 hours'}`
+          }
         </div>
       )}
     </section>

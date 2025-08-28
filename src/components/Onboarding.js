@@ -4,7 +4,7 @@ import { useSettings, ORGANIZATION_STYLES, DELETE_TIMERS } from '../contexts/Set
 
 const Onboarding = () => {
   const { theme, switchTheme, themes } = useTheme();
-  const { completeOnboarding } = useSettings();
+  const { completeOnboarding, settings } = useSettings();
   const [currentStep, setCurrentStep] = useState(-1); // Start with welcome screen
   const [selections, setSelections] = useState({
     theme: 'white',
@@ -15,20 +15,20 @@ const Onboarding = () => {
 
   const steps = [
     {
-      title: "first things first - what colors make your brain happy?",
-      subtitle: "i'm pretty flexible, but these are my favorites:"
+      title: settings.personalityEnabled ? "First things first - what colors make your brain happy?" : "Theme Selection",
+      subtitle: settings.personalityEnabled ? "I'm pretty flexible, but these are my favorites:" : "Choose your preferred application theme."
     },
     {
-      title: "when your thoughts come rapid-fire, how should i catch them?",
-      subtitle: "don't stress about this - i learn your style as we go"
+      title: settings.personalityEnabled ? "Now, when your thoughts come rapid-fire, how should I catch them?" : "Note Organization Style",
+      subtitle: settings.personalityEnabled ? "Don't stress about this - I learn your style as we go." : "Select how your notes should be organized."
     },
     {
-      title: "here's my favorite part - the cleanup!",
-      subtitle: "how long should thoughts hang around before i tidy up?"
+      title: settings.personalityEnabled ? "Here's my favorite part - the cleanup!" : "Auto-Delete Timer",
+      subtitle: settings.personalityEnabled ? "I'm like a helpful roommate who actually does the dishes. How long should thoughts hang around before I tidy up?" : "Set the duration after which notes are automatically deleted."
     },
     {
-      title: "check it out! this is us working together",
-      subtitle: "you dump thoughts, i organize and clean. perfect partnership!"
+      title: settings.personalityEnabled ? "Check it out! This is us working together." : "Preview and Confirmation",
+      subtitle: settings.personalityEnabled ? "You dump thoughts, I organize and clean. Perfect partnership! Ready to let your mind run wild?" : "Review your selections and confirm to start using Stream."
     }
   ];
 
@@ -72,12 +72,21 @@ const Onboarding = () => {
       <div className="text-6xl mb-4">💧</div>
       <div className="space-y-4">
         <h1 className={`text-xl font-light ${theme.text} mb-4`}>
-          hey! i'm stream, your new note buddy
+          {settings.personalityEnabled ? "Hey! I'm Stream, your new note buddy" : "Welcome to Stream"}
         </h1>
         <div className={`space-y-3 text-sm ${theme.textSecondary} font-light leading-relaxed max-w-sm mx-auto`}>
-          <p>i noticed something... your brain moves FAST, but your notes? total chaos, right?</p>
-          <p>i get it. i'm the same way. that's why i exist.</p>
-          <p>let me show you how i keep brilliant minds like yours flowing freely...</p>
+          {settings.personalityEnabled ? (
+            <>
+              <p>I noticed something... your brain moves FAST, but your notes? Total chaos, right?</p>
+              <p>I get it. I'm the same way. That's why I exist.</p>
+              <p>Let me show you how I keep brilliant minds like yours flowing freely...</p>
+            </>
+          ) : (
+            <>
+              <p>Stream is a self-managing note application designed to help you organize your thoughts efficiently.</p>
+              <p>This onboarding process will guide you through the initial setup of your preferences.</p>
+            </>
+          )}
         </div>
       </div>
     </div>
@@ -170,7 +179,7 @@ const Onboarding = () => {
         </div>
         
         <div className={`text-sm ${theme.text} font-light leading-relaxed text-center`}>
-          ready to let your mind run wild?
+          {settings.personalityEnabled ? "Ready to let your mind run wild?" : "Ready to start using Stream?"}
         </div>
       </div>
     );
@@ -225,7 +234,7 @@ const Onboarding = () => {
             onClick={handleNext}
             className={`text-xs font-light ${theme.text} hover:${theme.textSecondary.replace('text-', 'hover:text-')} transition-all duration-200`}
           >
-            {currentStep === -1 ? 'let\'s go!' : currentStep === steps.length - 1 ? 'start flowing' : 'next'}
+            {currentStep === -1 ? (settings.personalityEnabled ? 'let\'s go!' : 'Start') : currentStep === steps.length - 1 ? (settings.personalityEnabled ? 'start flowing' : 'Finish') : 'next'}
           </button>
         </div>
       </div>

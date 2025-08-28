@@ -5,7 +5,7 @@ import { getRandomMessage, AUTO_DELETE_MESSAGES, SAVE_NOTE_MESSAGES } from '../u
 const NOTES_KEY = 'stream_notes';
 const SAVED_NOTES_KEY = 'stream_saved_notes';
 
-export const useNotes = (deleteTimer = '24h', onToast = null) => {
+export const useNotes = (deleteTimer = '24h', onToast = null, personalityEnabled = true) => {
   const [notes, setNotes] = useState([]);
   const [savedNotes, setSavedNotes] = useState([]);
 
@@ -31,7 +31,7 @@ export const useNotes = (deleteTimer = '24h', onToast = null) => {
         localStorage.setItem(NOTES_KEY, JSON.stringify(validNotes));
         // Show auto-delete toast if notes were removed
         if (onToast && parsedNotes.length - validNotes.length > 0) {
-          onToast(getRandomMessage(AUTO_DELETE_MESSAGES));
+          onToast(getRandomMessage(AUTO_DELETE_MESSAGES, personalityEnabled));
         }
       }
       
@@ -42,7 +42,7 @@ export const useNotes = (deleteTimer = '24h', onToast = null) => {
       setNotes([]);
       setSavedNotes([]);
     }
-  }, [deleteTimer, onToast]);
+  }, [deleteTimer, onToast, personalityEnabled]);
 
   const saveNotes = useCallback((newNotes) => {
     try {
@@ -102,9 +102,9 @@ export const useNotes = (deleteTimer = '24h', onToast = null) => {
     
     // Show save toast
     if (onToast) {
-      onToast(getRandomMessage(SAVE_NOTE_MESSAGES));
+      onToast(getRandomMessage(SAVE_NOTE_MESSAGES, personalityEnabled));
     }
-  }, [notes, savedNotes, saveNotes, saveSavedNotes, onToast]);
+  }, [notes, savedNotes, saveNotes, saveSavedNotes, onToast, personalityEnabled]);
 
   const deleteSavedNote = useCallback((id) => {
     const updatedSavedNotes = savedNotes.filter(note => note.id !== id);
