@@ -12,6 +12,7 @@ import SettingsModal from './components/SettingsModal';
 function AppContent() {
   const [activeTab, setActiveTab] = useState('active');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [editingNoteId, setEditingNoteId] = useState(null);
   const { theme } = useTheme();
   const { settings } = useSettings();
   const {
@@ -21,7 +22,8 @@ function AppContent() {
     deleteNote,
     saveNote,
     deleteSavedNote,
-    getTimeInfo
+    getTimeInfo,
+    updateNoteContent
   } = useNotes(settings.deleteTimer);
 
   // Show onboarding if not completed
@@ -98,6 +100,9 @@ function AppContent() {
                 onDeleteNote={deleteNote}
                 onSaveNote={saveNote}
                 getTimeInfo={getTimeInfo}
+                editingNoteId={editingNoteId}
+                onSetEditingNoteId={setEditingNoteId}
+                onUpdateNoteContent={updateNoteContent}
               />
             </div>
           )}

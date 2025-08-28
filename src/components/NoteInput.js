@@ -21,9 +21,21 @@ const NoteInput = ({ onAddNote }) => {
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSubmit(e);
+    // No-op
+  };
+
+  const handleNewLine = () => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const newContent = content.substring(0, start) + '\n' + content.substring(end);
+      setContent(newContent);
+      textarea.focus();
+      // Set cursor position after the new line
+      setTimeout(() => {
+        textarea.selectionStart = textarea.selectionEnd = start + 1;
+      }, 0);
     }
   };
 
@@ -58,10 +70,7 @@ const NoteInput = ({ onAddNote }) => {
           />
           
           {isFocused && content.trim() && (
-            <div className="mt-4 flex items-center justify-between">
-              <span className={`text-xs ${theme.textTertiary} font-light`}>
-                enter to save, shift+enter for new line
-              </span>
+            <div className="mt-4 flex items-center justify-end">
               <button
                 type="submit"
                 className={`px-3 py-1 text-xs font-light ${theme.text} border ${theme.border} rounded ${theme.buttonHover} transition-all duration-200`}

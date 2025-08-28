@@ -68,6 +68,13 @@ export const useNotes = (deleteTimer = '24h') => {
     saveNotes(updatedNotes);
   }, [notes, saveNotes]);
 
+  const updateNoteContent = useCallback((id, newContent) => {
+    const updatedNotes = notes.map(note => 
+      note.id === id ? { ...note, content: newContent } : note
+    );
+    saveNotes(updatedNotes);
+  }, [notes, saveNotes]);
+
   const deleteNote = useCallback((id) => {
     const updatedNotes = notes.filter(note => note.id !== id);
     saveNotes(updatedNotes);
@@ -139,6 +146,7 @@ export const useNotes = (deleteTimer = '24h') => {
     saveNote,
     deleteSavedNote,
     getTimeInfo,
+    updateNoteContent,
     refreshNotes: loadNotes
   };
 };

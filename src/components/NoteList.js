@@ -1,8 +1,31 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 
-const NoteList = ({ notes, onDeleteNote, onSaveNote, getTimeInfo }) => {
+const NoteList = ({ 
+  notes, 
+  onDeleteNote, 
+  onSaveNote, 
+  getTimeInfo, 
+  editingNoteId, 
+  onSetEditingNoteId, 
+  onUpdateNoteContent 
+}) => {
   const { theme } = useTheme();
+  const editingTextareaRef = useRef(null);
+
+  useEffect(() => {
+    if (editingNoteId && editingTextareaRef.current) {
+      editingTextareaRef.current.focus();
+      editingTextareaRef.current.style.height = 'auto';
+      editingTextareaRef.current.style.height = `${editingTextareaRef.current.scrollHeight}px`;
+    }
+  }, [editingNoteId]);
+
+  const handleContentChange = (e, noteId) => {
+    onUpdateNoteContent(noteId, e.target.value);
+    e.target.style.height = 'auto';
+    e.target.style.height = `${e.target.scrollHeight}px`;
+  };
 
   if (notes.length === 0) {
     return (
@@ -30,9 +53,22 @@ const NoteList = ({ notes, onDeleteNote, onSaveNote, getTimeInfo }) => {
           >
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1 min-w-0">
-                <p className={`${theme.text} text-sm font-light leading-relaxed whitespace-pre-wrap break-words mb-3`}>
-                  {note.content}
-                </p>
+                {editingNoteId === note.id ? (
+                  <textarea
+                    ref={editingTextareaRef}
+                    value={note.content}
+                    onChange={(e) => handleContentChange(e, note.id)}
+                    onBlur={() => onSetEditingNoteId(null)}
+                    className={`${theme.text} text-sm font-light leading-relaxed whitespace-pre-wrap break-words mb-3 w-full bg-transparent resize-none focus:outline-none`}
+                  />
+                ) : (
+                  <p 
+                    onClick={() => onSetEditingNoteId(note.id)}
+                    className={`${theme.text} text-sm font-light leading-relaxed whitespace-pre-wrap break-words mb-3 cursor-pointer`}
+                  >
+                    {note.content}
+                  </p>
+                )}
                 
                 <div className="flex items-center gap-3 text-xs">
                   <span className={`font-light ${
