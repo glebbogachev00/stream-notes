@@ -8,10 +8,19 @@ export const EMPTY_STATE_MESSAGES = {
     "Ready to turn brain dump into brain flow?",
     "Fresh start, clear mind - let's capture some thoughts",
     "All tidy here! Ready for your next mental download",
-    "Brain space: officially decluttered"
+    "Brain space: officially decluttered",
+    "Brain squeaky clean. What's next?",
+    "No notes hanging around—start fresh.",
+    "I'm all ears—throw me something to chew on.",
+    "Mental whiteboard cleared and ready",
+    "Your thoughts have expired—time for new ones",
+    "Zero notes, infinite possibilities",
+    "Clean slate, fresh mind—let's flow"
   ],
   professional: [
-    "No active notes"
+    "No active notes",
+    "No notes to display",
+    "Your active notes list is empty"
   ]
 };
 

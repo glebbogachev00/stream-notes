@@ -71,23 +71,23 @@ function AppContent() {
         </header>
 
         <nav className="mb-8 sm:mb-12">
-          <div className={`flex space-x-6 border-b ${theme.border} transition-all duration-200`}>
+          <div className={`flex space-x-8 border-b ${theme.border} transition-all duration-200`}>
             <button
               onClick={() => setActiveTab('active')}
-              className={`pb-3 dynamic-text-sm font-light transition-all duration-200 border-b ${
+              className={`pb-3 dynamic-text-sm transition-all duration-300 tab-indicator ${
                 activeTab === 'active'
-                  ? `${theme.text} ${theme.text.replace('text-', 'border-')}`
-                  : `${theme.textTertiary} hover:${theme.textSecondary.replace('text-', 'hover:text-')} border-transparent`
+                  ? `${theme.text} font-medium active`
+                  : `${theme.textTertiary} hover:${theme.textSecondary.replace('text-', 'hover:text-')} font-light`
               }`}
             >
               active ({notes.length})
             </button>
             <button
               onClick={() => setActiveTab('saved')}
-              className={`pb-3 dynamic-text-sm font-light transition-all duration-200 border-b ${
+              className={`pb-3 dynamic-text-sm transition-all duration-300 tab-indicator ${
                 activeTab === 'saved'
-                  ? `${theme.text} ${theme.text.replace('text-', 'border-')}`
-                  : `${theme.textTertiary} hover:${theme.textSecondary.replace('text-', 'hover:text-')} border-transparent`
+                  ? `${theme.text} font-medium active`
+                  : `${theme.textTertiary} hover:${theme.textSecondary.replace('text-', 'hover:text-')} font-light`
               }`}
             >
               saved ({savedNotes.length})

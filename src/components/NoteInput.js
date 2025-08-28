@@ -65,12 +65,16 @@ const NoteInput = ({ onAddNote }) => {
             onFocus={handleFocus}
             onBlur={handleBlur}
             placeholder={isFocused ? "write..." : placeholder}
-            className={`w-full p-0 text-base font-light resize-none border-0 focus:outline-none focus:ring-0 ${theme.inputBg} transition-all duration-200 ${theme.text} placeholder:${theme.textTertiary} ${
+            className={`w-full text-base font-light resize-none ${theme.inputBg} ${theme.text} placeholder:${theme.textSecondary} ${
               isFocused 
-                ? 'min-h-[120px]' 
-                : `min-h-[40px] border-b ${theme.border} ${theme.borderHover}`
+                ? 'min-h-[120px] input-enhanced' 
+                : `min-h-[40px] border-0 border-b ${theme.border} ${theme.borderHover} p-0 focus:outline-none transition-all duration-200`
             }`}
             rows={isFocused ? 6 : 1}
+            style={{
+              '--focus-color': theme.focusColor,
+              '--focus-border': theme.focusBorder
+            }}
           />
           
           {isFocused && content.trim() && (
@@ -87,7 +91,7 @@ const NoteInput = ({ onAddNote }) => {
       </form>
       
       {!isFocused && (
-        <div className={`mt-2 text-xs ${theme.textTertiary} font-light`}>
+        <div className={`mt-2 text-xs ${theme.textSecondary} font-light`}>
           {settings.personalityEnabled ? 
             `Notes expire in ${settings.deleteTimer === '1h' ? '1 hour' : settings.deleteTimer === '6h' ? '6 hours' : '24 hours'}` : 
             `Notes expire in ${settings.deleteTimer === '1h' ? '1 hour' : settings.deleteTimer === '6h' ? '6 hours' : '24 hours'}`
