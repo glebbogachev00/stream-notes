@@ -40,25 +40,34 @@ function AppContent() {
       style={{ 
         fontSize: `${settings.fontSize}px`,
         '--base-font-size': `${settings.fontSize}px`,
-        letterSpacing: `${settings.letterSpacing}px`
+        letterSpacing: `${settings.letterSpacing}px`,
+        '--theme-accent': theme.themeAccent,
+        '--theme-accent-light': theme.themeAccentLight,
+        '--focus-color': theme.focusColor,
+        '--focus-border': theme.focusBorder,
+        '--focus-color-outer': theme.focusColorOuter,
+        '--input-bg-light': theme.inputBgLight,
+        '--input-bg-dark': theme.inputBgDark,
+        '--panel-bg': theme.panelBg,
+        '--separator-color': theme.separatorColor
       }}
     >
       <div className="max-w-2xl mx-auto px-4 py-8 sm:py-12">
         <header className="flex items-start justify-between mb-12 sm:mb-16">
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <h1 className={`dynamic-text-xl font-light ${theme.text} tracking-tight`}>
+              <h1 className={`dynamic-text-xl typography-title ${theme.text} tracking-tight`}>
                 [stream]
               </h1>
             </div>
-            <p className={`dynamic-text-sm ${theme.textSecondary} font-light`}>
+            <p className={`dynamic-text-sm ${theme.textSecondary} font-light typography-system`}>
               self-managing notes
             </p>
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={() => setIsSettingsOpen(true)}
-              className={`p-2 ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} transition-colors dynamic-text-sm`}
+              className={`p-2 ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} transition-colors dynamic-text-sm icon-hover`}
               title="Settings"
             >
               <svg className="w-1em h-1em" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -74,9 +83,9 @@ function AppContent() {
           <div className={`flex space-x-8 border-b ${theme.border} transition-all duration-200`}>
             <button
               onClick={() => setActiveTab('active')}
-              className={`pb-3 dynamic-text-sm transition-all duration-300 tab-indicator ${
+              className={`pb-3 dynamic-text-sm transition-all duration-400 tab-indicator ${
                 activeTab === 'active'
-                  ? `${theme.text} font-medium active`
+                  ? `${theme.text} typography-title active`
                   : `${theme.textTertiary} hover:${theme.textSecondary.replace('text-', 'hover:text-')} font-light`
               }`}
             >
@@ -84,9 +93,9 @@ function AppContent() {
             </button>
             <button
               onClick={() => setActiveTab('saved')}
-              className={`pb-3 dynamic-text-sm transition-all duration-300 tab-indicator ${
+              className={`pb-3 dynamic-text-sm transition-all duration-400 tab-indicator ${
                 activeTab === 'saved'
-                  ? `${theme.text} font-medium active`
+                  ? `${theme.text} typography-title active`
                   : `${theme.textTertiary} hover:${theme.textSecondary.replace('text-', 'hover:text-')} font-light`
               }`}
             >
@@ -99,6 +108,7 @@ function AppContent() {
           {activeTab === 'active' && (
             <div className="space-y-8">
               <NoteInput onAddNote={addNote} />
+              <div className={`content-separator ${theme.textTertiary}`}></div>
               <NoteList
                 notes={notes}
                 onDeleteNote={deleteNote}
@@ -125,6 +135,9 @@ function AppContent() {
         isOpen={isSettingsOpen} 
         onClose={() => setIsSettingsOpen(false)} 
       />
+      
+      {/* Stream watermark */}
+      <div className="watermark">stream</div>
       
       {/* Toast notifications */}
       {toasts.map((toast) => (

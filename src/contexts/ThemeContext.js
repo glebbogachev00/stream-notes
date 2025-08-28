@@ -17,8 +17,15 @@ const THEMES = {
     inputBg: 'bg-white',
     ring: 'ring-gray-300',
     textDestructive: 'hover:text-red-500',
-    focusColor: 'rgba(59, 130, 246, 0.3)',
-    focusBorder: '#3b82f6'
+    focusColor: 'rgba(59, 130, 246, 0.25)',
+    focusBorder: '#3b82f6',
+    focusColorOuter: 'rgba(59, 130, 246, 0.1)',
+    themeAccent: '#3b82f6',
+    themeAccentLight: '#60a5fa',
+    inputBgLight: '#ffffff',
+    inputBgDark: '#fafafa',
+    panelBg: 'rgba(255, 255, 255, 0.95)',
+    separatorColor: 'rgb(0, 0, 0)'
   },
   black: {
     name: 'black',
@@ -35,7 +42,14 @@ const THEMES = {
     ring: 'ring-gray-700',
     textDestructive: 'hover:text-red-500',
     focusColor: 'rgba(156, 163, 175, 0.3)',
-    focusBorder: '#9ca3af'
+    focusBorder: '#9ca3af',
+    focusColorOuter: 'rgba(156, 163, 175, 0.15)',
+    themeAccent: '#9ca3af',
+    themeAccentLight: '#d1d5db',
+    inputBgLight: '#111827',
+    inputBgDark: '#0f172a',
+    panelBg: 'rgba(17, 24, 39, 0.95)',
+    separatorColor: 'rgb(255, 255, 255)'
   },
   beige: {
     name: 'beige',
@@ -51,8 +65,15 @@ const THEMES = {
     inputBg: 'bg-amber-50',
     ring: 'ring-amber-300',
     textDestructive: 'hover:text-red-500',
-    focusColor: 'rgba(245, 158, 11, 0.3)',
-    focusBorder: '#f59e0b'
+    focusColor: 'rgba(245, 158, 11, 0.25)',
+    focusBorder: '#f59e0b',
+    focusColorOuter: 'rgba(245, 158, 11, 0.1)',
+    themeAccent: '#f59e0b',
+    themeAccentLight: '#fbbf24',
+    inputBgLight: '#fffbeb',
+    inputBgDark: '#fef3c7',
+    panelBg: 'rgba(255, 251, 235, 0.95)',
+    separatorColor: 'rgb(120, 53, 15)'
   },
   blue: {
     name: 'blue',
@@ -68,8 +89,39 @@ const THEMES = {
     inputBg: 'bg-slate-50',
     ring: 'ring-slate-300',
     textDestructive: 'hover:text-red-500',
-    focusColor: 'rgba(99, 102, 241, 0.3)',
-    focusBorder: '#6366f1'
+    focusColor: 'rgba(99, 102, 241, 0.25)',
+    focusBorder: '#6366f1',
+    focusColorOuter: 'rgba(99, 102, 241, 0.1)',
+    themeAccent: '#6366f1',
+    themeAccentLight: '#818cf8',
+    inputBgLight: '#f8fafc',
+    inputBgDark: '#f1f5f9',
+    panelBg: 'rgba(248, 250, 252, 0.95)',
+    separatorColor: 'rgb(71, 85, 105)'
+  },
+  dark: {
+    name: 'dark',
+    bg: 'premium-dark',
+    text: 'text-slate-100 glow-text',
+    textSecondary: 'text-slate-300',
+    textTertiary: 'text-slate-400',
+    border: 'border-slate-700',
+    borderHover: 'hover:border-slate-600',
+    borderSecondary: 'border-slate-800',
+    borderSecondaryHover: 'hover:border-slate-700',
+    buttonHover: 'hover:bg-slate-800',
+    inputBg: 'bg-slate-800',
+    ring: 'ring-slate-600',
+    textDestructive: 'hover:text-red-400',
+    focusColor: 'rgba(59, 130, 246, 0.4)',
+    focusBorder: '#3b82f6',
+    focusColorOuter: 'rgba(59, 130, 246, 0.2)',
+    themeAccent: '#3b82f6',
+    themeAccentLight: '#60a5fa',
+    inputBgLight: '#1e293b',
+    inputBgDark: '#0f172a',
+    panelBg: 'rgba(30, 41, 59, 0.95)',
+    separatorColor: 'rgb(148, 163, 184)'
   }
 };
 

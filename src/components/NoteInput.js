@@ -32,6 +32,15 @@ const NoteInput = ({ onAddNote }) => {
     e.preventDefault();
     if (content.trim()) {
       const formattedContent = formatText(content);
+      
+      // Add save animation
+      if (textareaRef.current) {
+        textareaRef.current.classList.add('save-animation');
+        setTimeout(() => {
+          textareaRef.current?.classList.remove('save-animation');
+        }, 600);
+      }
+      
       onAddNote(formattedContent);
       setContent('');
       textareaRef.current?.blur();
@@ -71,17 +80,14 @@ const NoteInput = ({ onAddNote }) => {
                 : `min-h-[40px] border-0 border-b ${theme.border} ${theme.borderHover} p-0 focus:outline-none transition-all duration-200`
             }`}
             rows={isFocused ? 6 : 1}
-            style={{
-              '--focus-color': theme.focusColor,
-              '--focus-border': theme.focusBorder
-            }}
           />
           
           {isFocused && content.trim() && (
             <div className="mt-4 flex items-center justify-end">
               <button
                 type="submit"
-                className={`px-3 py-1 text-xs font-light ${theme.text} border ${theme.border} rounded ${theme.buttonHover} transition-all duration-200`}
+                className={`px-4 py-2 text-xs typography-title ${theme.text} border ${theme.border} rounded-lg ${theme.buttonHover} transition-all duration-200 micro-hover`}
+                style={{ backgroundColor: 'var(--theme-accent)', color: 'white', border: 'none' }}
               >
                 save
               </button>
@@ -91,7 +97,7 @@ const NoteInput = ({ onAddNote }) => {
       </form>
       
       {!isFocused && (
-        <div className={`mt-2 text-xs ${theme.textSecondary} font-light`}>
+        <div className={`mt-2 text-xs ${theme.textSecondary} font-light typography-system`}>
           {settings.personalityEnabled ? 
             `Notes expire in ${settings.deleteTimer === '1h' ? '1 hour' : settings.deleteTimer === '6h' ? '6 hours' : '24 hours'}` : 
             `Notes expire in ${settings.deleteTimer === '1h' ? '1 hour' : settings.deleteTimer === '6h' ? '6 hours' : '24 hours'}`

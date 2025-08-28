@@ -30,10 +30,16 @@ const NoteList = ({
     e.target.style.height = `${e.target.scrollHeight}px`;
   };
 
+  const getEmptyStateIcon = () => {
+    const icons = ['✨', '🧠', '💭', '📝', '🌊', '🎯', '💡'];
+    return icons[Math.floor(Math.random() * icons.length)];
+  };
+
   if (notes.length === 0) {
     return (
       <div className="text-center py-16">
         <p className={`text-sm ${theme.textTertiary} font-light`}>
+          <span className="empty-state-icon">{getEmptyStateIcon()}</span>
           {getRandomMessage(EMPTY_STATE_MESSAGES, settings.personalityEnabled)}
         </p>
       </div>
@@ -74,34 +80,34 @@ const NoteList = ({
                 )}
                 
                 <div className="flex items-center gap-3 text-xs">
-                  <span className={`font-light ${
+                  <span className={`font-light typography-system ${
                     timeInfo.isExpiringSoon ? 'text-orange-500' : theme.textTertiary
                   }`}>
                     {timeInfo.timeText}
                   </span>
                   
                   {timeInfo.isExpiringSoon && (
-                    <span className="text-orange-500 font-light">
+                    <span className="text-orange-500 font-light typography-system">
                       expires in {timeInfo.hoursRemaining}h {timeInfo.minutesRemaining}m
                     </span>
                   )}
                 </div>
               </div>
               
-              <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+              <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300">
                 <button
                   onClick={() => onSaveNote(note.id)}
-                  className={`px-2 py-1 text-xs font-light ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} transition-colors duration-200`}
+                  className={`px-3 py-1 text-xs typography-title ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} transition-all duration-200 micro-hover icon-hover`}
                   title="Save this note permanently"
                 >
-                  save
+                  💾 save
                 </button>
                 <button
                   onClick={() => onDeleteNote(note.id)}
-                  className={`px-2 py-1 text-xs font-light ${theme.textTertiary} hover:text-red-500 transition-colors duration-200`}
+                  className={`px-3 py-1 text-xs typography-title ${theme.textTertiary} hover:text-red-500 transition-all duration-200 micro-hover icon-hover`}
                   title="Delete this note"
                 >
-                  delete
+                  🗑️ delete
                 </button>
               </div>
             </div>
