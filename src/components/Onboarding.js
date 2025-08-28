@@ -69,7 +69,7 @@ const Onboarding = () => {
 
   const renderWelcome = () => (
     <div className="text-center space-y-8">
-      <div className="text-6xl mb-4">💧</div>
+      <div className={`text-6xl mb-4 ${theme.textTertiary} font-extralight`}>~</div>
       <div className="space-y-4">
         <h1 className={`text-xl font-light ${theme.text} mb-4`}>
           {settings.personalityEnabled ? "Hey! I'm Stream, your new note buddy" : "Welcome to Stream"}
