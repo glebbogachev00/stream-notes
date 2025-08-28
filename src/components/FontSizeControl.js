@@ -1,120 +1,44 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useSettings } from '../contexts/SettingsContext';
 
 const FontSizeControl = ({ isAlwaysEditing = false }) => {
   const { theme } = useTheme();
   const { settings, updateSettings } = useSettings();
-  const [isEditing, setIsEditing] = useState(isAlwaysEditing);
-  const [tempFontSize, setTempFontSize] = useState(settings.fontSize);
-  const inputRef = useRef(null);
-  const containerRef = useRef(null);
 
-  const MIN_FONT_SIZE = 12;
-  const MAX_FONT_SIZE = 24;
-
-  useEffect(() => {
-    setTempFontSize(settings.fontSize);
-  }, [settings.fontSize]);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (containerRef.current && !containerRef.current.contains(event.target)) {
-        handleSave();
-      }
-    };
-
-    if (isEditing && !isAlwaysEditing) {
-      document.addEventListener('mousedown', handleClickOutside);
-      inputRef.current?.focus();
-      inputRef.current?.select();
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isEditing]);
-
-  const handleSave = () => {
-    const clampedSize = Math.max(MIN_FONT_SIZE, Math.min(MAX_FONT_SIZE, tempFontSize));
-    updateSettings({ fontSize: clampedSize });
-    setTempFontSize(clampedSize);
-    setIsEditing(false);
+  const FONT_SIZES = {
+    S: 14,
+    M: 16,
+    L: 18
   };
 
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      handleSave();
-    } else if (e.key === 'Escape') {
-      setTempFontSize(settings.fontSize);
-      setIsEditing(false);
-    }
+  const getCurrentSize = () => {
+    const currentSize = settings.fontSize;
+    if (currentSize <= 14) return 'S';
+    if (currentSize <= 16) return 'M';
+    return 'L';
   };
 
-  const handleIncrement = () => {
-    const newSize = Math.min(MAX_FONT_SIZE, tempFontSize + 2);
-    setTempFontSize(newSize);
-    // Apply immediately to settings for real-time preview
-    updateSettings({ fontSize: newSize });
+  const handleSizeChange = (size) => {
+    updateSettings({ fontSize: FONT_SIZES[size] });
   };
-
-  const handleDecrement = () => {
-    const newSize = Math.max(MIN_FONT_SIZE, tempFontSize - 2);
-    setTempFontSize(newSize);
-    // Apply immediately to settings for real-time preview
-    updateSettings({ fontSize: newSize });
-  };
-
-  const handleInputChange = (e) => {
-    const value = parseInt(e.target.value) || MIN_FONT_SIZE;
-    setTempFontSize(value);
-    // Apply change immediately for real-time preview while typing
-    const clampedSize = Math.max(MIN_FONT_SIZE, Math.min(MAX_FONT_SIZE, value));
-    updateSettings({ fontSize: clampedSize });
-  };
-
-  if (isEditing || isAlwaysEditing) {
-    return (
-      <div
-        ref={containerRef}
-        className="flex items-center gap-1"
-      >
-        <button
-          onClick={handleDecrement}
-          className={`dynamic-text-xs font-light ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} transition-colors`}
-        >
-          [-]
-        </button>
-        <input
-          ref={inputRef}
-          type="number"
-          value={tempFontSize}
-          onChange={handleInputChange}
-          onKeyDown={handleKeyDown}
-          min={MIN_FONT_SIZE}
-          max={MAX_FONT_SIZE}
-          className={`w-8 dynamic-text-xs font-light text-center ${theme.text} bg-transparent border-0 outline-none`}
-        />
-        <button
-          onClick={handleIncrement}
-          className={`dynamic-text-xs font-light ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} transition-colors`}
-        >
-          [+]
-        </button>
-      </div>
-    );
-  }
 
   return (
-    <button
-      onClick={() => setIsEditing(true)}
-      className={`dynamic-text-xs font-light ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} transition-colors`}
-      title="Click to adjust font size"
-    >
-      [font: {settings.fontSize}px]
-    </button>
+    <div className="flex items-center gap-1">
+      {Object.keys(FONT_SIZES).map((size) => (
+        <button
+          key={size}
+          onClick={() => handleSizeChange(size)}
+          className={`px-2 py-1 dynamic-text-xs font-light transition-colors border-b ${
+            getCurrentSize() === size
+              ? `${theme.text} ${theme.border}`
+              : `${theme.textTertiary} border-transparent hover:${theme.text.replace('text-', 'hover:text-')}`
+          }`}
+        >
+          {size}
+        </button>
+      ))}
+    </div>
   );
 };
 

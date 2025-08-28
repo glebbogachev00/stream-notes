@@ -32,6 +32,15 @@ const NoteInput = ({ onAddNote }) => {
     e.preventDefault();
     if (content.trim()) {
       const formattedContent = formatText(content);
+      
+      // Add save animation
+      if (textareaRef.current) {
+        textareaRef.current.classList.add('save-animation');
+        setTimeout(() => {
+          textareaRef.current?.classList.remove('save-animation');
+        }, 600);
+      }
+      
       onAddNote(formattedContent);
       setContent('');
       textareaRef.current?.blur();
@@ -65,10 +74,10 @@ const NoteInput = ({ onAddNote }) => {
             onFocus={handleFocus}
             onBlur={handleBlur}
             placeholder={isFocused ? "write..." : placeholder}
-            className={`w-full p-0 text-base font-light resize-none border-0 focus:outline-none focus:ring-0 ${theme.inputBg} transition-all duration-200 ${theme.text} placeholder:${theme.textTertiary} ${
+            className={`w-full text-base font-light resize-none ${theme.text} placeholder:${theme.textSecondary} focus:outline-none transition-all duration-200 ${
               isFocused 
-                ? 'min-h-[120px]' 
-                : `min-h-[40px] border-b ${theme.border} ${theme.borderHover}`
+                ? `min-h-[120px] p-4 rounded-lg ${theme.inputBg} border ${theme.border}` 
+                : `min-h-[40px] border-0 border-b ${theme.border} ${theme.borderHover} p-2 bg-transparent`
             }`}
             rows={isFocused ? 6 : 1}
           />
@@ -77,7 +86,7 @@ const NoteInput = ({ onAddNote }) => {
             <div className="mt-4 flex items-center justify-end">
               <button
                 type="submit"
-                className={`px-3 py-1 text-xs font-light ${theme.text} border ${theme.border} rounded ${theme.buttonHover} transition-all duration-200`}
+                className={`px-3 py-1 text-xs typography-title ${theme.text} border ${theme.border} rounded transition-all duration-200 ${theme.buttonHover} hover:${theme.text.replace('text-', 'hover:text-')}`}
               >
                 save
               </button>
@@ -87,7 +96,7 @@ const NoteInput = ({ onAddNote }) => {
       </form>
       
       {!isFocused && (
-        <div className={`mt-2 text-xs ${theme.textTertiary} font-light`}>
+        <div className={`mt-2 text-xs ${theme.textSecondary} font-light typography-system`}>
           {settings.personalityEnabled ? 
             `Notes expire in ${settings.deleteTimer === '1h' ? '1 hour' : settings.deleteTimer === '6h' ? '6 hours' : '24 hours'}` : 
             `Notes expire in ${settings.deleteTimer === '1h' ? '1 hour' : settings.deleteTimer === '6h' ? '6 hours' : '24 hours'}`
