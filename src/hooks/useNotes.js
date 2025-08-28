@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
+import { DELETE_TIMERS } from '../contexts/SettingsContext';
 
 const NOTES_KEY = 'stream_notes';
 const SAVED_NOTES_KEY = 'stream_saved_notes';
 
-export const useNotes = () => {
+export const useNotes = (deleteTimer = '24h') => {
   const [notes, setNotes] = useState([]);
   const [savedNotes, setSavedNotes] = useState([]);
 
@@ -16,10 +17,14 @@ export const useNotes = () => {
       const parsedSavedNotes = storedSavedNotes ? JSON.parse(storedSavedNotes) : [];
       
       const now = Date.now();
-      const validNotes = parsedNotes.filter(note => {
-        const ageInHours = (now - note.createdAt) / (1000 * 60 * 60);
-        return ageInHours < 24;
-      });
+      const maxAgeHours = DELETE_TIMERS[deleteTimer]?.hours || 24;
+      
+      const validNotes = maxAgeHours === Infinity ? 
+        parsedNotes : 
+        parsedNotes.filter(note => {
+          const ageInHours = (now - note.createdAt) / (1000 * 60 * 60);
+          return ageInHours < maxAgeHours;
+        });
       
       if (validNotes.length !== parsedNotes.length) {
         localStorage.setItem(NOTES_KEY, JSON.stringify(validNotes));
@@ -32,7 +37,7 @@ export const useNotes = () => {
       setNotes([]);
       setSavedNotes([]);
     }
-  }, []);
+  }, [deleteTimer]);
 
   const saveNotes = useCallback((newNotes) => {
     try {
@@ -104,16 +109,18 @@ export const useNotes = () => {
       timeText = `${Math.floor(ageInHours)}h ago`;
     }
 
-    const isExpiringSoon = ageInHours > 20;
-    const hoursRemaining = Math.max(0, 24 - ageInHours);
+    const maxAgeHours = DELETE_TIMERS[deleteTimer]?.hours || 24;
+    const isExpiringSoon = maxAgeHours !== Infinity && ageInHours > (maxAgeHours * 0.8);
+    const hoursRemaining = maxAgeHours === Infinity ? Infinity : Math.max(0, maxAgeHours - ageInHours);
     
     return {
       timeText,
       isExpiringSoon,
-      hoursRemaining: Math.floor(hoursRemaining),
-      minutesRemaining: Math.floor((hoursRemaining % 1) * 60)
+      hoursRemaining: hoursRemaining === Infinity ? Infinity : Math.floor(hoursRemaining),
+      minutesRemaining: hoursRemaining === Infinity ? 0 : Math.floor((hoursRemaining % 1) * 60),
+      deleteTimer: DELETE_TIMERS[deleteTimer]?.name || '24 hours'
     };
-  }, []);
+  }, [deleteTimer]);
 
   useEffect(() => {
     loadNotes();

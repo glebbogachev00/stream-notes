@@ -1,16 +1,19 @@
 import React, { useState, useRef } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
+import { useSettings } from '../contexts/SettingsContext';
 
 const NoteInput = ({ onAddNote }) => {
   const [content, setContent] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const textareaRef = useRef(null);
   const { theme } = useTheme();
+  const { formatText } = useSettings();
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (content.trim()) {
-      onAddNote(content);
+      const formattedContent = formatText(content);
+      onAddNote(formattedContent);
       setContent('');
       textareaRef.current?.blur();
       setIsFocused(false);
