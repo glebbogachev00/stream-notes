@@ -36,7 +36,8 @@ function AppContent() {
       className={`min-h-screen ${theme.bg} transition-all duration-200`}
       style={{ 
         fontSize: `${settings.fontSize}px`,
-        '--base-font-size': `${settings.fontSize}px`
+        '--base-font-size': `${settings.fontSize}px`,
+        letterSpacing: `${settings.letterSpacing}px`
       }}
     >
       <div className="max-w-2xl mx-auto px-4 py-8 sm:py-12">

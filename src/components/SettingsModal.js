@@ -46,6 +46,26 @@ const SettingsModal = ({ isOpen, onClose }) => {
             <FontSizeControl isAlwaysEditing={true} />
           </CollapsibleSection>
 
+          <CollapsibleSection title="letter spacing">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => updateSettings({ letterSpacing: Math.max(-1, settings.letterSpacing - 0.5) })}
+                className={`dynamic-text-xs font-light ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} transition-colors`}
+              >
+                [-]
+              </button>
+              <span className={`dynamic-text-xs font-light ${theme.text}`}>
+                {settings.letterSpacing}px
+              </span>
+              <button
+                onClick={() => updateSettings({ letterSpacing: Math.min(5, settings.letterSpacing + 0.5) })}
+                className={`dynamic-text-xs font-light ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} transition-colors`}
+              >
+                [+]
+              </button>
+            </div>
+          </CollapsibleSection>
+
           <CollapsibleSection title="list style">
             <div className="space-y-2">
               {Object.entries(ORGANIZATION_STYLES).map(([key, style]) => (

@@ -28,14 +28,13 @@ export const ORGANIZATION_STYLES = {
 export const DELETE_TIMERS = {
   '1h': { name: '1 hour', hours: 1 },
   '6h': { name: '6 hours', hours: 6 },
-  '24h': { name: '24 hours', hours: 24 },
-  '3d': { name: '3 days', hours: 72 },
-  'never': { name: 'Never', hours: Infinity }
+  '24h': { name: '24 hours', hours: 24 }
 };
 
 const DEFAULT_SETTINGS = {
   theme: 'white',
   fontSize: 16,
+  letterSpacing: 0,
   organizationStyle: 'bullets',
   deleteTimer: '24h',
   onboardingCompleted: false
@@ -69,6 +68,7 @@ export const SettingsProvider = ({ children }) => {
       localStorage.setItem('stream-settings', JSON.stringify({
         theme: settings.theme,
         fontSize: settings.fontSize,
+        letterSpacing: settings.letterSpacing,
         organizationStyle: settings.organizationStyle,
         deleteTimer: settings.deleteTimer
       }));
