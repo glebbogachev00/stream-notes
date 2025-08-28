@@ -166,7 +166,7 @@ const NoteList = ({
                       e.target.closest('button')?.classList.remove('animate-pulse');
                     }, 600);
                   }}
-                  className={`flex items-center gap-1 px-3 py-1 text-xs typography-title ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} transition-all duration-200 micro-hover icon-hover active:scale-95`}
+                  className={`flex items-center gap-1 px-3 py-1 text-xs typography-title ${theme.textTertiary} hover:text-blue-500 transition-all duration-200 micro-hover icon-hover active:scale-95`}
                   title="Copy this note"
                 >
                   <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -182,7 +182,7 @@ const NoteList = ({
                       e.target.closest('button')?.classList.remove('animate-bounce');
                     }, 600);
                   }}
-                  className={`flex items-center gap-1 px-3 py-1 text-xs typography-title ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} transition-all duration-200 micro-hover icon-hover active:scale-95`}
+                  className={`flex items-center gap-1 px-3 py-1 text-xs typography-title ${theme.textTertiary} hover:text-green-500 transition-all duration-200 micro-hover icon-hover active:scale-95`}
                   title="Save this note permanently"
                 >
                   <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
