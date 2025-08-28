@@ -56,18 +56,23 @@ const FontSizeControl = () => {
   const handleIncrement = () => {
     const newSize = Math.min(MAX_FONT_SIZE, tempFontSize + 2);
     setTempFontSize(newSize);
+    // Apply immediately to settings for real-time preview
     updateSettings({ fontSize: newSize });
   };
 
   const handleDecrement = () => {
     const newSize = Math.max(MIN_FONT_SIZE, tempFontSize - 2);
     setTempFontSize(newSize);
+    // Apply immediately to settings for real-time preview
     updateSettings({ fontSize: newSize });
   };
 
   const handleInputChange = (e) => {
     const value = parseInt(e.target.value) || MIN_FONT_SIZE;
     setTempFontSize(value);
+    // Apply change immediately for real-time preview while typing
+    const clampedSize = Math.max(MIN_FONT_SIZE, Math.min(MAX_FONT_SIZE, value));
+    updateSettings({ fontSize: clampedSize });
   };
 
   if (isEditing) {
@@ -78,7 +83,7 @@ const FontSizeControl = () => {
       >
         <button
           onClick={handleDecrement}
-          className={`text-xs font-light ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} transition-colors`}
+          className={`dynamic-text-xs font-light ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} transition-colors`}
         >
           [-]
         </button>
@@ -90,11 +95,11 @@ const FontSizeControl = () => {
           onKeyDown={handleKeyDown}
           min={MIN_FONT_SIZE}
           max={MAX_FONT_SIZE}
-          className={`w-8 text-xs font-light text-center ${theme.text} bg-transparent border-0 outline-none`}
+          className={`w-8 dynamic-text-xs font-light text-center ${theme.text} bg-transparent border-0 outline-none`}
         />
         <button
           onClick={handleIncrement}
-          className={`text-xs font-light ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} transition-colors`}
+          className={`dynamic-text-xs font-light ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} transition-colors`}
         >
           [+]
         </button>
@@ -105,7 +110,7 @@ const FontSizeControl = () => {
   return (
     <button
       onClick={() => setIsEditing(true)}
-      className={`text-xs font-light ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} transition-colors`}
+      className={`dynamic-text-xs font-light ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} transition-colors`}
       title="Click to adjust font size"
     >
       [font: {settings.fontSize}px]

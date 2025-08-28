@@ -23,4 +23,19 @@ body {
   .transition-theme {
     transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
   }
+  .dynamic-text-base {
+    font-size: var(--base-font-size, 16px) !important;
+  }
+  .dynamic-text-sm {
+    font-size: calc(var(--base-font-size, 16px) * 0.875) !important;
+  }
+  .dynamic-text-xs {
+    font-size: calc(var(--base-font-size, 16px) * 0.75) !important;
+  }
+  .dynamic-text-lg {
+    font-size: calc(var(--base-font-size, 16px) * 1.125) !important;
+  }
+  .dynamic-text-xl {
+    font-size: calc(var(--base-font-size, 16px) * 1.25) !important;
+  }
 }

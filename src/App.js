@@ -33,18 +33,21 @@ function AppContent() {
   return (
     <div 
       className={`min-h-screen ${theme.bg} transition-all duration-200`}
-      style={{ fontSize: `${settings.fontSize}px` }}
+      style={{ 
+        fontSize: `${settings.fontSize}px`,
+        '--base-font-size': `${settings.fontSize}px`
+      }}
     >
       <div className="max-w-2xl mx-auto px-4 py-8 sm:py-12">
         <header className="flex items-start justify-between mb-12 sm:mb-16">
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <h1 className={`text-xl font-light ${theme.text} tracking-tight`}>
+              <h1 className={`dynamic-text-xl font-light ${theme.text} tracking-tight`}>
                 [stream]
               </h1>
               <FontSizeControl />
             </div>
-            <p className={`text-sm ${theme.textSecondary} font-light`}>
+            <p className={`dynamic-text-sm ${theme.textSecondary} font-light`}>
               self-managing notes
             </p>
           </div>
@@ -67,7 +70,7 @@ function AppContent() {
           <div className={`flex space-x-6 border-b ${theme.border} transition-all duration-200`}>
             <button
               onClick={() => setActiveTab('active')}
-              className={`pb-3 text-sm font-light transition-all duration-200 ${
+              className={`pb-3 dynamic-text-sm font-light transition-all duration-200 ${
                 activeTab === 'active'
                   ? `${theme.text} border-b ${theme.text.replace('text-', 'border-')}`
                   : `${theme.textTertiary} hover:${theme.textSecondary.replace('text-', 'hover:text-')}`
@@ -77,7 +80,7 @@ function AppContent() {
             </button>
             <button
               onClick={() => setActiveTab('saved')}
-              className={`pb-3 text-sm font-light transition-all duration-200 ${
+              className={`pb-3 dynamic-text-sm font-light transition-all duration-200 ${
                 activeTab === 'saved'
                   ? `${theme.text} border-b ${theme.text.replace('text-', 'border-')}`
                   : `${theme.textTertiary} hover:${theme.textSecondary.replace('text-', 'hover:text-')}`
