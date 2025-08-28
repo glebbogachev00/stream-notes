@@ -1,5 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
+import { getRandomMessage, EMPTY_STATE_MESSAGES } from '../utils/messages';
 
 const NoteList = ({ 
   notes, 
@@ -31,7 +32,7 @@ const NoteList = ({
     return (
       <div className="text-center py-16">
         <p className={`text-sm ${theme.textTertiary} font-light`}>
-          no notes yet
+          {getRandomMessage(EMPTY_STATE_MESSAGES)}
         </p>
       </div>
     );

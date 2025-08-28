@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNotes } from './hooks/useNotes';
+import { useToast } from './hooks/useToast';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import { SettingsProvider, useSettings } from './contexts/SettingsContext';
 import NoteInput from './components/NoteInput';
@@ -8,6 +9,7 @@ import SavedNotes from './components/SavedNotes';
 import ThemeToggle from './components/ThemeToggle';
 import Onboarding from './components/Onboarding';
 import SettingsModal from './components/SettingsModal';
+import Toast from './components/Toast';
 
 function AppContent() {
   const [activeTab, setActiveTab] = useState('active');
@@ -15,6 +17,7 @@ function AppContent() {
   const [editingNoteId, setEditingNoteId] = useState(null);
   const { theme } = useTheme();
   const { settings } = useSettings();
+  const { toasts, showToast, hideToast } = useToast();
   const {
     notes,
     savedNotes,
@@ -24,7 +27,7 @@ function AppContent() {
     deleteSavedNote,
     getTimeInfo,
     updateNoteContent
-  } = useNotes(settings.deleteTimer);
+  } = useNotes(settings.deleteTimer, showToast);
 
   // Show onboarding if not completed
   if (!settings.onboardingCompleted) {
@@ -122,6 +125,16 @@ function AppContent() {
         isOpen={isSettingsOpen} 
         onClose={() => setIsSettingsOpen(false)} 
       />
+      
+      {/* Toast notifications */}
+      {toasts.map((toast) => (
+        <Toast
+          key={toast.id}
+          message={toast.message}
+          onClose={() => hideToast(toast.id)}
+          duration={toast.duration}
+        />
+      ))}
     </div>
   );
 }

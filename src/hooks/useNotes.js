@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { DELETE_TIMERS } from '../contexts/SettingsContext';
+import { getRandomMessage, AUTO_DELETE_MESSAGES, SAVE_NOTE_MESSAGES } from '../utils/messages';
 
 const NOTES_KEY = 'stream_notes';
 const SAVED_NOTES_KEY = 'stream_saved_notes';
 
-export const useNotes = (deleteTimer = '24h') => {
+export const useNotes = (deleteTimer = '24h', onToast = null) => {
   const [notes, setNotes] = useState([]);
   const [savedNotes, setSavedNotes] = useState([]);
 
@@ -28,6 +29,10 @@ export const useNotes = (deleteTimer = '24h') => {
       
       if (validNotes.length !== parsedNotes.length) {
         localStorage.setItem(NOTES_KEY, JSON.stringify(validNotes));
+        // Show auto-delete toast if notes were removed
+        if (onToast && parsedNotes.length - validNotes.length > 0) {
+          onToast(getRandomMessage(AUTO_DELETE_MESSAGES));
+        }
       }
       
       setNotes(validNotes);
@@ -37,7 +42,7 @@ export const useNotes = (deleteTimer = '24h') => {
       setNotes([]);
       setSavedNotes([]);
     }
-  }, [deleteTimer]);
+  }, [deleteTimer, onToast]);
 
   const saveNotes = useCallback((newNotes) => {
     try {
@@ -94,7 +99,12 @@ export const useNotes = (deleteTimer = '24h') => {
     
     saveNotes(updatedNotes);
     saveSavedNotes(updatedSavedNotes);
-  }, [notes, savedNotes, saveNotes, saveSavedNotes]);
+    
+    // Show save toast
+    if (onToast) {
+      onToast(getRandomMessage(SAVE_NOTE_MESSAGES));
+    }
+  }, [notes, savedNotes, saveNotes, saveSavedNotes, onToast]);
 
   const deleteSavedNote = useCallback((id) => {
     const updatedSavedNotes = savedNotes.filter(note => note.id !== id);

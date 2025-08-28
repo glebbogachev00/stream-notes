@@ -47,4 +47,19 @@ body {
   .dynamic-text-xl {
     font-size: calc(var(--base-font-size, 16px) * 1.25) !important;
   }
+  
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+  }
+  
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px) translateX(-50%);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) translateX(-50%);
+    }
+  }
 }

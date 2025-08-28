@@ -1,13 +1,25 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useSettings } from '../contexts/SettingsContext';
+import { getRotatingMessage, INPUT_PLACEHOLDER_MESSAGES } from '../utils/messages';
 
 const NoteInput = ({ onAddNote }) => {
   const [content, setContent] = useState('');
   const [isFocused, setIsFocused] = useState(false);
+  const [placeholder, setPlaceholder] = useState(getRotatingMessage(INPUT_PLACEHOLDER_MESSAGES));
   const textareaRef = useRef(null);
   const { theme } = useTheme();
-  const { formatText } = useSettings();
+  const { formatText, settings } = useSettings();
+
+  // Rotate placeholder every few seconds when not focused
+  useEffect(() => {
+    if (!isFocused) {
+      const interval = setInterval(() => {
+        setPlaceholder(getRotatingMessage(INPUT_PLACEHOLDER_MESSAGES));
+      }, 3000);
+      return () => clearInterval(interval);
+    }
+  }, [isFocused]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -45,7 +57,7 @@ const NoteInput = ({ onAddNote }) => {
             onKeyDown={handleKeyDown}
             onFocus={handleFocus}
             onBlur={handleBlur}
-            placeholder={isFocused ? "write..." : "new note"}
+            placeholder={isFocused ? "write..." : placeholder}
             className={`w-full p-0 text-base font-light resize-none border-0 focus:outline-none focus:ring-0 ${theme.inputBg} transition-all duration-200 ${theme.text} placeholder:${theme.textTertiary} ${
               isFocused 
                 ? 'min-h-[120px]' 
@@ -69,7 +81,7 @@ const NoteInput = ({ onAddNote }) => {
       
       {!isFocused && (
         <div className={`mt-2 text-xs ${theme.textTertiary} font-light`}>
-          notes expire in 24 hours
+          notes expire in {settings.deleteTimer === '1h' ? '1 hour' : settings.deleteTimer === '6h' ? '6 hours' : '24 hours'}
         </div>
       )}
     </section>
