@@ -24,21 +24,6 @@ const NoteInput = ({ onAddNote }) => {
     // No-op
   };
 
-  const handleNewLine = () => {
-    const textarea = textareaRef.current;
-    if (textarea) {
-      const start = textarea.selectionStart;
-      const end = textarea.selectionEnd;
-      const newContent = content.substring(0, start) + '\n' + content.substring(end);
-      setContent(newContent);
-      textarea.focus();
-      // Set cursor position after the new line
-      setTimeout(() => {
-        textarea.selectionStart = textarea.selectionEnd = start + 1;
-      }, 0);
-    }
-  };
-
   const handleFocus = () => {
     setIsFocused(true);
   };
