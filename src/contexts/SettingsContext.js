@@ -105,13 +105,22 @@ export const SettingsProvider = ({ children }) => {
   const shouldOrganizeText = (text) => {
     const lines = text.split('\n').map(line => line.trim()).filter(Boolean);
     
+    // Check if text is already formatted with bullets, numbers, or dashes
+    const alreadyFormatted = lines.some(line => 
+      /^(\d+\.|[•\-*]\s|[•\-*]$)/.test(line.trim())
+    );
+    
+    if (alreadyFormatted) {
+      return false; // Don't format if already formatted
+    }
+    
     // Single line - organize if it contains multiple short sentences or tasks
     if (lines.length === 1) {
       const line = lines[0];
       const sentences = line.split(/[.!?]/).map(s => s.trim()).filter(Boolean);
       
-      // Check if it looks like a task list (contains numbers/bullets already)
-      if (/^\d+\.|^[•\-*]|\btask\b|\btodo\b/i.test(line)) {
+      // Check if it looks like a task list (contains task keywords)
+      if (/\btask\b|\btodo\b/i.test(line)) {
         return true;
       }
       
@@ -133,31 +142,38 @@ export const SettingsProvider = ({ children }) => {
   };
 
   const formatText = (text) => {
-    if (!shouldOrganizeText(text)) {
+    const lines = text.split('\n').map(line => line.trim()).filter(Boolean);
+    const style = ORGANIZATION_STYLES[settings.organizationStyle];
+    
+    // Separate formatted and unformatted lines
+    const formattedLines = [];
+    const unformattedLines = [];
+    
+    lines.forEach(line => {
+      if (/^(\d+\.|[•\-*]\s)/.test(line)) {
+        formattedLines.push(line); // Already formatted
+      } else if (line.trim() !== '') {
+        unformattedLines.push(line); // Needs formatting
+      }
+    });
+    
+    // If no unformatted lines, return as-is
+    if (unformattedLines.length === 0) {
       return text;
     }
-
-    const style = ORGANIZATION_STYLES[settings.organizationStyle];
-    const lines = text.split('\n').map(line => line.trim()).filter(Boolean);
     
-    // Single line with multiple sentences - split by sentence endings
-    if (lines.length === 1) {
-      const line = lines[0];
-      let items = [];
+    // Check if unformatted content should be organized
+    if (shouldOrganizeText(unformattedLines.join('\n'))) {
+      // Format only the unformatted lines
+      const newlyFormatted = style.format(unformattedLines);
       
-      // If already formatted, extract the content
-      if (/^\d+\.|\b[•\-*]\b/.test(line)) {
-        items = line.split(/\d+\.|[•\-*]/).map(s => s.trim()).filter(Boolean);
-      } else {
-        // Split by sentence endings but keep meaningful content
-        items = line.split(/[.!?]/).map(s => s.trim()).filter(Boolean);
-      }
-      
-      return style.format(items);
+      // Combine: keep existing formatted lines + newly formatted lines
+      const allLines = [...formattedLines, ...newlyFormatted.split('\n')];
+      return allLines.join('\n');
     }
     
-    // Multiple lines - format each line as an item
-    return style.format(lines);
+    // If shouldn't be organized, return original text
+    return text;
   };
 
   return (
