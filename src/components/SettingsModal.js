@@ -25,36 +25,36 @@ const SettingsModal = ({ isOpen, onClose }) => {
 
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-20 flex items-center justify-center p-4 z-50"
+      className="fixed inset-0 bg-black bg-opacity-20 flex items-start justify-center p-4 z-50 pt-12 sm:pt-20"
       onClick={handleOverlayClick}
     >
-      <div className={`${theme.bg} max-w-sm w-full p-6`}>
-        <div className="flex items-center justify-between mb-8">
-          <h2 className={`text-lg font-light ${theme.text}`}>settings</h2>
+      <div className={`${theme.bg} max-w-sm w-full p-4 sm:p-6 max-h-[80vh] sm:max-h-[70vh] overflow-y-auto`}>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className={`dynamic-text-lg font-light ${theme.text}`}>settings</h2>
           <button
             onClick={onClose}
-            className={`text-xs font-light ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} transition-colors`}
+            className={`dynamic-text-xs font-light ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} transition-colors`}
           >
             close
           </button>
         </div>
 
-        <div className="space-y-8">
+        <div className="space-y-6">
           <div>
-            <h3 className={`text-sm font-light ${theme.text} mb-4`}>font size</h3>
+            <h3 className={`dynamic-text-sm font-light ${theme.text} mb-3`}>font size</h3>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => updateSettings({ fontSize: Math.max(12, settings.fontSize - 2) })}
-                className={`text-xs font-light ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} transition-colors`}
+                className={`dynamic-text-xs font-light ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} transition-colors`}
               >
                 [-]
               </button>
-              <span className={`text-xs font-light ${theme.text} min-w-[3rem] text-center`}>
+              <span className={`dynamic-text-xs font-light ${theme.text} min-w-[3rem] text-center`}>
                 {settings.fontSize}px
               </span>
               <button
                 onClick={() => updateSettings({ fontSize: Math.min(24, settings.fontSize + 2) })}
-                className={`text-xs font-light ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} transition-colors`}
+                className={`dynamic-text-xs font-light ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} transition-colors`}
               >
                 [+]
               </button>
@@ -62,8 +62,8 @@ const SettingsModal = ({ isOpen, onClose }) => {
           </div>
 
           <div>
-            <h3 className={`text-sm font-light ${theme.text} mb-4`}>list style</h3>
-            <div className="space-y-3">
+            <h3 className={`dynamic-text-sm font-light ${theme.text} mb-3`}>list style</h3>
+            <div className="space-y-2">
               {Object.entries(ORGANIZATION_STYLES).map(([key, style]) => (
                 <button
                   key={key}
@@ -72,10 +72,10 @@ const SettingsModal = ({ isOpen, onClose }) => {
                     settings.organizationStyle === key ? theme.text : theme.textTertiary
                   } hover:${theme.text.replace('text-', 'hover:text-')}`}
                 >
-                  <div className="text-xs font-light mb-1">
+                  <div className="dynamic-text-xs font-light mb-1">
                     {style.name.toLowerCase()}
                   </div>
-                  <div className={`text-xs ${theme.textTertiary} font-mono whitespace-pre-line leading-relaxed`}>
+                  <div className={`dynamic-text-xs ${theme.textTertiary} font-mono whitespace-pre-line leading-tight`}>
                     {style.example}
                   </div>
                 </button>
@@ -84,13 +84,13 @@ const SettingsModal = ({ isOpen, onClose }) => {
           </div>
 
           <div>
-            <h3 className={`text-sm font-light ${theme.text} mb-4`}>auto-delete</h3>
-            <div className="space-y-2">
+            <h3 className={`dynamic-text-sm font-light ${theme.text} mb-3`}>auto-delete</h3>
+            <div className="space-y-1">
               {Object.entries(DELETE_TIMERS).map(([key, timer]) => (
                 <button
                   key={key}
                   onClick={() => updateSettings({ deleteTimer: key })}
-                  className={`w-full text-left text-xs font-light transition-all duration-200 ${
+                  className={`w-full text-left dynamic-text-xs font-light transition-all duration-200 py-1 ${
                     settings.deleteTimer === key ? theme.text : theme.textTertiary
                   } hover:${theme.text.replace('text-', 'hover:text-')}`}
                 >
@@ -101,10 +101,10 @@ const SettingsModal = ({ isOpen, onClose }) => {
           </div>
         </div>
 
-        <div className={`mt-8 pt-6 border-t ${theme.borderSecondary}`}>
+        <div className={`mt-6 pt-4 border-t ${theme.borderSecondary}`}>
           <button
             onClick={handleReset}
-            className={`text-xs font-light ${theme.textTertiary} hover:text-red-500 transition-colors`}
+            className={`dynamic-text-xs font-light ${theme.textTertiary} hover:text-red-500 transition-colors`}
           >
             reset preferences
           </button>
