@@ -176,7 +176,7 @@ function AppContent() {
               savedNotes={savedNotes}
               onDeleteNote={deleteSavedNote}
               onUpdateNote={updateSavedNoteContent}
-              onTransformToArt={transformToArt}
+              onTransformToSAMO={transformToArt}
               getTimeInfo={getTimeInfo}
             />
           )}
