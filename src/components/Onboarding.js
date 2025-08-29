@@ -8,7 +8,7 @@ const Onboarding = () => {
   const [currentStep, setCurrentStep] = useState(-1); // Start with welcome screen
   const [selections, setSelections] = useState({
     theme: 'white',
-    fontSize: 16,
+    fontSize: 'base',
     organizationStyle: 'bullets',
     deleteTimer: '24h'
   });
@@ -17,6 +17,10 @@ const Onboarding = () => {
     {
       title: settings.personalityEnabled ? "First things first - what colors make your brain happy?" : "Theme Selection",
       subtitle: settings.personalityEnabled ? "I'm pretty flexible, but these are my favorites:" : "Choose your preferred application theme."
+    },
+    {
+      title: settings.personalityEnabled ? "How big should the text be?" : "Font Size",
+      subtitle: settings.personalityEnabled ? "You can always change this later in the settings." : "Select your preferred font size."
     },
     {
       title: settings.personalityEnabled ? "Now, when your thoughts come rapid-fire, how should I catch them?" : "Note Organization Style",
@@ -119,6 +123,33 @@ const Onboarding = () => {
   );
 
   const renderStep2 = () => (
+    <div className="space-y-3">
+      {Object.entries({
+        sm: "small",
+        base: "medium",
+        lg: "large",
+      }).map(([key, value]) => (
+        <button
+          key={key}
+          onClick={() => setSelections({ ...selections, fontSize: key })}
+          className={`w-full text-left p-4 rounded-lg border-2 transition-all duration-200 ${
+            selections.fontSize === key
+              ? `border-blue-500 bg-blue-50 ${theme.text} shadow-md`
+              : `${theme.borderSecondary} ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} hover:bg-gray-50`
+          }`}
+        >
+          <div className="text-base font-medium">
+            {value}
+            {selections.fontSize === key && (
+              <span className="text-xs text-blue-600 ml-2">✓</span>
+            )}
+          </div>
+        </button>
+      ))}
+    </div>
+  );
+
+  const renderStep3 = () => (
     <div className="space-y-4">
       {Object.entries(ORGANIZATION_STYLES).map(([key, style]) => (
         <button
@@ -144,7 +175,7 @@ const Onboarding = () => {
     </div>
   );
 
-  const renderStep3 = () => (
+  const renderStep4 = () => (
     <div className="space-y-3">
       {Object.entries(DELETE_TIMERS).map(([key, timer]) => (
         <button
@@ -167,7 +198,7 @@ const Onboarding = () => {
     </div>
   );
 
-  const renderStep4 = () => {
+  const renderStep5 = () => {
     const sampleText = "Buy groceries\nCall mom\nFinish project";
     const formattedSample = ORGANIZATION_STYLES[selections.organizationStyle].format(
       sampleText.split('\n')
@@ -196,9 +227,7 @@ const Onboarding = () => {
 
   return (
     <div 
-      className={`min-h-screen ${theme.bg} flex items-center justify-center p-4`}
-      style={{ fontSize: `${selections.fontSize}px` }}
-    >
+      className={`min-h-screen ${theme.bg} flex items-center justify-center p-4 text-${selections.fontSize}`}>
       <div className="max-w-sm w-full">
         {renderProgressBar()}
         
@@ -222,6 +251,7 @@ const Onboarding = () => {
               {currentStep === 1 && renderStep2()}
               {currentStep === 2 && renderStep3()}
               {currentStep === 3 && renderStep4()}
+              {currentStep === 4 && renderStep5()}
             </div>
           </>
         )}

@@ -72,10 +72,8 @@ function AppContent() {
 
   return (
     <div 
-      className={`min-h-screen ${theme.bg} transition-all duration-200`}
+      className={`min-h-screen ${theme.bg} transition-all duration-200 text-${settings.fontSize}`}
       style={{ 
-        fontSize: `${settings.fontSize}px`,
-        '--base-font-size': `${settings.fontSize}px`,
         letterSpacing: `${settings.letterSpacing}px`
       }}
     >

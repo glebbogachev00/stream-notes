@@ -7,16 +7,9 @@ const FontSizeControl = ({ isAlwaysEditing = false }) => {
   const { settings, updateSettings } = useSettings();
 
   const FONT_SIZES = {
-    S: 16,
-    M: 18,
-    L: 20
-  };
-
-  const getCurrentSize = () => {
-    const currentSize = settings.fontSize;
-    if (currentSize <= 16) return 'S';
-    if (currentSize <= 18) return 'M';
-    return 'L';
+    s: "sm",
+    m: "base",
+    l: "lg",
   };
 
   const handleSizeChange = (size) => {
@@ -30,7 +23,7 @@ const FontSizeControl = ({ isAlwaysEditing = false }) => {
           key={size}
           onClick={() => handleSizeChange(size)}
           className={`px-2 py-1 dynamic-text-xs font-light transition-colors border-b ${
-            getCurrentSize() === size
+            settings.fontSize === FONT_SIZES[size]
               ? `${theme.text} ${theme.border}`
               : `${theme.textTertiary} border-transparent hover:${theme.text.replace('text-', 'hover:text-')}`
           }`}
