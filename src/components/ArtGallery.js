@@ -23,45 +23,58 @@ const ArtGallery = ({ artNotes, onDeleteNote }) => {
   const renderArtContent = (note) => {
     const styles = getArtStyleClasses(note.artStyle);
     const baseFontSize = 1.5;
-    
-    // Split content into words
-    const words = note.content.toUpperCase().split(' ');
     const isStencil = note.artStyle === 'stencil';
     
     return (
-      <div className={`${styles.container} min-h-48 shadow-xl relative overflow-hidden flex flex-col justify-center items-start`}>
-        <div className={styles.words}>
-          {words.map((word, index) => (
-            <div
-              key={index}
-              className="block"
-              style={isStencil ? {} : {
-                transform: `rotate(${(Math.random() - 0.5) * 4}deg)`,
-                marginLeft: `${Math.random() * 20}px`,
-                marginTop: `${Math.random() * 8 - 4}px`
-              }}
-            >
-              {word.split('').map((letter, letterIndex) => (
-                <span
-                  key={letterIndex}
-                  className={`${styles.text} inline-block`}
-                  style={isStencil ? {
+      <div className={`${styles.container} min-h-48 shadow-xl relative overflow-hidden flex flex-col justify-center items-center text-center`}>
+        <div className={`${styles.words} w-full`}>
+          {isStencil ? (
+            // Stencil mode - clean, centered lines
+            <div className="space-y-3">
+              {note.content.split('\n').filter(line => line.trim()).map((line, lineIndex) => (
+                <div key={lineIndex} className="block">
+                  <span className={`${styles.text} inline-block`} style={{
                     fontSize: `${baseFontSize}rem`,
                     letterSpacing: '3px',
                     fontWeight: '900'
-                  } : {
-                    fontSize: `${baseFontSize + (Math.random() - 0.5) * 0.4}rem`,
-                    transform: `rotate(${(Math.random() - 0.5) * 8}deg) scaleY(${0.9 + Math.random() * 0.2})`,
-                    letterSpacing: `${(Math.random() - 0.5) * 2}px`,
-                    textShadow: '1px 1px 2px rgba(255,255,255,0.1)',
-                    filter: 'drop-shadow(0 0 1px white)'
-                  }}
-                >
-                  {letter}
-                </span>
+                  }}>
+                    {line.toUpperCase()}
+                  </span>
+                </div>
               ))}
             </div>
-          ))}
+          ) : (
+            // SAMO mode - rough, organic but centered
+            <div className="space-y-2">
+              {note.content.split(' ').reduce((lines, word, index) => {
+                if (index % 3 === 0) lines.push([]);
+                lines[lines.length - 1].push(word);
+                return lines;
+              }, []).map((lineWords, lineIndex) => (
+                <div key={lineIndex} className="block">
+                  {lineWords.map((word, wordIndex) => (
+                    <span key={wordIndex} className="inline-block mr-2">
+                      {word.split('').map((letter, letterIndex) => (
+                        <span
+                          key={letterIndex}
+                          className={`${styles.text} inline-block`}
+                          style={{
+                            fontSize: `${baseFontSize + (Math.random() - 0.5) * 0.4}rem`,
+                            transform: `rotate(${(Math.random() - 0.5) * 8}deg) scaleY(${0.9 + Math.random() * 0.2})`,
+                            letterSpacing: `${(Math.random() - 0.5) * 2}px`,
+                            textShadow: '1px 1px 2px rgba(255,255,255,0.1)',
+                            filter: 'drop-shadow(0 0 1px white)'
+                          }}
+                        >
+                          {letter}
+                        </span>
+                      ))}
+                    </span>
+                  ))}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
         
         <div className="absolute bottom-2 right-2 text-xs opacity-40 font-mono">
@@ -70,7 +83,6 @@ const ArtGallery = ({ artNotes, onDeleteNote }) => {
       </div>
     );
   };
-
 
   if (artNotes.length === 0) {
     return (
@@ -120,7 +132,7 @@ const ArtGallery = ({ artNotes, onDeleteNote }) => {
 
   return (
     <>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid gap-6 sm:grid-cols-2">
         {artNotes.map((note) => (
           <article
             key={note.id}
@@ -128,21 +140,20 @@ const ArtGallery = ({ artNotes, onDeleteNote }) => {
           >
             {renderArtContent(note)}
             
-            <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
               <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDeleteNote(note.id);
-                }}
-                className={`px-2 py-1 text-xs ${theme.bg} ${theme.text} rounded shadow hover:opacity-80 transition-opacity`}
+                onClick={() => onDeleteNote(note.id)}
+                className={`p-1 rounded ${theme.textTertiary} hover:text-red-500 transition-colors`}
+                title="Delete art piece"
               >
-                delete
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
               </button>
             </div>
           </article>
         ))}
       </div>
-
     </>
   );
 };

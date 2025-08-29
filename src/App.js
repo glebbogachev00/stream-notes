@@ -11,13 +11,12 @@ import Onboarding from './components/Onboarding';
 import SettingsModal from './components/SettingsModal';
 import ArtGallery from './components/ArtGallery';
 import StyleSelector from './components/StyleSelector';
+import QuoteCollection from './components/QuoteCollection';
 import Toast from './components/Toast';
-import QuoteGenerator from './components/QuoteGenerator';
 
 function AppContent() {
   const [activeTab, setActiveTab] = useState('active');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [isQuoteGeneratorOpen, setIsQuoteGeneratorOpen] = useState(false);
   const [editingNoteId, setEditingNoteId] = useState(null);
   const [logoStyle, setLogoStyle] = useState(() => {
     return localStorage.getItem('stream-logo-style') || 'originalText';
@@ -168,18 +167,16 @@ function AppContent() {
                 </svg>
               </button>
             )}
-            {settings.stealThisQuoteEnabled && (
             <button
-              onClick={() => setIsQuoteGeneratorOpen(true)}
-              className={`pb-3 dynamic-text-sm font-light transition-all duration-200 border-b flex items-center gap-2 ${
-                activeTab === 'steal-this-quote'
+              onClick={() => setActiveTab('quotes')}
+              className={`pb-3 dynamic-text-sm font-light transition-all duration-200 border-b ${
+                activeTab === 'quotes'
                   ? `${theme.text} ${theme.text.replace('text-', 'border-')}`
                   : `${theme.textTertiary} hover:${theme.textSecondary.replace('text-', 'hover:text-')} border-transparent`
               }`}
             >
-              steal this quote (◎)
+              steal this quote
             </button>
-            )}
           </div>
         </nav>
 
@@ -217,6 +214,10 @@ function AppContent() {
               onUpdateNote={updateArtNoteContent}
             />
           )}
+
+          {activeTab === 'quotes' && (
+            <QuoteCollection />
+          )}
         </main>
       </div>
       
@@ -225,10 +226,6 @@ function AppContent() {
         onClose={() => setIsSettingsOpen(false)} 
       />
 
-      <QuoteGenerator 
-        isOpen={isQuoteGeneratorOpen} 
-        onClose={() => setIsQuoteGeneratorOpen(false)} 
-      />
       
       <StyleSelector
         isOpen={styleSelectorOpen}

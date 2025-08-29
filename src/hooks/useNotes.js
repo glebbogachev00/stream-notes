@@ -140,18 +140,15 @@ export const useNotes = (deleteTimer = '24h', onToast = null, personalityEnabled
 
     const artNote = {
       ...sourceNote,
+      id: `${sourceNote.id}-art-${Date.now()}`, // Create unique ID for art piece
       artStyle: artStyle,
       transformedAt: Date.now(),
     };
 
     const updatedArtNotes = [artNote, ...artNotes];
-    const updatedSourceNotes = sourceNotes.filter(note => note.id !== id);
     
     saveArtNotes(updatedArtNotes);
-    if (fromSaved) {
-      saveSavedNotes(updatedSourceNotes);
-    } else {
-      saveNotes(updatedSourceNotes);
+    // Keep original note in source collection
     }
     
     if (onToast) {
