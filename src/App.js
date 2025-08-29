@@ -9,23 +9,29 @@ import SavedNotes from './components/SavedNotes';
 import ThemeToggle from './components/ThemeToggle';
 import Onboarding from './components/Onboarding';
 import SettingsModal from './components/SettingsModal';
+import ArtGallery from './components/ArtGallery';
 import Toast from './components/Toast';
 
 function AppContent() {
   const [activeTab, setActiveTab] = useState('active');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [editingNoteId, setEditingNoteId] = useState(null);
+  const [showLogo, setShowLogo] = useState(true);
   const { theme } = useTheme();
   const { settings } = useSettings();
   const { toasts, showToast, hideToast } = useToast();
   const {
     notes,
     savedNotes,
+    artNotes,
     addNote,
     deleteNote,
     saveNote,
     deleteSavedNote,
     updateSavedNoteContent,
+    transformToArt,
+    deleteArtNote,
+    updateArtNoteContent,
     getTimeInfo,
     updateNoteContent
   } = useNotes(settings.deleteTimer, showToast, settings.personalityEnabled);
@@ -47,10 +53,23 @@ function AppContent() {
       <div className="max-w-2xl mx-auto px-4 py-8 sm:py-12">
         <header className="flex items-start justify-between mb-12 sm:mb-16">
           <div>
-            <div className="flex items-center gap-3 mb-2">
-              <h1 className={`dynamic-text-xl font-light ${theme.text} tracking-tight`}>
-                [stream]
-              </h1>
+            <div 
+              className="flex items-center mb-2 cursor-pointer"
+              onClick={() => setShowLogo(!showLogo)}
+            >
+              {showLogo ? (
+                <svg 
+                  className={`w-5 h-7 ${theme.text} transition-all duration-300`}
+                  fill="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M12 2c-4 0-8 6-8 10 0 4.4 3.6 8 8 8s8-3.6 8-8c0-4-4-10-8-10z"/>
+                </svg>
+              ) : (
+                <h1 className={`dynamic-text-xl font-light ${theme.text} tracking-tight transition-all duration-300`}>
+                  [stream]
+                </h1>
+              )}
             </div>
             <p className={`dynamic-text-sm ${theme.textSecondary} font-light`}>
               self-managing notes
@@ -93,6 +112,16 @@ function AppContent() {
             >
               saved ({savedNotes.length})
             </button>
+            <button
+              onClick={() => setActiveTab('art')}
+              className={`pb-3 dynamic-text-sm font-light transition-all duration-200 border-b ${
+                activeTab === 'art'
+                  ? `${theme.text} ${theme.text.replace('text-', 'border-')}`
+                  : `${theme.textTertiary} hover:${theme.textSecondary.replace('text-', 'hover:text-')} border-transparent`
+              }`}
+            >
+              art ({artNotes.length})
+            </button>
           </div>
         </nav>
 
@@ -104,6 +133,7 @@ function AppContent() {
                 notes={notes}
                 onDeleteNote={deleteNote}
                 onSaveNote={saveNote}
+                onTransformToArt={transformToArt}
                 getTimeInfo={getTimeInfo}
                 editingNoteId={editingNoteId}
                 onSetEditingNoteId={setEditingNoteId}
@@ -117,7 +147,16 @@ function AppContent() {
               savedNotes={savedNotes}
               onDeleteNote={deleteSavedNote}
               onUpdateNote={updateSavedNoteContent}
+              onTransformToArt={transformToArt}
               getTimeInfo={getTimeInfo}
+            />
+          )}
+
+          {activeTab === 'art' && (
+            <ArtGallery
+              artNotes={artNotes}
+              onDeleteNote={deleteArtNote}
+              onUpdateNote={updateArtNoteContent}
             />
           )}
         </main>

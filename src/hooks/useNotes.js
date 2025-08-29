@@ -4,18 +4,22 @@ import { getRandomMessage, AUTO_DELETE_MESSAGES, SAVE_NOTE_MESSAGES } from '../u
 
 const NOTES_KEY = 'stream_notes';
 const SAVED_NOTES_KEY = 'stream_saved_notes';
+const ART_NOTES_KEY = 'stream_art_notes';
 
 export const useNotes = (deleteTimer = '24h', onToast = null, personalityEnabled = true) => {
   const [notes, setNotes] = useState([]);
   const [savedNotes, setSavedNotes] = useState([]);
+  const [artNotes, setArtNotes] = useState([]);
 
   const loadNotes = useCallback(() => {
     try {
       const storedNotes = localStorage.getItem(NOTES_KEY);
       const storedSavedNotes = localStorage.getItem(SAVED_NOTES_KEY);
+      const storedArtNotes = localStorage.getItem(ART_NOTES_KEY);
       
       const parsedNotes = storedNotes ? JSON.parse(storedNotes) : [];
       const parsedSavedNotes = storedSavedNotes ? JSON.parse(storedSavedNotes) : [];
+      const parsedArtNotes = storedArtNotes ? JSON.parse(storedArtNotes) : [];
       
       const now = Date.now();
       const maxAgeHours = DELETE_TIMERS[deleteTimer]?.hours || 24;
@@ -37,10 +41,12 @@ export const useNotes = (deleteTimer = '24h', onToast = null, personalityEnabled
       
       setNotes(validNotes);
       setSavedNotes(parsedSavedNotes);
+      setArtNotes(parsedArtNotes);
     } catch (error) {
       console.error('Error loading notes:', error);
       setNotes([]);
       setSavedNotes([]);
+      setArtNotes([]);
     }
   }, [deleteTimer, onToast, personalityEnabled]);
 
@@ -59,6 +65,15 @@ export const useNotes = (deleteTimer = '24h', onToast = null, personalityEnabled
       setSavedNotes(newSavedNotes);
     } catch (error) {
       console.error('Error saving saved notes:', error);
+    }
+  }, []);
+
+  const saveArtNotes = useCallback((newArtNotes) => {
+    try {
+      localStorage.setItem(ART_NOTES_KEY, JSON.stringify(newArtNotes));
+      setArtNotes(newArtNotes);
+    } catch (error) {
+      console.error('Error saving art notes:', error);
     }
   }, []);
 
@@ -118,6 +133,46 @@ export const useNotes = (deleteTimer = '24h', onToast = null, personalityEnabled
     saveSavedNotes(updatedSavedNotes);
   }, [savedNotes, saveSavedNotes]);
 
+  const transformToArt = useCallback((id, fromSaved = false) => {
+    const sourceNotes = fromSaved ? savedNotes : notes;
+    const sourceNote = sourceNotes.find(note => note.id === id);
+    if (!sourceNote) return;
+
+    const randomStyle = 'samo';
+
+    const artNote = {
+      ...sourceNote,
+      artStyle: randomStyle,
+      transformedAt: Date.now(),
+    };
+
+    const updatedArtNotes = [artNote, ...artNotes];
+    const updatedSourceNotes = sourceNotes.filter(note => note.id !== id);
+    
+    saveArtNotes(updatedArtNotes);
+    if (fromSaved) {
+      saveSavedNotes(updatedSourceNotes);
+    } else {
+      saveNotes(updatedSourceNotes);
+    }
+    
+    if (onToast) {
+      onToast("Note transformed into art!");
+    }
+  }, [notes, savedNotes, artNotes, saveNotes, saveSavedNotes, saveArtNotes, onToast]);
+
+  const deleteArtNote = useCallback((id) => {
+    const updatedArtNotes = artNotes.filter(note => note.id !== id);
+    saveArtNotes(updatedArtNotes);
+  }, [artNotes, saveArtNotes]);
+
+  const updateArtNoteContent = useCallback((id, newContent) => {
+    const updatedArtNotes = artNotes.map(note => 
+      note.id === id ? { ...note, content: newContent } : note
+    );
+    saveArtNotes(updatedArtNotes);
+  }, [artNotes, saveArtNotes]);
+
   const getTimeInfo = useCallback((createdAt) => {
     const now = Date.now();
     const ageInMs = now - createdAt;
@@ -158,11 +213,15 @@ export const useNotes = (deleteTimer = '24h', onToast = null, personalityEnabled
   return {
     notes,
     savedNotes,
+    artNotes,
     addNote,
     deleteNote,
     saveNote,
     deleteSavedNote,
     updateSavedNoteContent,
+    transformToArt,
+    deleteArtNote,
+    updateArtNoteContent,
     getTimeInfo,
     updateNoteContent,
     refreshNotes: loadNotes

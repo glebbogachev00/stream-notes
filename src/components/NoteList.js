@@ -7,6 +7,7 @@ const NoteList = ({
   notes, 
   onDeleteNote, 
   onSaveNote, 
+  onTransformToArt,
   getTimeInfo, 
   editingNoteId, 
   onSetEditingNoteId, 
@@ -17,7 +18,6 @@ const NoteList = ({
   const editingTextareaRef = useRef(null);
   const [expandedNotes, setExpandedNotes] = useState(new Set());
   const [openMenuId, setOpenMenuId] = useState(null);
-  const [fullscreenNoteId, setFullscreenNoteId] = useState(null);
 
   useEffect(() => {
     if (editingNoteId && editingTextareaRef.current) {
@@ -95,11 +95,9 @@ const NoteList = ({
     );
   }
 
-  const fullscreenNote = notes.find(note => note.id === fullscreenNoteId);
 
   return (
-    <>
-      <div className="space-y-6">
+    <div className="space-y-6">
         {notes.map((note) => {
           const timeInfo = getTimeInfo(note.createdAt);
           
@@ -165,15 +163,6 @@ const NoteList = ({
                           </svg>
                           {expandedNotes.has(note.id) ? 'Show less' : 'Show more'}
                         </button>
-                        <button
-                          onClick={() => setFullscreenNoteId(note.id)}
-                          className={`flex items-center gap-1 text-xs ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} transition-colors mb-2 font-light`}
-                        >
-                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-                          </svg>
-                          Fullscreen
-                        </button>
                       </div>
                     )}
                   </div>
@@ -234,6 +223,19 @@ const NoteList = ({
                       </button>
                       <button
                         onClick={() => {
+                          onTransformToArt(note.id);
+                          setOpenMenuId(null);
+                        }}
+                        className={`w-full px-3 py-1 text-xs font-light text-left ${theme.textTertiary} hover:text-purple-500 hover:${theme.bgSecondary} transition-colors duration-200 flex items-center gap-2`}
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM7 3H5a2 2 0 00-2 2v12a4 4 0 004 4h2a2 2 0 002-2V5a2 2 0 00-2-2z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l8 8-8 8" />
+                        </svg>
+                        transform to art
+                      </button>
+                      <button
+                        onClick={() => {
                           onDeleteNote(note.id);
                           setOpenMenuId(null);
                         }}
@@ -252,32 +254,7 @@ const NoteList = ({
           </article>
         );
       })}
-      </div>
-
-      {fullscreenNote && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
-          <div className={`${theme.bg} w-full max-w-4xl max-h-[90vh] m-4 rounded-lg shadow-xl overflow-hidden flex flex-col`}>
-            <div className={`flex items-center justify-between p-4 border-b ${theme.borderSecondary}`}>
-              <span className={`text-sm ${theme.textTertiary} font-light`}>
-                {getTimeInfo(fullscreenNote.createdAt).timeText}
-              </span>
-              <button
-                onClick={() => setFullscreenNoteId(null)}
-                className={`px-2 py-1 text-sm font-light ${theme.textTertiary} hover:${theme.text} transition-colors duration-200`}
-                title="Close fullscreen view"
-              >
-                ×
-              </button>
-            </div>
-            <div className="flex-1 overflow-y-auto p-6">
-              <p className={`${theme.text} text-lg font-light leading-relaxed whitespace-pre-wrap break-words`}>
-                {fullscreenNote.content}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-    </>
+    </div>
   );
 };
 
