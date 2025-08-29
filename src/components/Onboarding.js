@@ -74,7 +74,7 @@ const Onboarding = () => {
   const renderWelcome = () => (
     <div className="text-center space-y-8">
       <div className="text-6xl mb-4">💧</div>
-      <div className="space-y-4">
+      <div className="space-y-0">
         <h1 className={`text-xl font-light ${theme.text} mb-4`}>
           {settings.personalityEnabled ? "Hey! I'm Stream, your new note buddy" : "Welcome to Stream"}
         </h1>
@@ -97,7 +97,7 @@ const Onboarding = () => {
   );
 
   const renderStep1 = () => (
-    <div className="space-y-3">
+    <div className="space-y-0">
       {themes.map((themeName) => (
         <button
           key={themeName}
@@ -111,7 +111,7 @@ const Onboarding = () => {
               : `${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} border-transparent`
           }`}
         >
-          <div className="text-base font-medium">
+          <div className="text-sm font-light">
             {themeName}
           </div>
         </button>
@@ -120,7 +120,7 @@ const Onboarding = () => {
   );
 
   const renderStep2 = () => (
-    <div className="space-y-3">
+    <div className="space-y-0">
       {Object.entries({
         sm: "small",
         base: "medium",
@@ -129,13 +129,13 @@ const Onboarding = () => {
         <button
           key={key}
           onClick={() => setSelections({ ...selections, fontSize: key })}
-          className={`w-full text-left p-4 rounded-lg border transition-all duration-200 ${
+          className={`w-full text-left p-3 transition-all duration-200 border-b ${
             selections.fontSize === key
-              ? `border-black ${theme.text} bg-gray-200 shadow-md`
-              : `${theme.borderSecondary} ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} hover:${theme.bgSecondary}`
+              ? `${theme.text} ${theme.text.replace('text-', 'border-')}`
+              : `${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} border-transparent`
           }`}
         >
-          <div className="text-base font-medium">
+          <div className="text-sm font-light">
             {value}
           </div>
         </button>
@@ -144,18 +144,18 @@ const Onboarding = () => {
   );
 
   const renderStep3 = () => (
-    <div className="space-y-4">
+    <div className="space-y-0">
       {Object.entries(ORGANIZATION_STYLES).map(([key, style]) => (
         <button
           key={key}
           onClick={() => setSelections({ ...selections, organizationStyle: key })}
-          className={`w-full text-left p-4 rounded-lg border transition-all duration-200 ${
+          className={`w-full text-left p-3 transition-all duration-200 border-b ${
             selections.organizationStyle === key
-              ? `border-black ${theme.text} bg-gray-200 shadow-md`
-              : `${theme.borderSecondary} ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} hover:${theme.bgSecondary}`
+              ? `${theme.text} ${theme.text.replace('text-', 'border-')}`
+              : `${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} border-transparent`
           }`}
         >
-          <div className="text-base font-medium mb-2">
+          <div className="text-sm font-light mb-2">
             {style.name.toLowerCase()}
           </div>
           <div className={`text-xs ${theme.textTertiary} font-mono whitespace-pre-line leading-relaxed`}>
@@ -167,18 +167,18 @@ const Onboarding = () => {
   );
 
   const renderStep4 = () => (
-    <div className="space-y-3">
+    <div className="space-y-0">
       {Object.entries(DELETE_TIMERS).map(([key, timer]) => (
         <button
           key={key}
           onClick={() => setSelections({ ...selections, deleteTimer: key })}
-          className={`w-full text-left p-4 rounded-lg border transition-all duration-200 ${
+          className={`w-full text-left p-3 transition-all duration-200 border-b ${
             selections.deleteTimer === key
-              ? `border-black ${theme.text} bg-gray-200 shadow-md`
-              : `${theme.borderSecondary} ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} hover:${theme.bgSecondary}`
+              ? `${theme.text} ${theme.text.replace('text-', 'border-')}`
+              : `${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} border-transparent`
           }`}
         >
-          <div className="text-base font-medium">
+          <div className="text-sm font-light">
             {timer.name.toLowerCase()}
           </div>
         </button>
