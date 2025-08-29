@@ -133,16 +133,14 @@ export const useNotes = (deleteTimer = '24h', onToast = null, personalityEnabled
     saveSavedNotes(updatedSavedNotes);
   }, [savedNotes, saveSavedNotes]);
 
-  const transformToArt = useCallback((id, fromSaved = false) => {
+  const transformToArt = useCallback((id, fromSaved = false, artStyle = 'samo') => {
     const sourceNotes = fromSaved ? savedNotes : notes;
     const sourceNote = sourceNotes.find(note => note.id === id);
     if (!sourceNote) return;
 
-    const randomStyle = 'samo';
-
     const artNote = {
       ...sourceNote,
-      artStyle: randomStyle,
+      artStyle: artStyle,
       transformedAt: Date.now(),
     };
 

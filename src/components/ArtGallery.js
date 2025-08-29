@@ -4,7 +4,15 @@ import { useTheme } from '../contexts/ThemeContext';
 const ArtGallery = ({ artNotes, onDeleteNote }) => {
   const { theme } = useTheme();
 
-  const getArtStyleClasses = () => {
+  const getArtStyleClasses = (artStyle) => {
+    if (artStyle === 'stencil') {
+      return {
+        container: 'bg-white text-black border-4 border-black p-8 rounded-lg',
+        text: 'font-black tracking-widest uppercase select-none',
+        words: 'space-y-2'
+      };
+    }
+    // Default SAMO style
     return {
       container: 'bg-black text-white p-8 rounded-lg',
       text: 'font-bold tracking-wide uppercase select-none',
@@ -13,11 +21,12 @@ const ArtGallery = ({ artNotes, onDeleteNote }) => {
   };
 
   const renderArtContent = (note) => {
-    const styles = getArtStyleClasses();
+    const styles = getArtStyleClasses(note.artStyle);
     const baseFontSize = 1.5;
     
-    // Split content into words and arrange them vertically like SAMO
+    // Split content into words
     const words = note.content.toUpperCase().split(' ');
+    const isStencil = note.artStyle === 'stencil';
     
     return (
       <div className={`${styles.container} min-h-48 shadow-xl relative overflow-hidden flex flex-col justify-center items-start`}>
@@ -26,7 +35,7 @@ const ArtGallery = ({ artNotes, onDeleteNote }) => {
             <div
               key={index}
               className="block"
-              style={{
+              style={isStencil ? {} : {
                 transform: `rotate(${(Math.random() - 0.5) * 4}deg)`,
                 marginLeft: `${Math.random() * 20}px`,
                 marginTop: `${Math.random() * 8 - 4}px`
@@ -36,7 +45,11 @@ const ArtGallery = ({ artNotes, onDeleteNote }) => {
                 <span
                   key={letterIndex}
                   className={`${styles.text} inline-block`}
-                  style={{
+                  style={isStencil ? {
+                    fontSize: `${baseFontSize}rem`,
+                    letterSpacing: '3px',
+                    fontWeight: '900'
+                  } : {
                     fontSize: `${baseFontSize + (Math.random() - 0.5) * 0.4}rem`,
                     transform: `rotate(${(Math.random() - 0.5) * 8}deg) scaleY(${0.9 + Math.random() * 0.2})`,
                     letterSpacing: `${(Math.random() - 0.5) * 2}px`,
@@ -52,7 +65,7 @@ const ArtGallery = ({ artNotes, onDeleteNote }) => {
         </div>
         
         <div className="absolute bottom-2 right-2 text-xs opacity-40 font-mono">
-          ©{new Date(note.transformedAt).getFullYear()}
+          {isStencil ? '[stream]©' : 'SAMO©'}
         </div>
       </div>
     );

@@ -34,10 +34,10 @@ const SettingsModal = ({ isOpen, onClose }) => {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h2 className={`dynamic-text-lg font-light ${theme.text}`}>
-              {settings.personalityEnabled ? "Stream's Command Center" : "Application Settings"}
+              {settings.personalityEnabled ? "stream's command center" : "application settings"}
             </h2>
             <p className={`dynamic-text-sm ${theme.textSecondary} font-light mt-1`}>
-              {settings.personalityEnabled ? "Let's tweak how I help your brain flow!" : "Adjust application preferences."}
+              {settings.personalityEnabled ? "let's tweak how i help your brain flow!" : "adjust application preferences."}
             </p>
           </div>
           <button
@@ -49,11 +49,11 @@ const SettingsModal = ({ isOpen, onClose }) => {
         </div>
 
         <div className="space-y-6">
-          <CollapsibleSection title={settings.personalityEnabled ? "Font Size" : "Font Size"}>
+          <CollapsibleSection title={settings.personalityEnabled ? "font size" : "font size"}>
             <FontSizeControl isAlwaysEditing={true} />
           </CollapsibleSection>
 
-          <CollapsibleSection title={settings.personalityEnabled ? "Spacing" : "Letter Spacing"}>
+          <CollapsibleSection title={settings.personalityEnabled ? "spacing" : "letter spacing"}>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => updateSettings({ letterSpacing: Math.max(-1, settings.letterSpacing - 0.5) })}
@@ -73,7 +73,7 @@ const SettingsModal = ({ isOpen, onClose }) => {
             </div>
           </CollapsibleSection>
 
-          <CollapsibleSection title={settings.personalityEnabled ? "Lists" : "List Style"}>
+          <CollapsibleSection title={settings.personalityEnabled ? "lists" : "list style"}>
             <div className="space-y-2">
               {Object.entries(ORGANIZATION_STYLES).map(([key, style]) => (
                 <button
@@ -96,7 +96,7 @@ const SettingsModal = ({ isOpen, onClose }) => {
             </div>
           </CollapsibleSection>
 
-          <CollapsibleSection title={settings.personalityEnabled ? "Cleanup" : "Auto-Delete"}>
+          <CollapsibleSection title={settings.personalityEnabled ? "cleanup" : "auto-delete"}>
             <div className="space-y-3">
               {Object.entries(DELETE_TIMERS).map(([key, timer]) => (
                 <button
@@ -116,7 +116,7 @@ const SettingsModal = ({ isOpen, onClose }) => {
             </div>
           </CollapsibleSection>
 
-          <CollapsibleSection title={settings.personalityEnabled ? "Colors" : "Theme"}>
+          <CollapsibleSection title={settings.personalityEnabled ? "colors" : "theme"}>
             <div className="space-y-3">
               {themes.map((themeName) => (
                 <button
@@ -139,24 +139,32 @@ const SettingsModal = ({ isOpen, onClose }) => {
             </div>
           </CollapsibleSection>
 
-          <CollapsibleSection title={settings.personalityEnabled ? "SAMO" : "SAMO Mode"}>
-            <button
-              onClick={() => updateSettings({ samoModeEnabled: !settings.samoModeEnabled })}
-              className={`w-full text-left pb-3 border-b transition-all duration-200 ${theme.border} ${theme.text} hover:${theme.textSecondary.replace('text-', 'hover:text-')}`}
-            >
-              <div className="dynamic-text-xs font-light">
-                {settings.samoModeEnabled ? 'Transform notes into Basquiat-inspired street art' : 'Enable SAMO mode to transform notes into street art'}
-              </div>
-            </button>
+          <CollapsibleSection title="feature visibility">
+            <div className="space-y-3">
+              <button
+                onClick={() => updateSettings({ samoModeEnabled: !settings.samoModeEnabled })}
+                className={`w-full text-left pb-3 border-b transition-all duration-200 ${theme.border} ${theme.text} hover:${theme.textSecondary.replace('text-', 'hover:text-')}`}>
+                <div className="dynamic-text-xs font-light">
+                  {settings.samoModeEnabled ? 'hide samo' : 'show samo'}
+                </div>
+              </button>
+              <button
+                onClick={() => updateSettings({ stealThisQuoteEnabled: !settings.stealThisQuoteEnabled })}
+                className={`w-full text-left pb-3 border-b transition-all duration-200 ${theme.border} ${theme.text} hover:${theme.textSecondary.replace('text-', 'hover:text-')}`}>
+                <div className="dynamic-text-xs font-light">
+                  {settings.stealThisQuoteEnabled ? 'hide steal this quote' : 'show steal this quote'}
+                </div>
+              </button>
+            </div>
           </CollapsibleSection>
 
-          <CollapsibleSection title={settings.personalityEnabled ? "Stream's Personality" : "Personality"}>
+          <CollapsibleSection title={settings.personalityEnabled ? "stream's personality" : "personality"}>
             <button
               onClick={togglePersonality}
               className={`w-full text-left pb-3 border-b transition-all duration-200 ${theme.border} ${theme.text} hover:${theme.textSecondary.replace('text-', 'hover:text-')}`}
             >
               <div className="dynamic-text-xs font-light">
-                {settings.personalityEnabled ? 'Turn off personality - give Stream a vacation' : 'Bring Stream back from vacation'}
+                {settings.personalityEnabled ? 'turn off personality - give stream a vacation' : 'bring stream back from vacation'}
               </div>
             </button>
           </CollapsibleSection>

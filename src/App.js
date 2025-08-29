@@ -10,15 +10,21 @@ import ThemeToggle from './components/ThemeToggle';
 import Onboarding from './components/Onboarding';
 import SettingsModal from './components/SettingsModal';
 import ArtGallery from './components/ArtGallery';
+import StyleSelector from './components/StyleSelector';
 import Toast from './components/Toast';
+import QuoteGenerator from './components/QuoteGenerator';
 
 function AppContent() {
   const [activeTab, setActiveTab] = useState('active');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isQuoteGeneratorOpen, setIsQuoteGeneratorOpen] = useState(false);
   const [editingNoteId, setEditingNoteId] = useState(null);
   const [logoStyle, setLogoStyle] = useState(() => {
     return localStorage.getItem('stream-logo-style') || 'originalText';
   });
+  const [styleSelectorOpen, setStyleSelectorOpen] = useState(false);
+  const [pendingTransformId, setPendingTransformId] = useState(null);
+  const [pendingFromSaved, setPendingFromSaved] = useState(false);
 
   const cycleLogo = () => {
     const styles = ['originalText', 'raindrop', 'samo'];
@@ -26,6 +32,19 @@ function AppContent() {
     const nextStyle = styles[(currentIndex + 1) % styles.length];
     setLogoStyle(nextStyle);
     localStorage.setItem('stream-logo-style', nextStyle);
+  };
+
+  const handleTransformToArt = (id, fromSaved = false) => {
+    setPendingTransformId(id);
+    setPendingFromSaved(fromSaved);
+    setStyleSelectorOpen(true);
+  };
+
+  const handleStyleSelect = (style) => {
+    transformToArt(pendingTransformId, pendingFromSaved, style);
+    setStyleSelectorOpen(false);
+    setPendingTransformId(null);
+    setPendingFromSaved(false);
   };
   const { theme } = useTheme();
   const { settings } = useSettings();
@@ -87,7 +106,7 @@ function AppContent() {
                     textShadow: '1px 1px 2px rgba(255,255,255,0.1)',
                     letterSpacing: '1px'
                   }}>
-                    STREAM©
+                    STREAM
                   </span>
                 </div>
               )}
@@ -141,15 +160,27 @@ function AppContent() {
                     ? `${theme.text} ${theme.text.replace('text-', 'border-')}`
                     : `${theme.textTertiary} hover:${theme.textSecondary.replace('text-', 'hover:text-')} border-transparent`
                 }`}
-                title="SAMO mode transforms notes into street art inspired by Jean-Michel Basquiat's legendary graffiti tag 'SAMO©' - raw, authentic visual expression."
+                title="samo mode transforms notes into street art inspired by jean-michel basquiat's legendary graffiti tag 'samo' - raw, authentic visual expression."
               >
-                SAMO ({artNotes.length})
+                samo ({artNotes.length})
                 <svg className={`w-3 h-3 ${theme.textTertiary}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <circle cx="12" cy="12" r="10"/>
                   <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/>
                   <line x1="12" y1="17" x2="12.01" y2="17"/>
                 </svg>
               </button>
+            )}
+            {settings.stealThisQuoteEnabled && (
+            <button
+              onClick={() => setIsQuoteGeneratorOpen(true)}
+              className={`pb-3 dynamic-text-sm font-light transition-all duration-200 border-b flex items-center gap-2 ${
+                activeTab === 'steal-this-quote'
+                  ? `${theme.text} ${theme.text.replace('text-', 'border-')}`
+                  : `${theme.textTertiary} hover:${theme.textSecondary.replace('text-', 'hover:text-')} border-transparent`
+              }`}
+            >
+              steal this quote (◎)
+            </button>
             )}
           </div>
         </nav>
@@ -162,7 +193,7 @@ function AppContent() {
                 notes={notes}
                 onDeleteNote={deleteNote}
                 onSaveNote={saveNote}
-                onTransformToSAMO={transformToArt}
+                onTransformToSAMO={handleTransformToArt}
                 getTimeInfo={getTimeInfo}
                 editingNoteId={editingNoteId}
                 onSetEditingNoteId={setEditingNoteId}
@@ -194,6 +225,18 @@ function AppContent() {
       <SettingsModal 
         isOpen={isSettingsOpen} 
         onClose={() => setIsSettingsOpen(false)} 
+      />
+
+      <QuoteGenerator 
+        isOpen={isQuoteGeneratorOpen} 
+        onClose={() => setIsQuoteGeneratorOpen(false)} 
+      />
+      
+      <StyleSelector
+        isOpen={styleSelectorOpen}
+        onClose={() => setStyleSelectorOpen(false)}
+        onSelectStyle={handleStyleSelect}
+        noteContent={pendingTransformId ? (notes.find(n => n.id === pendingTransformId) || savedNotes.find(n => n.id === pendingTransformId))?.content : ''}
       />
       
       {/* Toast notifications */}

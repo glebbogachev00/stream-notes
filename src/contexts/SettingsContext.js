@@ -39,7 +39,9 @@ const DEFAULT_SETTINGS = {
   deleteTimer: '24h',
   onboardingCompleted: false,
   personalityEnabled: true,
-  samoModeEnabled: true
+  samoModeEnabled: true,
+  stealThisQuoteEnabled: true,
+  stencilModeEnabled: true
 };
 
 export const useSettings = () => {
@@ -74,7 +76,9 @@ export const SettingsProvider = ({ children }) => {
         organizationStyle: settings.organizationStyle,
         deleteTimer: settings.deleteTimer,
         personalityEnabled: settings.personalityEnabled,
-        samoModeEnabled: settings.samoModeEnabled
+        samoModeEnabled: settings.samoModeEnabled,
+        stealThisQuoteEnabled: settings.stealThisQuoteEnabled,
+        stencilModeEnabled: settings.stencilModeEnabled
       }));
       localStorage.setItem('stream-onboarding-completed', settings.onboardingCompleted.toString());
     } catch (error) {
