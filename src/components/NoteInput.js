@@ -86,7 +86,7 @@ const NoteInput = ({ onAddNote }) => {
             <div className="mt-4 flex items-center justify-end">
               <button
                 type="submit"
-                className={`px-3 py-1 text-xs typography-title ${theme.text} border ${theme.border} rounded transition-all duration-200 ${theme.buttonHover} hover:${theme.text.replace('text-', 'hover:text-')}`}
+                className={`px-3 py-2 dynamic-text-base typography-title ${theme.text} border ${theme.border} rounded transition-all duration-200 ${theme.buttonHover} hover:${theme.text.replace('text-', 'hover:text-')}`}
               >
                 save
               </button>
@@ -96,7 +96,7 @@ const NoteInput = ({ onAddNote }) => {
       </form>
       
       {!isFocused && (
-        <div className={`mt-2 text-xs ${theme.textSecondary} font-light typography-system`}>
+        <div className={`mt-2 dynamic-text-base ${theme.textSecondary} font-light typography-system`}>
           {settings.personalityEnabled ? 
             `Notes expire in ${settings.deleteTimer === '1h' ? '1 hour' : settings.deleteTimer === '6h' ? '6 hours' : '24 hours'}` : 
             `Notes expire in ${settings.deleteTimer === '1h' ? '1 hour' : settings.deleteTimer === '6h' ? '6 hours' : '24 hours'}`

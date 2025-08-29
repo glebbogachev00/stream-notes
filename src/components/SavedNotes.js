@@ -73,7 +73,7 @@ const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onTransformToSAMO 
   if (savedNotes.length === 0) {
     return (
       <div className="text-center py-16">
-        <p className={`text-sm ${theme.textTertiary} font-light`}>
+        <p className={`dynamic-text-base ${theme.textTertiary} font-light`}>
           no saved notes
         </p>
       </div>
@@ -134,7 +134,7 @@ const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onTransformToSAMO 
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => toggleNoteExpansion(note.id)}
-                          className={`flex items-center gap-1 text-xs ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} transition-colors mb-2 font-light`}
+                          className={`flex items-center gap-1 dynamic-text-base ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} transition-colors mb-2 font-light`}
                         >
                           <svg 
                             className={`w-3 h-3 transition-transform duration-200 ${expandedNotes.has(note.id) ? 'rotate-180' : ''}`} 
@@ -151,7 +151,7 @@ const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onTransformToSAMO 
                   </div>
                 )}
                 
-                <div className="flex items-center gap-3 text-xs">
+                <div className="flex items-center gap-3 dynamic-text-base">
                   <span className={`${theme.textTertiary} font-light`}>
                     {formatSavedDate(note.savedAt)}
                   </span>
@@ -179,7 +179,7 @@ const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onTransformToSAMO 
                             onTransformToSAMO(note.id, true);
                             setOpenMenuId(null);
                           }}
-                          className={`w-full px-3 py-1 text-xs font-light text-left ${theme.textTertiary} hover:text-purple-500 hover:${theme.bgSecondary} transition-colors duration-200 flex items-center gap-2`}
+                          className={`w-full px-3 py-2 dynamic-text-base font-light text-left ${theme.textTertiary} hover:text-purple-500 hover:${theme.bgSecondary} transition-colors duration-200 flex items-center gap-2`}
                         >
                           <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM7 3H5a2 2 0 00-2 2v12a4 4 0 004 4h2a2 2 0 002-2V5a2 2 0 00-2-2z" />
@@ -193,7 +193,7 @@ const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onTransformToSAMO 
                           onDeleteNote(note.id);
                           setOpenMenuId(null);
                         }}
-                        className={`w-full px-3 py-1 text-xs font-light text-left ${theme.textTertiary} hover:text-red-500 hover:${theme.bgSecondary} transition-colors duration-200 flex items-center gap-2`}
+                        className={`w-full px-3 py-2 dynamic-text-base font-light text-left ${theme.textTertiary} hover:text-red-500 hover:${theme.bgSecondary} transition-colors duration-200 flex items-center gap-2`}
                       >
                         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />

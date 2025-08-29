@@ -198,7 +198,7 @@ const NoteList = ({
                             e.target.closest('button')?.classList.remove('animate-pulse');
                           }, 600);
                         }}
-                        className={`w-full px-3 py-1 text-xs font-light text-left ${theme.textTertiary} hover:text-blue-500 hover:${theme.bgSecondary} transition-colors duration-200 flex items-center gap-2`}
+                        className={`w-full px-3 py-2 dynamic-text-base font-light text-left ${theme.textTertiary} hover:text-blue-500 hover:${theme.bgSecondary} transition-colors duration-200 flex items-center gap-2`}
                       >
                         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
@@ -214,7 +214,7 @@ const NoteList = ({
                             e.target.closest('button')?.classList.remove('animate-bounce');
                           }, 600);
                         }}
-                        className={`w-full px-3 py-1 text-xs font-light text-left ${theme.textTertiary} hover:text-green-500 hover:${theme.bgSecondary} transition-colors duration-200 flex items-center gap-2`}
+                        className={`w-full px-3 py-2 dynamic-text-base font-light text-left ${theme.textTertiary} hover:text-green-500 hover:${theme.bgSecondary} transition-colors duration-200 flex items-center gap-2`}
                       >
                         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
@@ -227,7 +227,7 @@ const NoteList = ({
                             onTransformToSAMO(note.id);
                             setOpenMenuId(null);
                           }}
-                          className={`w-full px-3 py-1 text-xs font-light text-left ${theme.textTertiary} hover:text-purple-500 hover:${theme.bgSecondary} transition-colors duration-200 flex items-center gap-2`}
+                          className={`w-full px-3 py-2 dynamic-text-base font-light text-left ${theme.textTertiary} hover:text-purple-500 hover:${theme.bgSecondary} transition-colors duration-200 flex items-center gap-2`}
                         >
                           <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM7 3H5a2 2 0 00-2 2v12a4 4 0 004 4h2a2 2 0 002-2V5a2 2 0 00-2-2z" />
@@ -241,7 +241,7 @@ const NoteList = ({
                           onDeleteNote(note.id);
                           setOpenMenuId(null);
                         }}
-                        className={`w-full px-3 py-1 text-xs font-light text-left ${theme.textTertiary} hover:text-red-500 hover:${theme.bgSecondary} transition-colors duration-200 flex items-center gap-2`}
+                        className={`w-full px-3 py-2 dynamic-text-base font-light text-left ${theme.textTertiary} hover:text-red-500 hover:${theme.bgSecondary} transition-colors duration-200 flex items-center gap-2`}
                       >
                         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />

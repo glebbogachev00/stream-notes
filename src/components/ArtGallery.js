@@ -143,7 +143,7 @@ const ArtGallery = ({ artNotes, onDeleteNote }) => {
             <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
               <button
                 onClick={() => onDeleteNote(note.id)}
-                className={`px-2 py-1 text-xs ${theme.textTertiary} hover:text-red-400 transition-colors font-light ${theme.bg}/90 backdrop-blur-sm rounded shadow-sm`}
+                className={`px-3 py-2 dynamic-text-base ${theme.textTertiary} hover:text-red-400 transition-colors font-light ${theme.bg}/90 backdrop-blur-sm rounded shadow-sm`}
                 title="Delete art piece"
               >
                 remove
