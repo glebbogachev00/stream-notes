@@ -33,7 +33,7 @@ const QuoteCollection = () => {
       <div className="flex items-center justify-center gap-6">
         <button
           onClick={cycleQuote}
-          className={`flex items-center gap-2 px-4 py-2 dynamic-text-sm font-light ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} transition-colors`}
+          className={`flex items-center gap-2 px-4 py-2 dynamic-text-base font-light ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} transition-colors`}
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -43,7 +43,7 @@ const QuoteCollection = () => {
         
         <button
           onClick={() => navigator.clipboard.writeText(`"${currentQuote.text}" — ${currentQuote.author}`)}
-          className={`flex items-center gap-2 px-4 py-2 dynamic-text-sm font-light ${theme.textTertiary} hover:text-green-500 transition-colors`}
+          className={`flex items-center gap-2 px-4 py-2 dynamic-text-base font-light ${theme.textTertiary} hover:text-green-500 transition-colors`}
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
@@ -52,7 +52,7 @@ const QuoteCollection = () => {
         </button>
       </div>
 
-      <div className={`text-center dynamic-text-sm ${theme.textTertiary} font-light max-w-md mx-auto`}>
+      <div className={`text-center dynamic-text-base ${theme.textTertiary} font-light max-w-md mx-auto`}>
         {settings.personalityEnabled 
           ? "Creative inspiration for your stream of consciousness. Click the quote to cycle through the collection, or steal it to your clipboard." 
           : "Curated quotes about creativity, influence, and artistic expression."

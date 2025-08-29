@@ -13,7 +13,7 @@ const ThemeToggle = () => {
   return (
     <button
       onClick={handleToggle}
-      className={`px-2 py-1 dynamic-text-sm font-light transition-all duration-200 ${theme.textTertiary} ${theme.buttonHover}`}
+      className={`px-2 py-1 dynamic-text-base font-light transition-all duration-200 ${theme.textTertiary} ${theme.buttonHover}`}
       title={`Current theme: ${currentTheme}. Click to cycle themes.`}
     >
       [{currentTheme}]

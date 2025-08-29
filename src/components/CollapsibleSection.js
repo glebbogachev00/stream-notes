@@ -15,8 +15,8 @@ const CollapsibleSection = ({ title, children }) => {
         onClick={toggleOpen}
         className={`w-full text-left flex justify-between items-center transition-all duration-200 ${theme.text} hover:${theme.text.replace('text-', 'hover:text-')}`}
       >
-        <h3 className={`dynamic-text-sm font-light`}>{title}</h3>
-        <span className="dynamic-text-sm font-light">
+        <h3 className={`dynamic-text-base font-light`}>{title}</h3>
+        <span className="dynamic-text-base font-light">
           {isOpen ? '[-]' : '[+]'}
         </span>
       </button>

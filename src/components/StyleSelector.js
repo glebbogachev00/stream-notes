@@ -22,7 +22,7 @@ const StyleSelector = ({ isOpen, onClose, onSelectStyle, noteContent }) => {
           <h2 className={`dynamic-text-lg font-light ${theme.text} mb-2`}>
             Choose Art Style
           </h2>
-          <p className={`dynamic-text-sm ${theme.textSecondary} font-light`}>
+          <p className={`dynamic-text-base ${theme.textSecondary} font-light`}>
             Transform your note into street art
           </p>
         </div>
@@ -66,7 +66,7 @@ const StyleSelector = ({ isOpen, onClose, onSelectStyle, noteContent }) => {
         <div className="flex justify-end">
           <button
             onClick={onClose}
-            className={`px-4 py-2 dynamic-text-sm font-light ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} transition-colors`}
+            className={`px-4 py-2 dynamic-text-base font-light ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} transition-colors`}
           >
             cancel
           </button>

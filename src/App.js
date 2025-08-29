@@ -108,14 +108,14 @@ function AppContent() {
                 </div>
               )}
             </div>
-            <p className={`dynamic-text-sm ${theme.textSecondary} font-light`}>
+            <p className={`dynamic-text-base ${theme.textSecondary} font-light`}>
               self-managing notes
             </p>
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={() => setIsSettingsOpen(true)}
-              className={`p-2 ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} transition-colors dynamic-text-sm`}
+              className={`p-2 ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} transition-colors dynamic-text-base`}
               title="Settings"
             >
               <svg className="w-1em h-1em" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -131,7 +131,7 @@ function AppContent() {
           <div className={`flex space-x-6 border-b ${theme.border} transition-all duration-200`}>
             <button
               onClick={() => setActiveTab('active')}
-              className={`pb-3 dynamic-text-sm font-light transition-all duration-200 border-b ${
+              className={`pb-3 dynamic-text-base font-light transition-all duration-200 border-b ${
                 activeTab === 'active'
                   ? `${theme.text} ${theme.text.replace('text-', 'border-')}`
                   : `${theme.textTertiary} hover:${theme.textSecondary.replace('text-', 'hover:text-')} border-transparent`
@@ -141,7 +141,7 @@ function AppContent() {
             </button>
             <button
               onClick={() => setActiveTab('saved')}
-              className={`pb-3 dynamic-text-sm font-light transition-all duration-200 border-b ${
+              className={`pb-3 dynamic-text-base font-light transition-all duration-200 border-b ${
                 activeTab === 'saved'
                   ? `${theme.text} ${theme.text.replace('text-', 'border-')}`
                   : `${theme.textTertiary} hover:${theme.textSecondary.replace('text-', 'hover:text-')} border-transparent`
@@ -152,7 +152,7 @@ function AppContent() {
             {settings.samoModeEnabled && (
               <button
                 onClick={() => setActiveTab('art')}
-                className={`pb-3 dynamic-text-sm font-light transition-all duration-200 border-b ${
+                className={`pb-3 dynamic-text-base font-light transition-all duration-200 border-b ${
                   activeTab === 'art'
                     ? `${theme.text} ${theme.text.replace('text-', 'border-')}`
                     : `${theme.textTertiary} hover:${theme.textSecondary.replace('text-', 'hover:text-')} border-transparent`
@@ -165,7 +165,7 @@ function AppContent() {
             )}
             <button
               onClick={() => setActiveTab('quotes')}
-              className={`pb-3 dynamic-text-sm font-light transition-all duration-200 border-b ${
+              className={`pb-3 dynamic-text-base font-light transition-all duration-200 border-b ${
                 activeTab === 'quotes'
                   ? `${theme.text} ${theme.text.replace('text-', 'border-')}`
                   : `${theme.textTertiary} hover:${theme.textSecondary.replace('text-', 'hover:text-')} border-transparent`
