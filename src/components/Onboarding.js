@@ -107,7 +107,7 @@ const Onboarding = () => {
           }}
           className={`w-full text-left p-4 rounded-lg border transition-all duration-200 ${
             selections.theme === themeName
-              ? `${theme.borderPrimary} ${theme.text} ${theme.bgSecondary}`
+              ? `border-gray-800 ${theme.text} bg-gray-100`
               : `${theme.borderSecondary} ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} hover:${theme.bgSecondary}`
           }`}
         >
@@ -115,7 +115,7 @@ const Onboarding = () => {
             {themeName}
           </div>
           {selections.theme === themeName && (
-            <div className={`text-xs ${theme.textTertiary} mt-1`}>✓ Selected</div>
+            <div className="text-xs text-gray-800 mt-1 font-medium">✓ Selected</div>
           )}
         </button>
       ))}
@@ -134,14 +134,14 @@ const Onboarding = () => {
           onClick={() => setSelections({ ...selections, fontSize: key })}
           className={`w-full text-left p-4 rounded-lg border transition-all duration-200 ${
             selections.fontSize === key
-              ? `${theme.borderPrimary} ${theme.text} ${theme.bgSecondary}`
+              ? `border-gray-800 ${theme.text} bg-gray-100`
               : `${theme.borderSecondary} ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} hover:${theme.bgSecondary}`
           }`}
         >
           <div className="text-base font-medium">
             {value}
             {selections.fontSize === key && (
-              <span className={`text-xs ${theme.textTertiary} ml-2`}>✓</span>
+              <span className="text-xs text-gray-800 ml-2 font-medium">✓</span>
             )}
           </div>
         </button>
@@ -157,14 +157,14 @@ const Onboarding = () => {
           onClick={() => setSelections({ ...selections, organizationStyle: key })}
           className={`w-full text-left p-4 rounded-lg border transition-all duration-200 ${
             selections.organizationStyle === key
-              ? `${theme.borderPrimary} ${theme.text} ${theme.bgSecondary}`
+              ? `border-gray-800 ${theme.text} bg-gray-100`
               : `${theme.borderSecondary} ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} hover:${theme.bgSecondary}`
           }`}
         >
           <div className="text-base font-medium mb-2">
             {style.name.toLowerCase()}
             {selections.organizationStyle === key && (
-              <span className={`text-xs ${theme.textTertiary} ml-2`}>✓</span>
+              <span className="text-xs text-gray-800 ml-2 font-medium">✓</span>
             )}
           </div>
           <div className={`text-xs ${theme.textTertiary} font-mono whitespace-pre-line leading-relaxed`}>
@@ -183,14 +183,14 @@ const Onboarding = () => {
           onClick={() => setSelections({ ...selections, deleteTimer: key })}
           className={`w-full text-left p-4 rounded-lg border transition-all duration-200 ${
             selections.deleteTimer === key
-              ? `${theme.borderPrimary} ${theme.text} ${theme.bgSecondary}`
+              ? `border-gray-800 ${theme.text} bg-gray-100`
               : `${theme.borderSecondary} ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} hover:${theme.bgSecondary}`
           }`}
         >
           <div className="text-base font-medium">
             {timer.name.toLowerCase()}
             {selections.deleteTimer === key && (
-              <span className={`text-xs ${theme.textTertiary} ml-2`}>✓</span>
+              <span className="text-xs text-gray-800 ml-2 font-medium">✓</span>
             )}
           </div>
         </button>
