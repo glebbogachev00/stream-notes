@@ -103,7 +103,7 @@ function AppContent() {
                     textShadow: '1px 1px 2px rgba(255,255,255,0.1)',
                     letterSpacing: '1px'
                   }}>
-                    STREAM
+                    [stream]©
                   </span>
                 </div>
               )}
