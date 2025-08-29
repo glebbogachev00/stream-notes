@@ -114,8 +114,6 @@ const Onboarding = () => {
           <div className="text-base font-medium">
             {themeName}
           </div>
-          {selections.theme === themeName && (
-          )}
         </button>
       ))}
     </div>
@@ -139,8 +137,6 @@ const Onboarding = () => {
         >
           <div className="text-base font-medium">
             {value}
-            {selections.fontSize === key && (
-            )}
           </div>
         </button>
       ))}
@@ -161,8 +157,6 @@ const Onboarding = () => {
         >
           <div className="text-base font-medium mb-2">
             {style.name.toLowerCase()}
-            {selections.organizationStyle === key && (
-            )}
           </div>
           <div className={`text-xs ${theme.textTertiary} font-mono whitespace-pre-line leading-relaxed`}>
             {style.example}
@@ -186,8 +180,6 @@ const Onboarding = () => {
         >
           <div className="text-base font-medium">
             {timer.name.toLowerCase()}
-            {selections.deleteTimer === key && (
-            )}
           </div>
         </button>
       ))}
