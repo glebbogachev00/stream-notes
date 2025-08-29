@@ -149,12 +149,11 @@ export const useNotes = (deleteTimer = '24h', onToast = null, personalityEnabled
     
     saveArtNotes(updatedArtNotes);
     // Keep original note in source collection
-    }
     
     if (onToast) {
       onToast("Note transformed into art!");
     }
-  }, [notes, savedNotes, artNotes, saveNotes, saveSavedNotes, saveArtNotes, onToast]);
+  }, [notes, savedNotes, artNotes, saveArtNotes, onToast]);
 
   const deleteArtNote = useCallback((id) => {
     const updatedArtNotes = artNotes.filter(note => note.id !== id);
