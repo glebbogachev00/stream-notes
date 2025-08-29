@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNotes } from './hooks/useNotes';
 import { useToast } from './hooks/useToast';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
@@ -16,18 +16,17 @@ function AppContent() {
   const [activeTab, setActiveTab] = useState('active');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [editingNoteId, setEditingNoteId] = useState(null);
-  const [showLogo, setShowLogo] = useState(true);
-  const [autoToggle, setAutoToggle] = useState(true);
+  const [logoStyle, setLogoStyle] = useState(() => {
+    return localStorage.getItem('stream-logo-style') || 'originalText';
+  });
 
-  useEffect(() => {
-    if (!autoToggle) return;
-    
-    const interval = setInterval(() => {
-      setShowLogo(prev => !prev);
-    }, 3000);
-    
-    return () => clearInterval(interval);
-  }, [autoToggle]);
+  const cycleLogo = () => {
+    const styles = ['originalText', 'raindrop', 'samo'];
+    const currentIndex = styles.indexOf(logoStyle);
+    const nextStyle = styles[(currentIndex + 1) % styles.length];
+    setLogoStyle(nextStyle);
+    localStorage.setItem('stream-logo-style', nextStyle);
+  };
   const { theme } = useTheme();
   const { settings } = useSettings();
   const { toasts, showToast, hideToast } = useToast();
@@ -65,14 +64,15 @@ function AppContent() {
         <header className="flex items-start justify-between mb-12 sm:mb-16">
           <div>
             <div 
-              className="flex items-center mb-2 cursor-pointer"
-              onClick={() => {
-                setAutoToggle(false);
-                setShowLogo(!showLogo);
-                setTimeout(() => setAutoToggle(true), 10000);
-              }}
+              className="flex items-center mb-2 cursor-pointer transition-all duration-300"
+              onClick={cycleLogo}
             >
-              {showLogo ? (
+              {logoStyle === 'originalText' && (
+                <h1 className={`dynamic-text-xl font-light ${theme.text} tracking-tight transition-all duration-300`}>
+                  [stream]
+                </h1>
+              )}
+              {logoStyle === 'raindrop' && (
                 <svg 
                   className={`w-5 h-7 ${theme.text} transition-all duration-300`}
                   fill="currentColor" 
@@ -80,10 +80,16 @@ function AppContent() {
                 >
                   <path d="M12 2c-4 0-8 6-8 10 0 4.4 3.6 8 8 8s8-3.6 8-8c0-4-4-10-8-10z"/>
                 </svg>
-              ) : (
-                <h1 className={`dynamic-text-xl font-light ${theme.text} tracking-tight transition-all duration-300`}>
-                  [stream]
-                </h1>
+              )}
+              {logoStyle === 'samo' && (
+                <div className="bg-black text-white px-3 py-1 rounded transform -rotate-1">
+                  <span className="font-bold text-lg tracking-wide" style={{
+                    textShadow: '1px 1px 2px rgba(255,255,255,0.1)',
+                    letterSpacing: '1px'
+                  }}>
+                    STREAM©
+                  </span>
+                </div>
               )}
             </div>
             <p className={`dynamic-text-sm ${theme.textSecondary} font-light`}>
@@ -137,7 +143,7 @@ function AppContent() {
                 }`}
                 title="SAMO mode transforms notes into street art inspired by Jean-Michel Basquiat's legendary graffiti tag 'SAMO©' - raw, authentic visual expression."
               >
-                SAMO mode ({artNotes.length})
+                SAMO ({artNotes.length})
                 <svg className={`w-3 h-3 ${theme.textTertiary}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <circle cx="12" cy="12" r="10"/>
                   <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/>
