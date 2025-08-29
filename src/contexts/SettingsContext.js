@@ -38,7 +38,8 @@ const DEFAULT_SETTINGS = {
   organizationStyle: 'bullets',
   deleteTimer: '24h',
   onboardingCompleted: false,
-  personalityEnabled: true
+  personalityEnabled: true,
+  samoModeEnabled: true
 };
 
 export const useSettings = () => {
@@ -72,7 +73,8 @@ export const SettingsProvider = ({ children }) => {
         letterSpacing: settings.letterSpacing,
         organizationStyle: settings.organizationStyle,
         deleteTimer: settings.deleteTimer,
-        personalityEnabled: settings.personalityEnabled
+        personalityEnabled: settings.personalityEnabled,
+        samoModeEnabled: settings.samoModeEnabled
       }));
       localStorage.setItem('stream-onboarding-completed', settings.onboardingCompleted.toString());
     } catch (error) {

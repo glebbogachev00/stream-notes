@@ -63,26 +63,40 @@ const ArtGallery = ({ artNotes, onDeleteNote }) => {
     return (
       <div className="text-center py-16">
         <div className="mb-8">
-          <div className="bg-black text-white p-8 rounded-lg shadow-xl transform -rotate-1 max-w-md mx-auto">
-            <div className="space-y-2">
-              {['SAMO', 'FOR', 'THE', 'SO-CALLED', 'AVANT-GARDE'].map((word, index) => (
-                <span
+          <div className="bg-black text-white p-8 rounded-lg shadow-xl max-w-md mx-auto">
+            <div className="space-y-1">
+              {['TRANSFORM', 'YOUR', 'FAVORITE', 'NOTES', 'INTO', 'RAW', 'STREET', 'ART', 'VISUALS'].map((word, index) => (
+                <div
                   key={index}
-                  className="font-bold text-lg inline-block mr-2 transform uppercase tracking-wide"
+                  className="block"
                   style={{
-                    fontSize: `${0.8 + Math.random() * 0.6}rem`,
-                    transform: `rotate(${(Math.random() - 0.5) * 8}deg)`
+                    transform: `rotate(${(Math.random() - 0.5) * 3}deg)`,
+                    marginLeft: `${Math.random() * 15}px`,
+                    marginTop: `${Math.random() * 4 - 2}px`
                   }}
                 >
-                  {word}
-                </span>
+                  {word.split('').map((letter, letterIndex) => (
+                    <span
+                      key={letterIndex}
+                      className="font-bold tracking-wide uppercase inline-block"
+                      style={{
+                        fontSize: `${1.1 + (Math.random() - 0.5) * 0.3}rem`,
+                        transform: `rotate(${(Math.random() - 0.5) * 6}deg) scaleY(${0.9 + Math.random() * 0.2})`,
+                        letterSpacing: `${(Math.random() - 0.5) * 2}px`,
+                        textShadow: '1px 1px 2px rgba(255,255,255,0.1)'
+                      }}
+                    >
+                      {letter}
+                    </span>
+                  ))}
+                </div>
               ))}
             </div>
-            <div className="absolute bottom-2 right-2 text-xs opacity-60">©1978</div>
+            <div className="absolute bottom-2 right-2 text-xs opacity-40 font-mono">SAMO©</div>
           </div>
         </div>
         <p className={`text-sm ${theme.textTertiary} font-light`}>
-          Transform your notes into beautiful art pieces
+          Channel your inner Basquiat
         </p>
         <p className={`text-xs ${theme.textTertiary} font-light mt-2`}>
           Use the palette icon on any note to create art

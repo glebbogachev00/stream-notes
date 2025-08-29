@@ -139,6 +139,27 @@ const SettingsModal = ({ isOpen, onClose }) => {
             </div>
           </CollapsibleSection>
 
+          <CollapsibleSection title="SAMO Mode">
+            <button
+              onClick={() => updateSettings({ samoModeEnabled: !settings.samoModeEnabled })}
+              className={`w-full text-left pb-3 border-b transition-all duration-200 ${theme.border} ${theme.text} hover:${theme.textSecondary.replace('text-', 'hover:text-')}`}
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="dynamic-text-xs font-light mb-1">
+                    {settings.samoModeEnabled ? 'SAMO mode enabled' : 'SAMO mode disabled'}
+                  </div>
+                  <div className={`dynamic-text-xs ${theme.textTertiary} font-light`}>
+                    Transform notes into Basquiat-inspired street art
+                  </div>
+                </div>
+                <div className={`w-8 h-4 rounded-full ${settings.samoModeEnabled ? 'bg-blue-500' : theme.borderSecondary} relative transition-colors duration-200`}>
+                  <div className={`w-3 h-3 bg-white rounded-full absolute top-0.5 transition-transform duration-200 ${settings.samoModeEnabled ? 'translate-x-4' : 'translate-x-0.5'}`} />
+                </div>
+              </div>
+            </button>
+          </CollapsibleSection>
+
           <CollapsibleSection title={settings.personalityEnabled ? "Stream's Personality" : "Personality"}>
             <button
               onClick={togglePersonality}

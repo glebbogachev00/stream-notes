@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNotes } from './hooks/useNotes';
 import { useToast } from './hooks/useToast';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
@@ -17,6 +17,17 @@ function AppContent() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [editingNoteId, setEditingNoteId] = useState(null);
   const [showLogo, setShowLogo] = useState(true);
+  const [autoToggle, setAutoToggle] = useState(true);
+
+  useEffect(() => {
+    if (!autoToggle) return;
+    
+    const interval = setInterval(() => {
+      setShowLogo(prev => !prev);
+    }, 3000);
+    
+    return () => clearInterval(interval);
+  }, [autoToggle]);
   const { theme } = useTheme();
   const { settings } = useSettings();
   const { toasts, showToast, hideToast } = useToast();
@@ -55,7 +66,11 @@ function AppContent() {
           <div>
             <div 
               className="flex items-center mb-2 cursor-pointer"
-              onClick={() => setShowLogo(!showLogo)}
+              onClick={() => {
+                setAutoToggle(false);
+                setShowLogo(!showLogo);
+                setTimeout(() => setAutoToggle(true), 10000);
+              }}
             >
               {showLogo ? (
                 <svg 
@@ -112,16 +127,24 @@ function AppContent() {
             >
               saved ({savedNotes.length})
             </button>
-            <button
-              onClick={() => setActiveTab('art')}
-              className={`pb-3 dynamic-text-sm font-light transition-all duration-200 border-b ${
-                activeTab === 'art'
-                  ? `${theme.text} ${theme.text.replace('text-', 'border-')}`
-                  : `${theme.textTertiary} hover:${theme.textSecondary.replace('text-', 'hover:text-')} border-transparent`
-              }`}
-            >
-              art ({artNotes.length})
-            </button>
+            {settings.samoModeEnabled && (
+              <button
+                onClick={() => setActiveTab('art')}
+                className={`pb-3 dynamic-text-sm font-light transition-all duration-200 border-b flex items-center gap-2 ${
+                  activeTab === 'art'
+                    ? `${theme.text} ${theme.text.replace('text-', 'border-')}`
+                    : `${theme.textTertiary} hover:${theme.textSecondary.replace('text-', 'hover:text-')} border-transparent`
+                }`}
+                title="SAMO mode transforms notes into street art inspired by Jean-Michel Basquiat's legendary graffiti tag 'SAMO©' - raw, authentic visual expression."
+              >
+                SAMO mode ({artNotes.length})
+                <svg className={`w-3 h-3 ${theme.textTertiary}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="10"/>
+                  <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/>
+                  <line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+              </button>
+            )}
           </div>
         </nav>
 
@@ -133,7 +156,7 @@ function AppContent() {
                 notes={notes}
                 onDeleteNote={deleteNote}
                 onSaveNote={saveNote}
-                onTransformToArt={transformToArt}
+                onTransformToSAMO={transformToArt}
                 getTimeInfo={getTimeInfo}
                 editingNoteId={editingNoteId}
                 onSetEditingNoteId={setEditingNoteId}
@@ -152,7 +175,7 @@ function AppContent() {
             />
           )}
 
-          {activeTab === 'art' && (
+          {activeTab === 'art' && settings.samoModeEnabled && (
             <ArtGallery
               artNotes={artNotes}
               onDeleteNote={deleteArtNote}
