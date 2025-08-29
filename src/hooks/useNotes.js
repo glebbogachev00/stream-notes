@@ -111,6 +111,13 @@ export const useNotes = (deleteTimer = '24h', onToast = null, personalityEnabled
     saveSavedNotes(updatedSavedNotes);
   }, [savedNotes, saveSavedNotes]);
 
+  const updateSavedNoteContent = useCallback((id, newContent) => {
+    const updatedSavedNotes = savedNotes.map(note => 
+      note.id === id ? { ...note, content: newContent } : note
+    );
+    saveSavedNotes(updatedSavedNotes);
+  }, [savedNotes, saveSavedNotes]);
+
   const getTimeInfo = useCallback((createdAt) => {
     const now = Date.now();
     const ageInMs = now - createdAt;
@@ -155,6 +162,7 @@ export const useNotes = (deleteTimer = '24h', onToast = null, personalityEnabled
     deleteNote,
     saveNote,
     deleteSavedNote,
+    updateSavedNoteContent,
     getTimeInfo,
     updateNoteContent,
     refreshNotes: loadNotes

@@ -33,7 +33,7 @@ export const DELETE_TIMERS = {
 
 const DEFAULT_SETTINGS = {
   theme: 'white',
-  fontSize: 16,
+  fontSize: 18,
   letterSpacing: 0,
   organizationStyle: 'bullets',
   deleteTimer: '24h',

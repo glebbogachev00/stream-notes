@@ -16,6 +16,8 @@ const NoteList = ({
   const { settings, formatText } = useSettings();
   const editingTextareaRef = useRef(null);
   const [expandedNotes, setExpandedNotes] = useState(new Set());
+  const [openMenuId, setOpenMenuId] = useState(null);
+  const [fullscreenNoteId, setFullscreenNoteId] = useState(null);
 
   useEffect(() => {
     if (editingNoteId && editingTextareaRef.current) {
@@ -24,6 +26,19 @@ const NoteList = ({
       editingTextareaRef.current.style.height = `${editingTextareaRef.current.scrollHeight}px`;
     }
   }, [editingNoteId]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (!event.target.closest('[data-menu]')) {
+        setOpenMenuId(null);
+      }
+    };
+
+    if (openMenuId) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [openMenuId]);
 
   const handleContentChange = (e, noteId) => {
     onUpdateNoteContent(noteId, e.target.value);
@@ -80,20 +95,23 @@ const NoteList = ({
     );
   }
 
+  const fullscreenNote = notes.find(note => note.id === fullscreenNoteId);
+
   return (
-    <div className="space-y-6">
-      {notes.map((note) => {
-        const timeInfo = getTimeInfo(note.createdAt);
-        
-        return (
-          <article
-            key={note.id}
-            className={`group pb-6 border-b transition-all duration-200 relative ${
-              timeInfo.isExpiringSoon 
-                ? 'border-orange-200' 
-                : `${theme.borderSecondary} ${theme.borderSecondaryHover}`
-            }`}
-          >
+    <>
+      <div className="space-y-6">
+        {notes.map((note) => {
+          const timeInfo = getTimeInfo(note.createdAt);
+          
+          return (
+            <article
+              key={note.id}
+              className={`group pb-6 border-b transition-all duration-200 relative ${
+                timeInfo.isExpiringSoon 
+                  ? 'border-orange-200' 
+                  : `${theme.borderSecondary} ${theme.borderSecondaryHover}`
+              }`}
+            >
             {/* Expiration progress bar */}
             <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gray-100">
               <div 
@@ -105,8 +123,8 @@ const NoteList = ({
                 }}
               />
             </div>
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex-1 min-w-0">
+            <div className="relative">
+              <div className="pr-2">
                 {editingNoteId === note.id ? (
                   <textarea
                     ref={editingTextareaRef}
@@ -118,13 +136,13 @@ const NoteList = ({
                         handleEditingFinished(note.id, note.content);
                       }
                     }}
-                    className={`${theme.text} text-sm font-light leading-relaxed whitespace-pre-wrap break-words mb-3 w-full bg-transparent resize-none focus:outline-none`}
+                    className={`${theme.text} text-base font-light leading-relaxed whitespace-pre-wrap break-words mb-3 w-full bg-transparent resize-none focus:outline-none`}
                   />
                 ) : (
                   <div>
                     <p 
                       onClick={() => onSetEditingNoteId(note.id)}
-                      className={`${theme.text} text-sm font-light leading-relaxed whitespace-pre-wrap break-words mb-3 cursor-pointer transition-smooth hover:${theme.textSecondary.replace('text-', 'hover:text-')}`}
+                      className={`${theme.text} text-base font-light leading-relaxed whitespace-pre-wrap break-words mb-3 cursor-pointer transition-smooth hover:${theme.textSecondary.replace('text-', 'hover:text-')}`}
                     >
                       {shouldTruncateNote(note.content) && !expandedNotes.has(note.id) 
                         ? getTruncatedContent(note.content)
@@ -132,12 +150,31 @@ const NoteList = ({
                       }
                     </p>
                     {shouldTruncateNote(note.content) && (
-                      <button
-                        onClick={() => toggleNoteExpansion(note.id)}
-                        className={`text-xs ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} transition-colors mb-2 font-light`}
-                      >
-                        {expandedNotes.has(note.id) ? 'Show less' : 'Show more'}
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => toggleNoteExpansion(note.id)}
+                          className={`flex items-center gap-1 text-xs ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} transition-colors mb-2 font-light`}
+                        >
+                          <svg 
+                            className={`w-3 h-3 transition-transform duration-200 ${expandedNotes.has(note.id) ? 'rotate-180' : ''}`} 
+                            fill="none" 
+                            stroke="currentColor" 
+                            viewBox="0 0 24 24"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                          {expandedNotes.has(note.id) ? 'Show less' : 'Show more'}
+                        </button>
+                        <button
+                          onClick={() => setFullscreenNoteId(note.id)}
+                          className={`flex items-center gap-1 text-xs ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} transition-colors mb-2 font-light`}
+                        >
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                          </svg>
+                          Fullscreen
+                        </button>
+                      </div>
                     )}
                   </div>
                 )}
@@ -148,64 +185,99 @@ const NoteList = ({
                   }`}>
                     {timeInfo.timeText}
                   </span>
-                  
-                  {timeInfo.isExpiringSoon && (
-                    <span className="text-orange-500 font-light typography-system">
-                      expires in {timeInfo.hoursRemaining}h {timeInfo.minutesRemaining}m
-                    </span>
-                  )}
                 </div>
               </div>
               
-              <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300">
-                <button
-                  onClick={(e) => {
-                    navigator.clipboard.writeText(note.content);
-                    e.target.closest('button').classList.add('animate-pulse');
-                    setTimeout(() => {
-                      e.target.closest('button')?.classList.remove('animate-pulse');
-                    }, 600);
-                  }}
-                  className={`flex items-center gap-1 px-3 py-1 text-xs typography-title ${theme.textTertiary} hover:text-blue-500 transition-all duration-200 micro-hover icon-hover active:scale-95`}
-                  title="Copy this note"
-                >
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                  </svg>
-                  copy
-                </button>
-                <button
-                  onClick={(e) => {
-                    onSaveNote(note.id);
-                    e.target.closest('button').classList.add('animate-bounce');
-                    setTimeout(() => {
-                      e.target.closest('button')?.classList.remove('animate-bounce');
-                    }, 600);
-                  }}
-                  className={`flex items-center gap-1 px-3 py-1 text-xs typography-title ${theme.textTertiary} hover:text-green-500 transition-all duration-200 micro-hover icon-hover active:scale-95`}
-                  title="Save this note permanently"
-                >
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
-                  </svg>
-                  save
-                </button>
-                <button
-                  onClick={() => onDeleteNote(note.id)}
-                  className={`flex items-center gap-1 px-3 py-1 text-xs typography-title ${theme.textTertiary} hover:text-red-500 transition-all duration-200 micro-hover icon-hover`}
-                  title="Delete this note"
-                >
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                  delete
-                </button>
+              <div className={`absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-all duration-300`}>
+                <div className="relative" data-menu>
+                  <button
+                    onClick={() => setOpenMenuId(openMenuId === note.id ? null : note.id)}
+                    className={`px-3 py-2 text-lg font-bold ${theme.textTertiary} hover:${theme.text} transition-colors duration-200 ${theme.bg}/90 backdrop-blur-sm rounded shadow-sm`}
+                    title="More actions"
+                  >
+                    ⋯
+                  </button>
+                  
+                  {openMenuId === note.id && (
+                    <div className={`absolute top-full right-0 mt-1 ${theme.bg} ${theme.borderPrimary} border rounded shadow-lg py-1 z-10 min-w-20`}>
+                      <button
+                        onClick={(e) => {
+                          navigator.clipboard.writeText(note.content);
+                          setOpenMenuId(null);
+                          e.target.closest('button').classList.add('animate-pulse');
+                          setTimeout(() => {
+                            e.target.closest('button')?.classList.remove('animate-pulse');
+                          }, 600);
+                        }}
+                        className={`w-full px-3 py-1 text-xs font-light text-left ${theme.textTertiary} hover:text-blue-500 hover:${theme.bgSecondary} transition-colors duration-200 flex items-center gap-2`}
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                        copy
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          onSaveNote(note.id);
+                          setOpenMenuId(null);
+                          e.target.closest('button').classList.add('animate-bounce');
+                          setTimeout(() => {
+                            e.target.closest('button')?.classList.remove('animate-bounce');
+                          }, 600);
+                        }}
+                        className={`w-full px-3 py-1 text-xs font-light text-left ${theme.textTertiary} hover:text-green-500 hover:${theme.bgSecondary} transition-colors duration-200 flex items-center gap-2`}
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                        </svg>
+                        save
+                      </button>
+                      <button
+                        onClick={() => {
+                          onDeleteNote(note.id);
+                          setOpenMenuId(null);
+                        }}
+                        className={`w-full px-3 py-1 text-xs font-light text-left ${theme.textTertiary} hover:text-red-500 hover:${theme.bgSecondary} transition-colors duration-200 flex items-center gap-2`}
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                        delete
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </article>
         );
       })}
-    </div>
+      </div>
+
+      {fullscreenNote && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
+          <div className={`${theme.bg} w-full max-w-4xl max-h-[90vh] m-4 rounded-lg shadow-xl overflow-hidden flex flex-col`}>
+            <div className={`flex items-center justify-between p-4 border-b ${theme.borderSecondary}`}>
+              <span className={`text-sm ${theme.textTertiary} font-light`}>
+                {getTimeInfo(fullscreenNote.createdAt).timeText}
+              </span>
+              <button
+                onClick={() => setFullscreenNoteId(null)}
+                className={`px-2 py-1 text-sm font-light ${theme.textTertiary} hover:${theme.text} transition-colors duration-200`}
+                title="Close fullscreen view"
+              >
+                ×
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-6">
+              <p className={`${theme.text} text-lg font-light leading-relaxed whitespace-pre-wrap break-words`}>
+                {fullscreenNote.content}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 

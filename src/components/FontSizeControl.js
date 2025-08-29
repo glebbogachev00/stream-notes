@@ -7,15 +7,15 @@ const FontSizeControl = ({ isAlwaysEditing = false }) => {
   const { settings, updateSettings } = useSettings();
 
   const FONT_SIZES = {
-    S: 14,
-    M: 16,
-    L: 18
+    S: 16,
+    M: 18,
+    L: 20
   };
 
   const getCurrentSize = () => {
     const currentSize = settings.fontSize;
-    if (currentSize <= 14) return 'S';
-    if (currentSize <= 16) return 'M';
+    if (currentSize <= 16) return 'S';
+    if (currentSize <= 18) return 'M';
     return 'L';
   };
 

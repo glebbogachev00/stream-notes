@@ -25,6 +25,7 @@ function AppContent() {
     deleteNote,
     saveNote,
     deleteSavedNote,
+    updateSavedNoteContent,
     getTimeInfo,
     updateNoteContent
   } = useNotes(settings.deleteTimer, showToast, settings.personalityEnabled);
@@ -115,6 +116,7 @@ function AppContent() {
             <SavedNotes
               savedNotes={savedNotes}
               onDeleteNote={deleteSavedNote}
+              onUpdateNote={updateSavedNoteContent}
               getTimeInfo={getTimeInfo}
             />
           )}
