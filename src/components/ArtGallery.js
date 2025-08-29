@@ -59,8 +59,8 @@ const ArtGallery = ({ artNotes, onDeleteNote }) => {
                           key={letterIndex}
                           className={`${styles.text} inline-block`}
                           style={{
-                            fontSize: `${baseFontSize + (Math.random() - 0.5) * 0.4}rem`,
-                            transform: `rotate(${(Math.random() - 0.5) * 8}deg) scaleY(${0.9 + Math.random() * 0.2})`,
+                            fontSize: `${baseFontSize + (Math.random() - 0.5) * 0.1}rem`,
+                            transform: `rotate(${(Math.random() - 0.5) * 3}deg) scaleY(${0.95 + Math.random() * 0.1})`,
                             letterSpacing: `${(Math.random() - 0.5) * 2}px`,
                             textShadow: '1px 1px 2px rgba(255,255,255,0.1)',
                             filter: 'drop-shadow(0 0 1px white)'
@@ -78,7 +78,7 @@ const ArtGallery = ({ artNotes, onDeleteNote }) => {
         </div>
         
         <div className="absolute bottom-2 right-2 text-xs opacity-40 font-mono">
-          {isStencil ? '[stream]©' : 'SAMO©'}
+          [stream]©
         </div>
       </div>
     );
@@ -117,7 +117,7 @@ const ArtGallery = ({ artNotes, onDeleteNote }) => {
                 </div>
               ))}
             </div>
-            <div className="absolute bottom-2 right-2 text-xs opacity-40 font-mono">SAMO©</div>
+            <div className="absolute bottom-2 right-2 text-xs opacity-40 font-mono">[stream]©</div>
           </div>
         </div>
         <p className={`text-sm ${theme.textTertiary} font-light`}>
@@ -143,12 +143,10 @@ const ArtGallery = ({ artNotes, onDeleteNote }) => {
             <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
               <button
                 onClick={() => onDeleteNote(note.id)}
-                className={`p-1 rounded ${theme.textTertiary} hover:text-red-500 transition-colors`}
+                className={`px-2 py-1 text-xs ${theme.textTertiary} hover:text-red-400 transition-colors font-light ${theme.bg}/90 backdrop-blur-sm rounded shadow-sm`}
                 title="Delete art piece"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
+                remove
               </button>
             </div>
           </article>

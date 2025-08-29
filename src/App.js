@@ -152,7 +152,7 @@ function AppContent() {
             {settings.samoModeEnabled && (
               <button
                 onClick={() => setActiveTab('art')}
-                className={`pb-3 dynamic-text-sm font-light transition-all duration-200 border-b flex items-center gap-2 ${
+                className={`pb-3 dynamic-text-sm font-light transition-all duration-200 border-b ${
                   activeTab === 'art'
                     ? `${theme.text} ${theme.text.replace('text-', 'border-')}`
                     : `${theme.textTertiary} hover:${theme.textSecondary.replace('text-', 'hover:text-')} border-transparent`
@@ -160,11 +160,7 @@ function AppContent() {
                 title="samo mode transforms notes into street art inspired by jean-michel basquiat's legendary graffiti tag 'samo' - raw, authentic visual expression."
               >
                 samo ({artNotes.length})
-                <svg className={`w-3 h-3 ${theme.textTertiary}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <circle cx="12" cy="12" r="10"/>
                   <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/>
-                  <line x1="12" y1="17" x2="12.01" y2="17"/>
-                </svg>
               </button>
             )}
             <button
