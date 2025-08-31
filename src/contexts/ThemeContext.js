@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { checkMatrixUnlock } from '../utils/quoteDetection';
 
 const ThemeContext = createContext();
 
@@ -74,6 +75,30 @@ const THEMES = {
     inputBgDark: 'bg-neutral-700',
     panelBg: 'rgba(23, 23, 23, 0.95)',
     separatorColor: 'rgb(255, 255, 255)'
+  },
+  matrix: {
+    name: 'matrix',
+    bg: 'bg-black',
+    text: 'text-green-400',
+    textSecondary: 'text-green-500',
+    textTertiary: 'text-green-600',
+    border: 'border-green-800',
+    borderHover: 'hover:border-green-700',
+    borderSecondary: 'border-green-900',
+    borderSecondaryHover: 'hover:border-green-800',
+    buttonHover: 'hover:bg-green-950',
+    inputBg: 'bg-green-950',
+    ring: 'ring-green-600',
+    textDestructive: 'hover:text-red-400',
+    focusColor: 'rgba(34, 197, 94, 0.25)',
+    focusBorder: '#22c55e',
+    focusColorOuter: 'rgba(34, 197, 94, 0.1)',
+    themeAccent: '#22c55e',
+    themeAccentLight: '#4ade80',
+    inputBgLight: 'bg-green-950',
+    inputBgDark: 'bg-green-900',
+    panelBg: 'rgba(0, 0, 0, 0.95)',
+    separatorColor: 'rgb(34, 197, 94)'
   }
 };
 
@@ -90,6 +115,7 @@ export const ThemeProvider = ({ children }) => {
     const saved = localStorage.getItem('stream_theme');
     return saved && THEMES[saved] ? saved : 'white';
   });
+  const [matrixUnlocked, setMatrixUnlocked] = useState(() => checkMatrixUnlock());
 
   useEffect(() => {
     localStorage.setItem('stream_theme', currentTheme);
@@ -101,6 +127,15 @@ export const ThemeProvider = ({ children }) => {
     }
   };
 
+  const unlockMatrixTheme = () => {
+    setMatrixUnlocked(true);
+  };
+
+  const getAvailableThemes = () => {
+    const baseThemes = ['white', 'beige', 'dark'];
+    return matrixUnlocked ? [...baseThemes, 'matrix'] : baseThemes;
+  };
+
   const theme = THEMES[currentTheme];
 
   return (
@@ -108,7 +143,9 @@ export const ThemeProvider = ({ children }) => {
       currentTheme, 
       theme, 
       switchTheme,
-      themes: Object.keys(THEMES)
+      themes: getAvailableThemes(),
+      unlockMatrixTheme,
+      matrixUnlocked
     }}>
       {children}
     </ThemeContext.Provider>

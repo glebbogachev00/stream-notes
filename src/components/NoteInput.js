@@ -2,11 +2,12 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useSettings } from '../contexts/SettingsContext';
 import { getRotatingMessage, INPUT_PLACEHOLDER_MESSAGES } from '../utils/messages';
+import { detectQuotePattern, unlockMatrix, checkMatrixUnlock } from '../utils/quoteDetection';
 
-const NoteInput = ({ onAddNote }) => {
+const NoteInput = ({ onAddNote, onMatrixUnlock }) => {
   const [content, setContent] = useState('');
   const [isFocused, setIsFocused] = useState(false);
-  const { theme } = useTheme();
+  const { theme, unlockMatrixTheme } = useTheme();
   const { formatText, settings } = useSettings();
   const [placeholder, setPlaceholder] = useState(() => 
     getRotatingMessage(INPUT_PLACEHOLDER_MESSAGES, settings?.personalityEnabled ?? true)
@@ -62,6 +63,18 @@ const NoteInput = ({ onAddNote }) => {
     }
   };
 
+  const handlePaste = (e) => {
+    const pastedText = e.clipboardData.getData('text');
+    
+    if (!checkMatrixUnlock() && detectQuotePattern(pastedText)) {
+      unlockMatrix();
+      unlockMatrixTheme();
+      if (onMatrixUnlock) {
+        onMatrixUnlock();
+      }
+    }
+  };
+
   return (
     <section className="mb-8">
       <form onSubmit={handleSubmit}>
@@ -73,6 +86,7 @@ const NoteInput = ({ onAddNote }) => {
             onKeyDown={handleKeyDown}
             onFocus={handleFocus}
             onBlur={handleBlur}
+            onPaste={handlePaste}
             placeholder={isFocused ? "write..." : placeholder}
             className={`w-full text-base font-light resize-none ${theme.text} placeholder:${theme.textSecondary} focus:outline-none transition-all duration-200 ${
               isFocused 

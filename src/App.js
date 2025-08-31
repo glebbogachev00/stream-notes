@@ -14,6 +14,7 @@ import ArtGallery from './components/ArtGallery';
 import StyleSelector from './components/StyleSelector';
 import QuoteCollection from './components/QuoteCollection';
 import Toast from './components/Toast';
+import MatrixUnlockNotification from './components/MatrixUnlockNotification';
 
 function AppContent() {
   const [activeTab, setActiveTab] = useState('active');
@@ -25,6 +26,7 @@ function AppContent() {
   const [styleSelectorOpen, setStyleSelectorOpen] = useState(false);
   const [pendingTransformId, setPendingTransformId] = useState(null);
   const [pendingFromSaved, setPendingFromSaved] = useState(false);
+  const [showMatrixUnlock, setShowMatrixUnlock] = useState(false);
 
   const cycleLogo = () => {
     const styles = ['originalText', 'raindrop', 'samo'];
@@ -45,6 +47,10 @@ function AppContent() {
     setStyleSelectorOpen(false);
     setPendingTransformId(null);
     setPendingFromSaved(false);
+  };
+
+  const handleMatrixUnlock = () => {
+    setShowMatrixUnlock(true);
   };
   const { theme } = useTheme();
   const { settings } = useSettings();
@@ -188,7 +194,7 @@ function AppContent() {
         <main>
           {activeTab === 'active' && (
             <div className="space-y-8">
-              <NoteInput onAddNote={addNote} />
+              <NoteInput onAddNote={addNote} onMatrixUnlock={handleMatrixUnlock} />
               <NoteList
                 notes={notes}
                 onDeleteNote={deleteNote}
@@ -248,6 +254,13 @@ function AppContent() {
           duration={toast.duration}
         />
       ))}
+
+      {/* Matrix unlock notification */}
+      {showMatrixUnlock && (
+        <MatrixUnlockNotification 
+          onClose={() => setShowMatrixUnlock(false)} 
+        />
+      )}
     </div>
   );
 }
