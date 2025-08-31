@@ -7,30 +7,45 @@ const FontSizeControl = ({ isAlwaysEditing = false }) => {
   const { settings, updateSettings } = useSettings();
 
   const FONT_SIZES = {
-    s: "sm",
-    m: "base",
-    l: "lg",
+    sm: 14,
+    base: 16,
+    lg: 18,
+    xl: 20,
   };
 
-  const handleSizeChange = (size) => {
-    updateSettings({ fontSize: FONT_SIZES[size] });
+  const handleDecrease = () => {
+    const sizes = Object.keys(FONT_SIZES);
+    const currentIndex = sizes.indexOf(settings.fontSize);
+    if (currentIndex > 0) {
+      updateSettings({ fontSize: sizes[currentIndex - 1] });
+    }
+  };
+
+  const handleIncrease = () => {
+    const sizes = Object.keys(FONT_SIZES);
+    const currentIndex = sizes.indexOf(settings.fontSize);
+    if (currentIndex < sizes.length - 1) {
+      updateSettings({ fontSize: sizes[currentIndex + 1] });
+    }
   };
 
   return (
-    <div className="flex items-center gap-1">
-      {Object.keys(FONT_SIZES).map((size) => (
-        <button
-          key={size}
-          onClick={() => handleSizeChange(size)}
-          className={`px-2 py-1 dynamic-text-xs font-light transition-colors border-b ${
-            settings.fontSize === FONT_SIZES[size]
-              ? `${theme.text} ${theme.border}`
-              : `${theme.textTertiary} border-transparent hover:${theme.text.replace('text-', 'hover:text-')}`
-          }`}
-        >
-          {size}
-        </button>
-      ))}
+    <div className="flex items-center gap-2">
+      <button
+        onClick={handleDecrease}
+        className={`dynamic-text-xs font-light ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} transition-colors`}
+      >
+        [-]
+      </button>
+      <span className={`dynamic-text-xs font-light ${theme.text}`}>
+        {FONT_SIZES[settings.fontSize]}
+      </span>
+      <button
+        onClick={handleIncrease}
+        className={`dynamic-text-xs font-light ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} transition-colors`}
+      >
+        [+]
+      </button>
     </div>
   );
 };

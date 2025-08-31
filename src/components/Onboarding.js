@@ -126,29 +126,49 @@ const Onboarding = () => {
     </div>
   );
 
-  const renderStep2 = () => (
-    <div className="space-y-0">
-      {Object.entries({
-        sm: "small",
-        base: "medium",
-        lg: "large",
-      }).map(([key, value]) => (
+  const renderStep2 = () => {
+    const FONT_SIZES = { sm: 14, base: 16, lg: 18, xl: 20 };
+    
+    const handleDecrease = () => {
+      const sizes = Object.keys(FONT_SIZES);
+      const currentIndex = sizes.indexOf(selections.fontSize);
+      if (currentIndex > 0) {
+        const newSize = sizes[currentIndex - 1];
+        setSelections({ ...selections, fontSize: newSize });
+        document.documentElement.style.setProperty('--base-font-size', `${FONT_SIZES[newSize]}px`);
+      }
+    };
+
+    const handleIncrease = () => {
+      const sizes = Object.keys(FONT_SIZES);
+      const currentIndex = sizes.indexOf(selections.fontSize);
+      if (currentIndex < sizes.length - 1) {
+        const newSize = sizes[currentIndex + 1];
+        setSelections({ ...selections, fontSize: newSize });
+        document.documentElement.style.setProperty('--base-font-size', `${FONT_SIZES[newSize]}px`);
+      }
+    };
+
+    return (
+      <div className="flex items-center justify-center gap-4">
         <button
-          key={key}
-          onClick={() => setSelections({ ...selections, fontSize: key })}
-          className={`w-full text-left p-3 transition-all duration-200 border-b ${
-            selections.fontSize === key
-              ? `${theme.text} ${theme.text.replace('text-', 'border-')}`
-              : `${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} border-transparent`
-          }`}
+          onClick={handleDecrease}
+          className={`dynamic-text-xs font-light ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} transition-colors`}
         >
-          <div className="text-sm font-light">
-            {value}
-          </div>
+          [-]
         </button>
-      ))}
-    </div>
-  );
+        <span className={`dynamic-text-base font-light ${theme.text}`}>
+          {FONT_SIZES[selections.fontSize]}
+        </span>
+        <button
+          onClick={handleIncrease}
+          className={`dynamic-text-xs font-light ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} transition-colors`}
+        >
+          [+]
+        </button>
+      </div>
+    );
+  };
 
   const renderStep3 = () => (
     <div className="space-y-0">
@@ -265,9 +285,17 @@ const Onboarding = () => {
     );
   };
 
+  const getFontSizeValue = (fontSize) => {
+    const sizes = { sm: 14, base: 16, lg: 18, xl: 20 };
+    return sizes[fontSize] || 16;
+  };
+
   return (
     <div 
-      className={`min-h-screen ${theme.bg} flex items-center justify-center p-4 text-${selections.fontSize}`}>
+      className={`min-h-screen ${theme.bg} flex items-center justify-center p-4`}
+      style={{ 
+        '--base-font-size': `${getFontSizeValue(selections.fontSize)}px`
+      }}>
       <div className="max-w-sm w-full">
         {renderProgressBar()}
         

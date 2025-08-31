@@ -77,11 +77,17 @@ function AppContent() {
     return <Onboarding />;
   }
 
+  const getFontSizeValue = (fontSize) => {
+    const sizes = { sm: 14, base: 16, lg: 18, xl: 20 };
+    return sizes[fontSize] || 16;
+  };
+
   return (
     <div 
-      className={`min-h-screen ${theme.bg} transition-all duration-200 text-${settings.fontSize}`}
+      className={`min-h-screen ${theme.bg} transition-all duration-200`}
       style={{ 
-        letterSpacing: `${settings.letterSpacing}px`
+        letterSpacing: `${settings.letterSpacing}px`,
+        '--base-font-size': `${getFontSizeValue(settings.fontSize)}px`
       }}
     >
       <div className="max-w-2xl mx-auto px-4 py-8 sm:py-12">
