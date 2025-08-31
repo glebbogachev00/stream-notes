@@ -1,16 +1,19 @@
 import React, { useState } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useSettings, ORGANIZATION_STYLES, DELETE_TIMERS } from '../contexts/SettingsContext';
+import { useStorage } from '../contexts/StorageContext';
 
 const Onboarding = () => {
   const { theme, switchTheme, themes } = useTheme();
   const { completeOnboarding, settings } = useSettings();
+  const { isSyncSupported } = useStorage();
   const [currentStep, setCurrentStep] = useState(-1); // Start with welcome screen
   const [selections, setSelections] = useState({
     theme: 'white',
     fontSize: 'base',
     organizationStyle: 'bullets',
-    deleteTimer: '24h'
+    deleteTimer: '24h',
+    syncEnabled: false
   });
 
   const steps = [
@@ -29,6 +32,10 @@ const Onboarding = () => {
     {
       title: settings.personalityEnabled ? "Here's my favorite part - the cleanup!" : "Auto-Delete Timer",
       subtitle: settings.personalityEnabled ? "I'm like a helpful roommate who actually does the dishes. How long should thoughts hang around before I tidy up?" : "Set the duration after which notes are automatically deleted."
+    },
+    {
+      title: settings.personalityEnabled ? "How should I store your thoughts?" : "Data Storage",
+      subtitle: settings.personalityEnabled ? "I can keep everything on this device, or sync across your browsers if you want." : "Choose whether to store notes locally or sync across devices."
     },
     {
       title: settings.personalityEnabled ? "Check it out! This is us working together." : "Preview and Confirmation",
@@ -186,7 +193,49 @@ const Onboarding = () => {
     </div>
   );
 
-  const renderStep5 = () => {
+  const renderStep5 = () => (
+    <div className="space-y-0">
+      <button
+        onClick={() => setSelections({ ...selections, syncEnabled: false })}
+        className={`w-full text-left p-3 transition-all duration-200 border-b ${
+          !selections.syncEnabled
+            ? `${theme.text} ${theme.text.replace('text-', 'border-')}`
+            : `${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} border-transparent`
+        }`}
+      >
+        <div className="text-sm font-light mb-1">
+          local only (this device only)
+        </div>
+      </button>
+      
+      {isSyncSupported() ? (
+        <button
+          onClick={() => setSelections({ ...selections, syncEnabled: true })}
+          className={`w-full text-left p-3 transition-all duration-200 border-b ${
+            selections.syncEnabled
+              ? `${theme.text} ${theme.text.replace('text-', 'border-')}`
+              : `${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} border-transparent`
+          }`}
+        >
+          <div className="text-sm font-light mb-1">
+            browser sync (sync across devices)
+          </div>
+        </button>
+      ) : (
+        <div className={`p-3 border-b ${theme.borderSecondary}`}>
+          <div className={`text-sm font-light mb-1 ${theme.textTertiary}`}>
+            browser sync (not available)
+          </div>
+        </div>
+      )}
+      
+      <div className={`text-xs ${theme.textTertiary} font-light leading-relaxed p-3`}>
+        browser sync uses your existing browser account to sync notes across devices. your data never goes to stream servers.
+      </div>
+    </div>
+  );
+
+  const renderStep6 = () => {
     const sampleText = "Buy groceries\nCall mom\nFinish project";
     const formattedSample = ORGANIZATION_STYLES[selections.organizationStyle].format(
       sampleText.split('\n')
@@ -203,6 +252,9 @@ const Onboarding = () => {
           </div>
           <div className={`text-xs ${theme.textTertiary} mt-3 font-light`}>
             deletes in: {DELETE_TIMERS[selections.deleteTimer].name.toLowerCase()}
+          </div>
+          <div className={`text-xs ${theme.textTertiary} mt-2 font-light`}>
+            storage: {selections.syncEnabled ? 'browser sync' : 'local only'}
           </div>
         </div>
         
@@ -240,6 +292,7 @@ const Onboarding = () => {
               {currentStep === 2 && renderStep3()}
               {currentStep === 3 && renderStep4()}
               {currentStep === 4 && renderStep5()}
+              {currentStep === 5 && renderStep6()}
             </div>
           </>
         )}

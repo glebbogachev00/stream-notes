@@ -41,7 +41,8 @@ const DEFAULT_SETTINGS = {
   personalityEnabled: true,
   samoModeEnabled: true,
   stealThisQuoteEnabled: true,
-  stencilModeEnabled: true
+  stencilModeEnabled: true,
+  syncEnabled: false
 };
 
 export const useSettings = () => {
@@ -78,7 +79,8 @@ export const SettingsProvider = ({ children }) => {
         personalityEnabled: settings.personalityEnabled,
         samoModeEnabled: settings.samoModeEnabled,
         stealThisQuoteEnabled: settings.stealThisQuoteEnabled,
-        stencilModeEnabled: settings.stencilModeEnabled
+        stencilModeEnabled: settings.stencilModeEnabled,
+        syncEnabled: settings.syncEnabled
       }));
       localStorage.setItem('stream-onboarding-completed', settings.onboardingCompleted.toString());
     } catch (error) {

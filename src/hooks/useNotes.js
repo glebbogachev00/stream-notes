@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { DELETE_TIMERS } from '../contexts/SettingsContext';
 import { getRandomMessage, AUTO_DELETE_MESSAGES, SAVE_NOTE_MESSAGES } from '../utils/messages';
+import { useStorage } from '../contexts/StorageContext';
 
 const NOTES_KEY = 'stream_notes';
 const SAVED_NOTES_KEY = 'stream_saved_notes';
@@ -10,12 +11,13 @@ export const useNotes = (deleteTimer = '24h', onToast = null, personalityEnabled
   const [notes, setNotes] = useState([]);
   const [savedNotes, setSavedNotes] = useState([]);
   const [artNotes, setArtNotes] = useState([]);
+  const { storage } = useStorage();
 
-  const loadNotes = useCallback(() => {
+  const loadNotes = useCallback(async () => {
     try {
-      const storedNotes = localStorage.getItem(NOTES_KEY);
-      const storedSavedNotes = localStorage.getItem(SAVED_NOTES_KEY);
-      const storedArtNotes = localStorage.getItem(ART_NOTES_KEY);
+      const storedNotes = await storage.get(NOTES_KEY);
+      const storedSavedNotes = await storage.get(SAVED_NOTES_KEY);
+      const storedArtNotes = await storage.get(ART_NOTES_KEY);
       
       const parsedNotes = storedNotes ? JSON.parse(storedNotes) : [];
       const parsedSavedNotes = storedSavedNotes ? JSON.parse(storedSavedNotes) : [];
@@ -32,8 +34,7 @@ export const useNotes = (deleteTimer = '24h', onToast = null, personalityEnabled
         });
       
       if (validNotes.length !== parsedNotes.length) {
-        localStorage.setItem(NOTES_KEY, JSON.stringify(validNotes));
-        // Show auto-delete toast if notes were removed
+        await storage.set(NOTES_KEY, JSON.stringify(validNotes));
         if (onToast && parsedNotes.length - validNotes.length > 0) {
           onToast(getRandomMessage(AUTO_DELETE_MESSAGES, personalityEnabled));
         }
@@ -48,34 +49,34 @@ export const useNotes = (deleteTimer = '24h', onToast = null, personalityEnabled
       setSavedNotes([]);
       setArtNotes([]);
     }
-  }, [deleteTimer, onToast, personalityEnabled]);
+  }, [deleteTimer, onToast, personalityEnabled, storage]);
 
-  const saveNotes = useCallback((newNotes) => {
+  const saveNotes = useCallback(async (newNotes) => {
     try {
-      localStorage.setItem(NOTES_KEY, JSON.stringify(newNotes));
+      await storage.set(NOTES_KEY, JSON.stringify(newNotes));
       setNotes(newNotes);
     } catch (error) {
       console.error('Error saving notes:', error);
     }
-  }, []);
+  }, [storage]);
 
-  const saveSavedNotes = useCallback((newSavedNotes) => {
+  const saveSavedNotes = useCallback(async (newSavedNotes) => {
     try {
-      localStorage.setItem(SAVED_NOTES_KEY, JSON.stringify(newSavedNotes));
+      await storage.set(SAVED_NOTES_KEY, JSON.stringify(newSavedNotes));
       setSavedNotes(newSavedNotes);
     } catch (error) {
       console.error('Error saving saved notes:', error);
     }
-  }, []);
+  }, [storage]);
 
-  const saveArtNotes = useCallback((newArtNotes) => {
+  const saveArtNotes = useCallback(async (newArtNotes) => {
     try {
-      localStorage.setItem(ART_NOTES_KEY, JSON.stringify(newArtNotes));
+      await storage.set(ART_NOTES_KEY, JSON.stringify(newArtNotes));
       setArtNotes(newArtNotes);
     } catch (error) {
       console.error('Error saving art notes:', error);
     }
-  }, []);
+  }, [storage]);
 
   const addNote = useCallback((content) => {
     const newNote = {

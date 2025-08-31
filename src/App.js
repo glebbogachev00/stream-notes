@@ -3,6 +3,7 @@ import { useNotes } from './hooks/useNotes';
 import { useToast } from './hooks/useToast';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import { SettingsProvider, useSettings } from './contexts/SettingsContext';
+import { StorageProvider, useStorage } from './contexts/StorageContext';
 import NoteInput from './components/NoteInput';
 import NoteList from './components/NoteList';
 import SavedNotes from './components/SavedNotes';
@@ -47,6 +48,7 @@ function AppContent() {
   };
   const { theme } = useTheme();
   const { settings } = useSettings();
+  const { getSyncStatus } = useStorage();
   const { toasts, showToast, hideToast } = useToast();
   const {
     notes,
@@ -108,9 +110,16 @@ function AppContent() {
                 </div>
               )}
             </div>
-            <p className={`dynamic-text-base ${theme.textSecondary} font-light`}>
-              self-managing notes
-            </p>
+            <div className="flex items-center gap-2">
+              <p className={`dynamic-text-base ${theme.textSecondary} font-light`}>
+                self-managing notes
+              </p>
+              {getSyncStatus() === 'synced' && (
+                <span className={`dynamic-text-xs ${theme.textTertiary} font-light`}>
+                  • synced
+                </span>
+              )}
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -247,7 +256,9 @@ function App() {
   return (
     <ThemeProvider>
       <SettingsProvider>
-        <AppContent />
+        <StorageProvider>
+          <AppContent />
+        </StorageProvider>
       </SettingsProvider>
     </ThemeProvider>
   );
