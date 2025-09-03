@@ -50,9 +50,6 @@ const NoteInput = ({ onAddNote, onMatrixUnlock }) => {
     }
   };
 
-  const handleKeyDown = (e) => {
-    // No-op
-  };
 
   const handleFocus = () => {
     setIsFocused(true);
