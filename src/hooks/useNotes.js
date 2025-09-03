@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { DELETE_TIMERS } from '../contexts/SettingsContext';
 import { getRandomMessage, AUTO_DELETE_MESSAGES, SAVE_NOTE_MESSAGES } from '../utils/messages';
 import { useStorage } from '../contexts/StorageContext';
+import { hasReminder, getReminderTime } from '../utils/reminders';
 
 const NOTES_KEY = 'stream_notes';
 const SAVED_NOTES_KEY = 'stream_saved_notes';
@@ -30,6 +31,15 @@ export const useNotes = (deleteTimer = '24h', onToast = null, personalityEnabled
         parsedNotes : 
         parsedNotes.filter(note => {
           const ageInHours = (now - note.createdAt) / (1000 * 60 * 60);
+          
+          // Don't delete if note has a future reminder
+          if (hasReminder(note.id)) {
+            const reminderTime = getReminderTime(note.id);
+            if (reminderTime > now) {
+              return true; // Keep note alive until reminder fires
+            }
+          }
+          
           return ageInHours < maxAgeHours;
         });
       

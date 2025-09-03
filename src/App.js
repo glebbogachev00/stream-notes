@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNotes } from './hooks/useNotes';
 import { useToast } from './hooks/useToast';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import { SettingsProvider, useSettings } from './contexts/SettingsContext';
 import { StorageProvider, useStorage } from './contexts/StorageContext';
+import { initializeReminders } from './utils/reminders';
 import NoteInput from './components/NoteInput';
 import NoteList from './components/NoteList';
 import SavedNotes from './components/SavedNotes';
@@ -84,6 +85,29 @@ function AppContent() {
     getTimeInfo,
     updateNoteContent
   } = useNotes(settings.deleteTimer, showToast, settings.personalityEnabled);
+
+  // Initialize reminders on app start
+  useEffect(() => {
+    initializeReminders();
+    
+    // Listen for reminder triggers
+    const handleReminderTriggered = () => {
+      showToast("Reminder: Check your note!");
+    };
+    
+    const handleReminderAlert = (event) => {
+      const { message } = event.detail;
+      showToast(message);
+    };
+    
+    window.addEventListener('reminderTriggered', handleReminderTriggered);
+    window.addEventListener('showReminderAlert', handleReminderAlert);
+    
+    return () => {
+      window.removeEventListener('reminderTriggered', handleReminderTriggered);
+      window.removeEventListener('showReminderAlert', handleReminderAlert);
+    };
+  }, [showToast]);
 
   // Show onboarding if not completed
   if (!settings.onboardingCompleted) {

@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useSettings } from '../contexts/SettingsContext';
 import { handleTextareaChange, handleTextareaKeyDown, setupTextareaForEditing, handleTextareaClick } from '../utils/textareaHelpers';
+import { hasReminder, setReminder, clearReminder } from '../utils/reminders';
+import ReminderModal from './ReminderModal';
 
 const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onTransformToSAMO }) => {
   const { theme } = useTheme();
@@ -9,7 +11,9 @@ const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onTransformToSAMO 
   const [editingNoteId, setEditingNoteId] = useState(null);
   const [openMenuId, setOpenMenuId] = useState(null);
   const [expandedNotes, setExpandedNotes] = useState(new Set());
+  const [reminderPickerNoteId, setReminderPickerNoteId] = useState(null);
   const editingTextareaRef = useRef(null);
+  const menuRefs = useRef(new Map());
 
   useEffect(() => {
     if (editingNoteId && editingTextareaRef.current) {
@@ -38,6 +42,17 @@ const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onTransformToSAMO 
     const formattedContent = formatText(content);
     onUpdateNote(noteId, formattedContent);
     setEditingNoteId(null);
+  };
+
+  const handleSetReminder = (noteId, timestamp) => {
+    setReminder(noteId, timestamp);
+    setReminderPickerNoteId(null);
+    setOpenMenuId(null);
+  };
+
+  const handleClearReminder = (noteId) => {
+    clearReminder(noteId);
+    setOpenMenuId(null);
   };
 
   const toggleNoteExpansion = (noteId) => {
@@ -147,6 +162,11 @@ const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onTransformToSAMO 
                 )}
                 
                 <div className="flex items-center gap-3 dynamic-text-base">
+                  {hasReminder(note.id) && (
+                    <svg className={`w-3 h-3 ${theme.text}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  )}
                   <span className={`${theme.textTertiary} font-light`}>
                     {formatSavedDate(note.savedAt)}
                   </span>
@@ -159,6 +179,11 @@ const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onTransformToSAMO 
               <div className={`absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-all duration-300`}>
                 <div className="relative" data-menu>
                   <button
+                    ref={(el) => {
+                      if (el) {
+                        menuRefs.current.set(note.id, el);
+                      }
+                    }}
                     onClick={() => setOpenMenuId(openMenuId === note.id ? null : note.id)}
                     className={`px-3 py-2 text-lg font-bold ${theme.textTertiary} hover:${theme.text} transition-colors duration-200 ${theme.bg}/90 backdrop-blur-sm rounded shadow-sm`}
                     title="More actions"
@@ -183,6 +208,30 @@ const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onTransformToSAMO 
                           samo
                         </button>
                       )}
+                      {hasReminder(note.id) ? (
+                        <button
+                          onClick={() => handleClearReminder(note.id)}
+                          className={`w-full px-3 py-2 dynamic-text-base font-light text-left ${theme.textTertiary} hover:text-orange-500 hover:${theme.bgSecondary} transition-colors duration-200 flex items-center gap-2`}
+                        >
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          clear reminder
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => {
+                            setReminderPickerNoteId(note.id);
+                            setOpenMenuId(null);
+                          }}
+                          className={`w-full px-3 py-2 dynamic-text-base font-light text-left ${theme.textTertiary} hover:text-blue-500 hover:${theme.bgSecondary} transition-colors duration-200 flex items-center gap-2`}
+                        >
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          remind me...
+                        </button>
+                      )}
                       <button
                         onClick={() => {
                           onDeleteNote(note.id);
@@ -202,6 +251,13 @@ const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onTransformToSAMO 
             </div>
           </article>
         ))}
+      
+      {/* Reminder Modal */}
+      <ReminderModal
+        isOpen={!!reminderPickerNoteId}
+        onClose={() => setReminderPickerNoteId(null)}
+        onSetReminder={(timestamp) => handleSetReminder(reminderPickerNoteId, timestamp)}
+      />
     </div>
   );
 };
