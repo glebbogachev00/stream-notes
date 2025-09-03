@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useSettings, ORGANIZATION_STYLES, DELETE_TIMERS } from '../contexts/SettingsContext';
 import { useStorage } from '../contexts/StorageContext';
+import { setUserTag, validateUserTag, formatUserTag } from '../utils/tags';
+import { sanitizeInput } from '../utils/security';
 
 const Onboarding = () => {
   const { theme, switchTheme, themes } = useTheme();
@@ -13,13 +15,24 @@ const Onboarding = () => {
     fontSize: 'base',
     organizationStyle: 'bullets',
     deleteTimer: '24h',
-    syncEnabled: false
+    syncEnabled: false,
+    userTag: '',
+    securityAcknowledged: false
   });
+  const [tagError, setTagError] = useState('');
 
   const steps = [
     {
       title: settings.personalityEnabled ? "First things first - what colors make your brain happy?" : "Theme Selection",
       subtitle: settings.personalityEnabled ? "I'm pretty flexible, but these are my favorites:" : "Choose your preferred application theme."
+    },
+    {
+      title: "Your privacy matters",
+      subtitle: "stream keeps everything local. Your thoughts stay on your device."
+    },
+    {
+      title: settings.personalityEnabled ? "Choose your tag" : "Create Your Signature",
+      subtitle: settings.personalityEnabled ? "Like graffiti artists, create your signature" : "This tag will appear on all your notes"
     },
     {
       title: settings.personalityEnabled ? "How big should the text be?" : "Font Size",
@@ -46,6 +59,28 @@ const Onboarding = () => {
   const handleNext = () => {
     if (currentStep === -1) {
       setCurrentStep(0); // Move from welcome to first step
+    } else if (currentStep === 1) { // Security step
+      setSelections({ ...selections, securityAcknowledged: true }); // Acknowledge security automatically
+      setCurrentStep(currentStep + 1); // Advance to next step
+    } else if (currentStep === 2) { // Tag creation step
+      if (!selections.userTag.trim()) {
+        setTagError('Please enter a tag name');
+        return;
+      }
+      
+      const sanitized = sanitizeInput(selections.userTag);
+      if (!validateUserTag(sanitized)) {
+        setTagError('Use only letters, numbers, hyphens, and underscores (2-15 characters)');
+        return;
+      }
+      
+      try {
+        setUserTag(sanitized);
+        setTagError('');
+        setCurrentStep(currentStep + 1);
+      } catch (error) {
+        setTagError(error.message);
+      }
     } else if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
@@ -80,7 +115,16 @@ const Onboarding = () => {
 
   const renderWelcome = () => (
     <div className="text-center space-y-8">
-      <div className="text-6xl mb-4">💧</div>
+      <div className="text-6xl mb-4">
+        <div className={`${theme.bgSecondary} ${theme.text} px-3 py-1 rounded transform -rotate-1`}>
+          <span className="font-bold text-4xl tracking-wide" style={{
+            textShadow: '1px 1px 2px rgba(255,255,255,0.1)',
+            letterSpacing: '1px'
+          }}>
+            [stream]©
+          </span>
+        </div>
+      </div>
       <div className="space-y-0">
         <h1 className={`text-xl font-light ${theme.text} mb-4`}>
           {settings.personalityEnabled ? "Hey! I'm stream, your new note buddy" : "Welcome to stream"}
@@ -126,7 +170,7 @@ const Onboarding = () => {
     </div>
   );
 
-  const renderStep2 = () => {
+  const renderFontSizeStep = () => {
     const FONT_SIZES = { sm: 14, base: 16, lg: 18, xl: 20 };
     
     const handleDecrease = () => {
@@ -255,6 +299,81 @@ const Onboarding = () => {
     </div>
   );
 
+  const renderSecurityStep = () => (
+    <div className="space-y-6 text-center">
+      <div className="space-y-3">
+        <div className="text-4xl mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" className={`h-12 w-12 mx-auto ${theme.text}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          </svg>
+        </div>
+        <div className={`text-sm ${theme.textSecondary} font-light leading-relaxed max-w-xs mx-auto space-y-3`}>
+          <p>stream keeps everything local. Your thoughts stay on your device.</p>
+          <p>No cloud storage. No data collection. Complete privacy.</p>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderTagStep = () => (
+    <div className="space-y-6">
+      <div className="space-y-4">
+        <div className="text-center">
+          <div className="text-2xl mb-3">
+            <svg xmlns="http://www.w3.org/2000/svg" className={`h-8 w-8 mx-auto ${theme.text}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+            </svg>
+          </div>
+          <div className={`text-xs ${theme.textSecondary} font-light leading-relaxed space-y-2`}>
+            <p>Your tag is your unique signature, inspired by graffiti tagging.</p>
+            <p>It's how you sign your notes, like a username.</p>
+          </div>
+        </div>
+        
+        <div className="space-y-3 text-center">
+          <div className="flex">
+            <span className={`text-sm ${theme.text} mr-1`}>[</span>
+            <input
+              type="text"
+              value={selections.userTag}
+              onChange={(e) => {
+                const value = sanitizeInput(e.target.value);
+                setSelections({ ...selections, userTag: value });
+                setTagError('');
+              }}
+              placeholder="your-name"
+              className={`bg-transparent ${theme.text} text-sm font-light focus:outline-none`}
+              size={selections.userTag.length || 'your-name'.length}
+              maxLength={15}
+            />
+            <span className={`text-sm ${theme.text} ml-1`}>]©</span>
+          </div>
+          
+          {selections.userTag && validateUserTag(selections.userTag) && (
+            <div className="text-center py-2">
+              <span 
+                className="inline-block text-xs font-medium px-3 py-1 rounded-full"
+                style={{ 
+                  backgroundColor: `${theme.text}20`,
+                  color: theme.text,
+                  border: `1px solid ${theme.text}40`
+                }}
+              >
+                {formatUserTag({ name: selections.userTag })}
+              </span>
+            </div>
+          )}
+          
+          {tagError && (
+            <p className={`text-xs text-red-500 font-light text-center`}>
+              {tagError}
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
   const renderStep6 = () => {
     const sampleText = "Buy groceries\nCall mom\nFinish project";
     const formattedSample = ORGANIZATION_STYLES[selections.organizationStyle].format(
@@ -270,6 +389,23 @@ const Onboarding = () => {
           <div className={`${theme.text} font-mono whitespace-pre-line text-sm font-light leading-relaxed`}>
             {formattedSample}
           </div>
+          {selections.userTag && validateUserTag(selections.userTag) && (
+            <div className="flex items-center justify-between mt-3">
+              <div className={`text-xs ${theme.textTertiary} font-light`}>
+                your signature:
+              </div>
+              <span 
+                className="inline-block text-xs font-medium px-2 py-1 rounded-full"
+                style={{ 
+                  backgroundColor: `${theme.text}20`,
+                  color: theme.text,
+                  border: `1px solid ${theme.text}40`
+                }}
+              >
+                {formatUserTag({ name: selections.userTag })}
+              </span>
+            </div>
+          )}
           <div className={`text-xs ${theme.textTertiary} mt-3 font-light`}>
             deletes in: {DELETE_TIMERS[selections.deleteTimer].name.toLowerCase()}
           </div>
@@ -278,8 +414,13 @@ const Onboarding = () => {
           </div>
         </div>
         
-        <div className={`text-sm ${theme.text} font-light leading-relaxed text-center`}>
-          {settings.personalityEnabled ? "Ready to let your mind run wild?" : "Ready to start using stream?"}
+        <div className="space-y-4">
+          <div className={`text-xs ${theme.textTertiary} font-light text-center`}>
+            Your notes and preferences are saved securely on your device.
+          </div>
+          <div className={`text-sm ${theme.text} font-light leading-relaxed text-center`}>
+            {settings.personalityEnabled ? "Ready to let your mind run wild?" : "Ready to start using stream?"}
+          </div>
         </div>
       </div>
     );
@@ -316,11 +457,13 @@ const Onboarding = () => {
 
             <div className="mb-12">
               {currentStep === 0 && renderStep1()}
-              {currentStep === 1 && renderStep2()}
-              {currentStep === 2 && renderStep3()}
-              {currentStep === 3 && renderStep4()}
-              {currentStep === 4 && renderStep5()}
-              {currentStep === 5 && renderStep6()}
+              {currentStep === 1 && renderSecurityStep()}
+              {currentStep === 2 && renderTagStep()}
+              {currentStep === 3 && renderFontSizeStep()}
+              {currentStep === 4 && renderStep3()}
+              {currentStep === 5 && renderStep4()}
+              {currentStep === 6 && renderStep5()}
+              {currentStep === 7 && renderStep6()}
             </div>
           </>
         )}

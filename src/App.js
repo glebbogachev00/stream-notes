@@ -82,7 +82,8 @@ function AppContent() {
     deleteArtNote,
     updateArtNoteContent,
     getTimeInfo,
-    updateNoteContent
+    updateNoteContent,
+    updateNoteDeleteTimer
   } = useNotes(settings.deleteTimer, showToast, settings.personalityEnabled);
 
   // Show onboarding if not completed
@@ -232,6 +233,7 @@ function AppContent() {
                 editingNoteId={editingNoteId}
                 onSetEditingNoteId={setEditingNoteId}
                 onUpdateNoteContent={updateNoteContent}
+                onUpdateNoteDeleteTimer={updateNoteDeleteTimer}
               />
             </div>
           )}

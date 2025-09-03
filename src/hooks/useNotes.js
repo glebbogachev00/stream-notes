@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { DELETE_TIMERS } from '../contexts/SettingsContext';
 import { getRandomMessage, AUTO_DELETE_MESSAGES, SAVE_NOTE_MESSAGES } from '../utils/messages';
 import { useStorage } from '../contexts/StorageContext';
+import { sanitizeNoteContent } from '../utils/security';
 
 const NOTES_KEY = 'stream_notes';
 const SAVED_NOTES_KEY = 'stream_saved_notes';
@@ -24,14 +25,19 @@ export const useNotes = (deleteTimer = '24h', onToast = null, personalityEnabled
       const parsedArtNotes = storedArtNotes ? JSON.parse(storedArtNotes) : [];
       
       const now = Date.now();
-      const maxAgeHours = DELETE_TIMERS[deleteTimer]?.hours || 24;
       
-      const validNotes = maxAgeHours === Infinity ? 
-        parsedNotes : 
-        parsedNotes.filter(note => {
+      const validNotes = parsedNotes.filter(note => {
+        // If expiresAt is Infinity, it never expires
+        if (note.expiresAt === Infinity) return true;
+        // If expiresAt is not set, use the global deleteTimer (for old notes)
+        if (!note.expiresAt) {
+          const maxAgeHours = DELETE_TIMERS[deleteTimer]?.hours || 24;
           const ageInHours = (now - note.createdAt) / (1000 * 60 * 60);
           return ageInHours < maxAgeHours;
-        });
+        }
+        // Use individual expiresAt
+        return now < note.expiresAt;
+      });
       
       if (validNotes.length !== parsedNotes.length) {
         await storage.set(NOTES_KEY, JSON.stringify(validNotes));
@@ -79,19 +85,37 @@ export const useNotes = (deleteTimer = '24h', onToast = null, personalityEnabled
   }, [storage]);
 
   const addNote = useCallback((content) => {
+    const sanitizedContent = sanitizeNoteContent(content);
+    const now = Date.now();
+    const maxAgeHours = DELETE_TIMERS[deleteTimer]?.hours || 24;
+    const expiresAt = maxAgeHours === Infinity ? Infinity : now + (maxAgeHours * 60 * 60 * 1000);
+
     const newNote = {
       id: Date.now().toString(),
-      content: content.trim(),
-      createdAt: Date.now(),
+      content: sanitizedContent,
+      createdAt: now,
+      expiresAt: expiresAt,
     };
     
     const updatedNotes = [newNote, ...notes];
     saveNotes(updatedNotes);
-  }, [notes, saveNotes]);
+  }, [notes, saveNotes, deleteTimer]);
 
   const updateNoteContent = useCallback((id, newContent) => {
+    const sanitizedContent = sanitizeNoteContent(newContent);
     const updatedNotes = notes.map(note => 
-      note.id === id ? { ...note, content: newContent } : note
+      note.id === id ? { ...note, content: sanitizedContent } : note
+    );
+    saveNotes(updatedNotes);
+  }, [notes, saveNotes]);
+
+  const updateNoteDeleteTimer = useCallback((id, newDeleteTimerKey) => {
+    const now = Date.now();
+    const maxAgeHours = DELETE_TIMERS[newDeleteTimerKey]?.hours || 24;
+    const expiresAt = maxAgeHours === Infinity ? Infinity : now + (maxAgeHours * 60 * 60 * 1000);
+
+    const updatedNotes = notes.map(note => 
+      note.id === id ? { ...note, expiresAt: expiresAt } : note
     );
     saveNotes(updatedNotes);
   }, [notes, saveNotes]);
@@ -128,8 +152,9 @@ export const useNotes = (deleteTimer = '24h', onToast = null, personalityEnabled
   }, [savedNotes, saveSavedNotes]);
 
   const updateSavedNoteContent = useCallback((id, newContent) => {
+    const sanitizedContent = sanitizeNoteContent(newContent);
     const updatedSavedNotes = savedNotes.map(note => 
-      note.id === id ? { ...note, content: newContent } : note
+      note.id === id ? { ...note, content: sanitizedContent } : note
     );
     saveSavedNotes(updatedSavedNotes);
   }, [savedNotes, saveSavedNotes]);
@@ -162,37 +187,49 @@ export const useNotes = (deleteTimer = '24h', onToast = null, personalityEnabled
   }, [artNotes, saveArtNotes]);
 
   const updateArtNoteContent = useCallback((id, newContent) => {
+    const sanitizedContent = sanitizeNoteContent(newContent);
     const updatedArtNotes = artNotes.map(note => 
-      note.id === id ? { ...note, content: newContent } : note
+      note.id === id ? { ...note, content: sanitizedContent } : note
     );
     saveArtNotes(updatedArtNotes);
   }, [artNotes, saveArtNotes]);
 
-  const getTimeInfo = useCallback((createdAt) => {
+  const getTimeInfo = useCallback((note) => {
     const now = Date.now();
-    const ageInMs = now - createdAt;
-    const ageInHours = ageInMs / (1000 * 60 * 60);
-    const ageInMinutes = ageInMs / (1000 * 60);
-    
-    let timeText;
-    if (ageInMinutes < 1) {
-      timeText = 'just now';
-    } else if (ageInMinutes < 60) {
-      timeText = `${Math.floor(ageInMinutes)}m ago`;
-    } else {
-      timeText = `${Math.floor(ageInHours)}h ago`;
+    const expiresAt = note.expiresAt || (now + (DELETE_TIMERS[deleteTimer]?.hours || 24) * 60 * 60 * 1000); // Fallback for old notes
+
+    if (expiresAt === Infinity) {
+      return {
+        timeText: 'never expires',
+        isExpiringSoon: false,
+        hoursRemaining: Infinity,
+        minutesRemaining: 0,
+        deleteTimer: 'Never'
+      };
     }
 
-    const maxAgeHours = DELETE_TIMERS[deleteTimer]?.hours || 24;
-    const isExpiringSoon = maxAgeHours !== Infinity && ageInHours > (maxAgeHours * 0.8);
-    const hoursRemaining = maxAgeHours === Infinity ? Infinity : Math.max(0, maxAgeHours - ageInHours);
-    
+    const timeRemainingMs = expiresAt - now;
+    const hoursRemaining = timeRemainingMs / (1000 * 60 * 60);
+    const minutesRemaining = timeRemainingMs / (1000 * 60);
+
+    let timeText;
+    if (minutesRemaining < 1) {
+      timeText = 'expiring now';
+    } else if (minutesRemaining < 60) {
+      timeText = `${Math.floor(minutesRemaining)}m left`;
+    } else {
+      timeText = `${Math.floor(hoursRemaining)}h left`;
+    }
+
+    const maxAgeHours = DELETE_TIMERS[deleteTimer]?.hours || 24; // Global setting for comparison
+    const isExpiringSoon = hoursRemaining < (maxAgeHours * 0.2); // Expiring soon if less than 20% of global time left
+
     return {
       timeText,
       isExpiringSoon,
-      hoursRemaining: hoursRemaining === Infinity ? Infinity : Math.floor(hoursRemaining),
-      minutesRemaining: hoursRemaining === Infinity ? 0 : Math.floor((hoursRemaining % 1) * 60),
-      deleteTimer: DELETE_TIMERS[deleteTimer]?.name || '24 hours'
+      hoursRemaining: Math.floor(hoursRemaining),
+      minutesRemaining: Math.floor((hoursRemaining % 1) * 60),
+      deleteTimer: DELETE_TIMERS[deleteTimer]?.name || '24 hours' // Still show global name for context
     };
   }, [deleteTimer]);
 
@@ -218,6 +255,7 @@ export const useNotes = (deleteTimer = '24h', onToast = null, personalityEnabled
     deleteArtNote,
     updateArtNoteContent,
     getTimeInfo,
+    updateNoteDeleteTimer,
     updateNoteContent,
     refreshNotes: loadNotes
   };

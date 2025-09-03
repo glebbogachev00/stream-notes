@@ -3,6 +3,8 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useSettings, DELETE_TIMERS } from '../contexts/SettingsContext';
 import { getRandomMessage, EMPTY_STATE_MESSAGES } from '../utils/messages';
 import { handleTextareaChange, handleTextareaKeyDown, setupTextareaForEditing, handleTextareaClick } from '../utils/textareaHelpers';
+import TagSignature from './TagSignature';
+import DeleteTimerControl from './DeleteTimerControl';
 
 const NoteList = ({ 
   notes, 
@@ -12,11 +14,13 @@ const NoteList = ({
   getTimeInfo, 
   editingNoteId, 
   onSetEditingNoteId, 
-  onUpdateNoteContent 
+  onUpdateNoteContent,
+  onUpdateNoteDeleteTimer
 }) => {
   const { theme } = useTheme();
   const { settings, formatText } = useSettings();
   const editingTextareaRef = useRef(null);
+  const deleteTimerControlRef = useRef(null);
   const [expandedNotes, setExpandedNotes] = useState(new Set());
   const [openMenuId, setOpenMenuId] = useState(null);
 
@@ -43,10 +47,20 @@ const NoteList = ({
     handleTextareaChange(e, (value) => onUpdateNoteContent(noteId, value));
   };
 
-  const handleEditingFinished = (noteId, content) => {
+  const handleEditingFinished = (noteId, content, event) => {
+    if (event && event.relatedTarget && deleteTimerControlRef.current && deleteTimerControlRef.current.contains(event.relatedTarget)) {
+      return; // Don't close if focus moved to DeleteTimerControl
+    }
     const formattedContent = formatText(content);
     onUpdateNoteContent(noteId, formattedContent);
     onSetEditingNoteId(null);
+  };
+
+  const handleNoteKeyDown = (e, noteId) => {
+    if (e.key === 'Enter' && editingNoteId !== noteId) {
+      e.preventDefault();
+      onSetEditingNoteId(noteId);
+    }
   };
 
   const getEmptyStateIcon = () => {
@@ -96,11 +110,13 @@ const NoteList = ({
   return (
     <div className="space-y-6">
         {notes.map((note) => {
-          const timeInfo = getTimeInfo(note.createdAt);
+          const timeInfo = getTimeInfo(note);
           
           return (
             <article
               key={note.id}
+              tabIndex={0}
+              onKeyDown={(e) => handleNoteKeyDown(e, note.id)}
               className={`group pb-6 border-b transition-all duration-200 relative ${
                 timeInfo.isExpiringSoon 
                   ? 'border-orange-200' 
@@ -121,16 +137,21 @@ const NoteList = ({
             <div className="relative">
               <div className="pr-2">
                 {editingNoteId === note.id ? (
-                  <textarea
-                    ref={editingTextareaRef}
-                    value={note.content}
-                    onChange={(e) => handleContentChange(e, note.id)}
-                    onBlur={() => handleEditingFinished(note.id, note.content)}
-                    onKeyDown={(e) => handleTextareaKeyDown(e, () => handleEditingFinished(note.id, note.content))}
-                    onClick={handleTextareaClick}
-                    className={`${theme.text} text-base font-light leading-relaxed whitespace-pre-wrap break-words mb-3 w-full bg-transparent resize-none focus:outline-none`}
-                    style={{ height: 'auto', minHeight: '1.5em' }}
-                  />
+                  <>
+                    <textarea
+                      ref={editingTextareaRef}
+                      value={note.content}
+                      onChange={(e) => handleContentChange(e, note.id)}
+                      onBlur={(e) => handleEditingFinished(note.id, note.content, e)}
+                      onKeyDown={(e) => handleTextareaKeyDown(e, () => handleEditingFinished(note.id, note.content))}
+                      onClick={handleTextareaClick}
+                      className={`${theme.text} text-base font-light leading-relaxed whitespace-pre-wrap break-words mb-3 w-full bg-transparent resize-none focus:outline-none`}
+                      style={{ height: 'auto', minHeight: '1.5em' }}
+                    />
+                    <div ref={deleteTimerControlRef} className="flex items-center justify-start gap-2 mt-2">
+                      <DeleteTimerControl note={note} onUpdateNoteDeleteTimer={onUpdateNoteDeleteTimer} />
+                    </div>
+                  </>
                 ) : (
                   <div>
                     <p 
@@ -164,6 +185,7 @@ const NoteList = ({
                 )}
                 
                 <div className="flex items-center gap-3 text-xs">
+                  <TagSignature />
                   <span className={`font-light typography-system ${
                     timeInfo.isExpiringSoon ? 'text-orange-500' : theme.textTertiary
                   }`}>

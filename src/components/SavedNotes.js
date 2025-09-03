@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useSettings } from '../contexts/SettingsContext';
 import { handleTextareaChange, handleTextareaKeyDown, setupTextareaForEditing, handleTextareaClick } from '../utils/textareaHelpers';
+import TagSignature from './TagSignature';
 
 const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onTransformToSAMO }) => {
   const { theme } = useTheme();
@@ -38,6 +39,13 @@ const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onTransformToSAMO 
     const formattedContent = formatText(content);
     onUpdateNote(noteId, formattedContent);
     setEditingNoteId(null);
+  };
+
+  const handleNoteKeyDown = (e, noteId) => {
+    if (e.key === 'Enter' && editingNoteId !== noteId) {
+      e.preventDefault();
+      setEditingNoteId(noteId);
+    }
   };
 
   const toggleNoteExpansion = (noteId) => {
@@ -99,7 +107,9 @@ const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onTransformToSAMO 
         {savedNotes.map((note) => (
           <article
             key={note.id}
-            className={`group pb-6 border-b ${theme.borderSecondary} ${theme.borderSecondaryHover} transition-all duration-200`}
+            tabIndex={0}
+            onKeyDown={(e) => handleNoteKeyDown(e, note.id)}
+            className={`group relative pb-6 border-b ${theme.borderSecondary} ${theme.borderSecondaryHover} transition-all duration-200`}
           >
             <div className="relative">
               <div>
@@ -147,11 +157,9 @@ const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onTransformToSAMO 
                 )}
                 
                 <div className="flex items-center gap-3 dynamic-text-base">
+                  <TagSignature />
                   <span className={`${theme.textTertiary} font-light`}>
                     {formatSavedDate(note.savedAt)}
-                  </span>
-                  <span className={`hidden sm:inline ${theme.textTertiary} font-light`}>
-                    created {new Date(note.createdAt).toLocaleDateString()}
                   </span>
                 </div>
               </div>

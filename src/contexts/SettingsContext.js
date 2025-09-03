@@ -28,7 +28,9 @@ export const ORGANIZATION_STYLES = {
 export const DELETE_TIMERS = {
   '1h': { name: '1 hour', hours: 1 },
   '6h': { name: '6 hours', hours: 6 },
-  '24h': { name: '24 hours', hours: 24 }
+  '24h': { name: '24 hours', hours: 24 },
+  '3d': { name: '3 days', hours: 3 * 24 },
+  '7d': { name: '7 days', hours: 7 * 24 },
 };
 
 const DEFAULT_SETTINGS = {
@@ -150,7 +152,8 @@ export const SettingsProvider = ({ children }) => {
   };
 
   const formatText = (text) => {
-    const lines = text.split('\n').map(line => line.trim()).filter(Boolean);
+    // Split by newline, but keep empty strings for empty lines
+    const lines = text.split('\n'); 
     const style = ORGANIZATION_STYLES[settings.organizationStyle];
     
     // Separate formatted and unformatted lines
@@ -158,14 +161,17 @@ export const SettingsProvider = ({ children }) => {
     const unformattedLines = [];
     
     lines.forEach(line => {
-      if (/^(\d+\.|[•\-*]\s)/.test(line)) {
-        formattedLines.push(line); // Already formatted
-      } else if (line.trim() !== '') {
-        unformattedLines.push(line); // Needs formatting
+      // Check if line is already formatted (e.g., starts with a bullet, number, or dash)
+      if (/^(\d+\.|[•\-*]\s)/.test(line.trim())) {
+        formattedLines.push(line); // Keep as is
+      } else if (line.trim() !== '') { // Only consider non-empty, unformatted lines for auto-formatting
+        unformattedLines.push(line); 
+      } else {
+        formattedLines.push(''); // Preserve empty lines
       }
     });
     
-    // If no unformatted lines, return as-is
+    // If no unformatted lines, return original text (preserving all original spacing)
     if (unformattedLines.length === 0) {
       return text;
     }
@@ -175,7 +181,7 @@ export const SettingsProvider = ({ children }) => {
       // Format only the unformatted lines
       const newlyFormatted = style.format(unformattedLines);
       
-      // Combine: keep existing formatted lines + newly formatted lines
+      // Combine: existing formatted lines + newly formatted lines
       const allLines = [...formattedLines, ...newlyFormatted.split('\n')];
       return allLines.join('\n');
     }
