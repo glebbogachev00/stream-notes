@@ -78,12 +78,14 @@ function AppContent() {
     saveNote,
     deleteSavedNote,
     updateSavedNoteContent,
+    updateSavedNoteProperties,
     transformToArt,
     deleteArtNote,
     updateArtNoteContent,
     getTimeInfo,
     updateNoteContent,
-    updateNoteDeleteTimer
+    updateNoteDeleteTimer,
+    updateNoteProperties
   } = useNotes(settings.deleteTimer, showToast, settings.personalityEnabled);
 
   // Show onboarding if not completed
@@ -207,16 +209,18 @@ function AppContent() {
                   <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/>
               </button>
             )}
-            <button
-              onClick={() => setActiveTab('quotes')}
-              className={`pb-3 dynamic-text-base font-light transition-all duration-200 border-b ${
-                activeTab === 'quotes'
-                  ? `${theme.text} ${theme.text.replace('text-', 'border-')}`
-                  : `${theme.textTertiary} hover:${theme.textSecondary.replace('text-', 'hover:text-')} border-transparent`
-              }`}
-            >
-              steal this quote
-            </button>
+            {settings.stealThisQuoteEnabled && (
+              <button
+                onClick={() => setActiveTab('quotes')}
+                className={`pb-3 dynamic-text-base font-light transition-all duration-200 border-b ${
+                  activeTab === 'quotes'
+                    ? `${theme.text} ${theme.text.replace('text-', 'border-')}`
+                    : `${theme.textTertiary} hover:${theme.textSecondary.replace('text-', 'hover:text-')} border-transparent`
+                }`}
+              >
+                steal this quote
+              </button>
+            )}
           </div>
         </nav>
 
@@ -234,6 +238,7 @@ function AppContent() {
                 onSetEditingNoteId={setEditingNoteId}
                 onUpdateNoteContent={updateNoteContent}
                 onUpdateNoteDeleteTimer={updateNoteDeleteTimer}
+                onUpdateNoteProperties={updateNoteProperties}
               />
             </div>
           )}
@@ -243,6 +248,7 @@ function AppContent() {
               savedNotes={savedNotes}
               onDeleteNote={deleteSavedNote}
               onUpdateNote={updateSavedNoteContent}
+              onUpdateNoteProperties={updateSavedNoteProperties}
               onTransformToSAMO={handleTransformToArt}
               getTimeInfo={getTimeInfo}
             />

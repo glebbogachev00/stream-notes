@@ -246,10 +246,9 @@ const SettingsModal = ({ isOpen, onClose }) => {
                       current tag:
                     </div>
                     <span 
-                      className="inline-block text-xs font-medium px-2 py-1 rounded-full"
+                      className={`inline-block text-xs font-medium px-2 py-1 rounded-full ${theme.text}`}
                       style={{ 
                         backgroundColor: `${theme.text}20`,
-                        color: theme.text,
                         border: `1px solid ${theme.text}40`
                       }}
                     >
@@ -257,9 +256,8 @@ const SettingsModal = ({ isOpen, onClose }) => {
                     </span>
                   </div>
                   
-                  <div className="flex items-center gap-2">
-                    <span className={`text-sm ${theme.text}`}>[</span>
-                    <input
+                  <div className={`text-sm ${theme.text}`}>
+                    [<input
                       type="text"
                       value={newUserTag}
                       onChange={(e) => {
@@ -268,11 +266,10 @@ const SettingsModal = ({ isOpen, onClose }) => {
                         setTagError('');
                       }}
                       placeholder={userTag.name}
-                      className={`bg-transparent ${theme.text} text-sm font-light focus:outline-none border-b ${theme.borderSecondary} pb-1`}
-                      size={newUserTag.length || userTag.name.length}
+                      className={`bg-transparent ${theme.text} text-sm font-light focus:outline-none`}
+                      style={{ margin: 0, padding: 0, border: 'none', width: `${(newUserTag || userTag.name).length}ch`, minWidth: '1ch', display: 'inline' }}
                       maxLength={15}
-                    />
-                    <span className={`text-sm ${theme.text}`}>]©</span>
+                    />]©
                     <button
                       onClick={handleTagChange}
                       disabled={!newUserTag.trim()}

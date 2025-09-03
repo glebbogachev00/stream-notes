@@ -222,7 +222,7 @@ const Onboarding = () => {
           onClick={() => setSelections({ ...selections, organizationStyle: key })}
           className={`w-full text-left p-3 transition-all duration-200 border-b ${
             selections.organizationStyle === key
-              ? `${theme.text} ${theme.text.replace('text-', 'border-')}`
+              ? `${theme.text} ${theme.text.replace('text-', 'border-')} font-medium bg-opacity-10 ${theme.bg === 'bg-white' ? 'bg-black' : theme.bg === 'bg-amber-50' ? 'bg-amber-900' : 'bg-white'}`
               : `${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} border-transparent`
           }`}
         >
@@ -324,15 +324,15 @@ const Onboarding = () => {
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
             </svg>
           </div>
-          <div className={`text-xs ${theme.textSecondary} font-light leading-relaxed space-y-2`}>
+          <div className={`text-xs ${theme.textSecondary} font-light leading-relaxed space-y-2 text-center`}>
             <p>Your tag is your unique signature, inspired by graffiti tagging.</p>
             <p>It's how you sign your notes, like a username.</p>
           </div>
         </div>
         
         <div className="space-y-3 text-center">
-          <div className="flex">
-            <span className={`text-sm ${theme.text} mr-1`}>[</span>
+          <div className="flex justify-center items-center">
+            <span className={`text-sm ${theme.text}`}>[</span>
             <input
               type="text"
               value={selections.userTag}
@@ -342,22 +342,17 @@ const Onboarding = () => {
                 setTagError('');
               }}
               placeholder="your-name"
-              className={`bg-transparent ${theme.text} text-sm font-light focus:outline-none`}
+              className={`bg-transparent ${theme.text} text-sm font-light focus:outline-none text-center`}
               size={selections.userTag.length || 'your-name'.length}
               maxLength={15}
             />
-            <span className={`text-sm ${theme.text} ml-1`}>]©</span>
+            <span className={`text-sm ${theme.text}`}>]©</span>
           </div>
           
           {selections.userTag && validateUserTag(selections.userTag) && (
             <div className="text-center py-2">
               <span 
-                className="inline-block text-xs font-medium px-3 py-1 rounded-full"
-                style={{ 
-                  backgroundColor: `${theme.text}20`,
-                  color: theme.text,
-                  border: `1px solid ${theme.text}40`
-                }}
+                className={`inline-block text-xs font-medium ${theme.text}`}
               >
                 {formatUserTag({ name: selections.userTag })}
               </span>
@@ -395,10 +390,9 @@ const Onboarding = () => {
                 your signature:
               </div>
               <span 
-                className="inline-block text-xs font-medium px-2 py-1 rounded-full"
+                className={`inline-block text-xs font-medium px-2 py-1 rounded-full ${theme.text}`}
                 style={{ 
                   backgroundColor: `${theme.text}20`,
-                  color: theme.text,
                   border: `1px solid ${theme.text}40`
                 }}
               >

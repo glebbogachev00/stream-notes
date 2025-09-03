@@ -15,7 +15,8 @@ const NoteList = ({
   editingNoteId, 
   onSetEditingNoteId, 
   onUpdateNoteContent,
-  onUpdateNoteDeleteTimer
+  onUpdateNoteDeleteTimer,
+  onUpdateNoteProperties
 }) => {
   const { theme } = useTheme();
   const { settings, formatText } = useSettings();
@@ -44,14 +45,24 @@ const NoteList = ({
   }, [openMenuId]);
 
   const handleContentChange = (e, noteId) => {
-    handleTextareaChange(e, (value) => onUpdateNoteContent(noteId, value));
+    handleTextareaChange(e, (value) => {
+      if (value.trim() === '') {
+        onDeleteNote(noteId);
+      } else {
+        onUpdateNoteContent(noteId, value);
+      }
+    });
   };
 
   const handleEditingFinished = (noteId, content, event) => {
-    if (event && event.relatedTarget && deleteTimerControlRef.current && deleteTimerControlRef.current.contains(event.relatedTarget)) {
-      return; // Don't close if focus moved to DeleteTimerControl
+    if (event && event.relatedTarget && (
+      (deleteTimerControlRef.current && deleteTimerControlRef.current.contains(event.relatedTarget)) ||
+      event.relatedTarget.closest('.editing-controls')
+    )) {
+      return; // Don't close if focus moved to controls
     }
-    const formattedContent = formatText(content);
+    const note = notes.find(n => n.id === noteId);
+    const formattedContent = (note?.autoFormat !== false) ? formatText(content) : content;
     onUpdateNoteContent(noteId, formattedContent);
     onSetEditingNoteId(null);
   };
@@ -93,6 +104,36 @@ const NoteList = ({
       return content.substring(0, 150) + '...';
     }
     return content;
+  };
+
+  const renderFormattedText = (content) => {
+    const lines = content.split('\n');
+    return lines.map((line, lineIndex) => {
+      const boldRegex = /\*\*(.*?)\*\*/g;
+      const parts = [];
+      let lastIndex = 0;
+      let match;
+      let keyIndex = 0;
+
+      while ((match = boldRegex.exec(line)) !== null) {
+        if (match.index > lastIndex) {
+          parts.push(line.slice(lastIndex, match.index));
+        }
+        parts.push(<strong key={`bold-${lineIndex}-${keyIndex++}`} className="font-bold">{match[1]}</strong>);
+        lastIndex = match.index + match[0].length;
+      }
+
+      if (lastIndex < line.length) {
+        parts.push(line.slice(lastIndex));
+      }
+
+      return (
+        <span key={`line-${lineIndex}`}>
+          {parts.length > 0 ? parts : line}
+          {lineIndex < lines.length - 1 && '\n'}
+        </span>
+      );
+    });
   };
 
   if (notes.length === 0) {
@@ -148,8 +189,77 @@ const NoteList = ({
                       className={`${theme.text} text-base font-light leading-relaxed whitespace-pre-wrap break-words mb-3 w-full bg-transparent resize-none focus:outline-none`}
                       style={{ height: 'auto', minHeight: '1.5em' }}
                     />
-                    <div ref={deleteTimerControlRef} className="flex items-center justify-start gap-2 mt-2">
+                    <div ref={deleteTimerControlRef} className="flex items-center justify-start gap-2 mt-2 editing-controls">
                       <DeleteTimerControl note={note} onUpdateNoteDeleteTimer={onUpdateNoteDeleteTimer} />
+                      <button
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          const textarea = editingTextareaRef.current;
+                          if (textarea && textarea.selectionStart !== textarea.selectionEnd) {
+                            const start = textarea.selectionStart;
+                            const end = textarea.selectionEnd;
+                            const selectedText = textarea.value.substring(start, end);
+                            const beforeText = textarea.value.substring(start - 2, start);
+                            const afterText = textarea.value.substring(end, end + 2);
+                            
+                            let newText, newStart, newEnd;
+                            
+                            if (beforeText === '**' && afterText === '**') {
+                              // Remove bold formatting (expand selection to include **)
+                              newText = textarea.value.substring(0, start - 2) + selectedText + textarea.value.substring(end + 2);
+                              newStart = start - 2;
+                              newEnd = end - 2;
+                            } else {
+                              // Add bold formatting
+                              newText = textarea.value.substring(0, start) + `**${selectedText}**` + textarea.value.substring(end);
+                              newStart = start + 2;
+                              newEnd = end + 2;
+                            }
+                            
+                            onUpdateNoteContent(note.id, newText);
+                            
+                            setTimeout(() => {
+                              textarea.focus();
+                              textarea.setSelectionRange(newStart, newEnd);
+                            }, 0);
+                          }
+                        }}
+                        className={`text-xs ${theme.textTertiary} hover:text-yellow-500 transition-colors duration-200 font-light`}
+                      >
+                        bold
+                      </button>
+                      <button
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          // Toggle auto-formatting for this note
+                          const currentFormatting = note.autoFormat !== false; // default to true
+                          
+                          let newContent;
+                          if (currentFormatting) {
+                            // Remove existing list formatting when switching to manual
+                            newContent = note.content
+                              .split('\n')
+                              .map(line => line.replace(/^(\d+\.|[•\-*]\s)/, '').trim())
+                              .join('\n');
+                          } else {
+                            // Apply formatting when switching back to auto
+                            newContent = formatText(note.content);
+                          }
+                          
+                          // Update both content and property at once
+                          onUpdateNoteProperties(note.id, { 
+                            autoFormat: !currentFormatting,
+                            content: newContent
+                          });
+                        }}
+                        className={`text-xs ${theme.textTertiary} hover:text-blue-500 transition-colors duration-200 font-light`}
+                      >
+                        {note.autoFormat !== false ? 'auto' : 'manual'}
+                      </button>
                     </div>
                   </>
                 ) : (
@@ -158,10 +268,10 @@ const NoteList = ({
                       onClick={() => onSetEditingNoteId(note.id)}
                       className={`${theme.text} text-base font-light leading-relaxed whitespace-pre-wrap break-words mb-3 cursor-pointer transition-smooth hover:${theme.textSecondary.replace('text-', 'hover:text-')}`}
                     >
-                      {shouldTruncateNote(note.content) && !expandedNotes.has(note.id) 
+                      {renderFormattedText(shouldTruncateNote(note.content) && !expandedNotes.has(note.id) 
                         ? getTruncatedContent(note.content)
                         : note.content
-                      }
+                      )}
                     </p>
                     {shouldTruncateNote(note.content) && (
                       <div className="flex items-center gap-2">

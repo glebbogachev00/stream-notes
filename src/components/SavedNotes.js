@@ -4,7 +4,7 @@ import { useSettings } from '../contexts/SettingsContext';
 import { handleTextareaChange, handleTextareaKeyDown, setupTextareaForEditing, handleTextareaClick } from '../utils/textareaHelpers';
 import TagSignature from './TagSignature';
 
-const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onTransformToSAMO }) => {
+const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onUpdateNoteProperties, onTransformToSAMO }) => {
   const { theme } = useTheme();
   const { settings, formatText } = useSettings();
   const [editingNoteId, setEditingNoteId] = useState(null);
@@ -32,11 +32,18 @@ const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onTransformToSAMO 
   }, [openMenuId]);
 
   const handleContentChange = (e, noteId) => {
-    handleTextareaChange(e, (value) => onUpdateNote(noteId, value));
+    handleTextareaChange(e, (value) => {
+      if (value.trim() === '') {
+        onDeleteNote(noteId);
+      } else {
+        onUpdateNote(noteId, value);
+      }
+    });
   };
 
   const handleEditingFinished = (noteId, content) => {
-    const formattedContent = formatText(content);
+    const note = savedNotes.find(n => n.id === noteId);
+    const formattedContent = (note?.autoFormat !== false) ? formatText(content) : content;
     onUpdateNote(noteId, formattedContent);
     setEditingNoteId(null);
   };
@@ -73,6 +80,36 @@ const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onTransformToSAMO 
       return content.substring(0, 150) + '...';
     }
     return content;
+  };
+
+  const renderFormattedText = (content) => {
+    const lines = content.split('\n');
+    return lines.map((line, lineIndex) => {
+      const boldRegex = /\*\*(.*?)\*\*/g;
+      const parts = [];
+      let lastIndex = 0;
+      let match;
+      let keyIndex = 0;
+
+      while ((match = boldRegex.exec(line)) !== null) {
+        if (match.index > lastIndex) {
+          parts.push(line.slice(lastIndex, match.index));
+        }
+        parts.push(<strong key={`bold-${lineIndex}-${keyIndex++}`} className="font-bold">{match[1]}</strong>);
+        lastIndex = match.index + match[0].length;
+      }
+
+      if (lastIndex < line.length) {
+        parts.push(line.slice(lastIndex));
+      }
+
+      return (
+        <span key={`line-${lineIndex}`}>
+          {parts.length > 0 ? parts : line}
+          {lineIndex < lines.length - 1 && '\n'}
+        </span>
+      );
+    });
   };
 
   if (savedNotes.length === 0) {
@@ -114,26 +151,95 @@ const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onTransformToSAMO 
             <div className="relative">
               <div>
                 {editingNoteId === note.id ? (
-                  <textarea
-                    ref={editingTextareaRef}
-                    value={note.content}
-                    onChange={(e) => handleContentChange(e, note.id)}
-                    onBlur={() => handleEditingFinished(note.id, note.content)}
-                    onKeyDown={(e) => handleTextareaKeyDown(e, () => handleEditingFinished(note.id, note.content))}
-                    onClick={handleTextareaClick}
-                    className={`${theme.text} text-base font-light leading-relaxed whitespace-pre-wrap break-words mb-3 w-full bg-transparent resize-none focus:outline-none`}
-                    style={{ height: 'auto', minHeight: '1.5em' }}
-                  />
+                  <>
+                    <textarea
+                      ref={editingTextareaRef}
+                      value={note.content}
+                      onChange={(e) => handleContentChange(e, note.id)}
+                      onBlur={() => handleEditingFinished(note.id, note.content)}
+                      onKeyDown={(e) => handleTextareaKeyDown(e, () => handleEditingFinished(note.id, note.content))}
+                      onClick={handleTextareaClick}
+                      className={`${theme.text} text-base font-light leading-relaxed whitespace-pre-wrap break-words mb-3 w-full bg-transparent resize-none focus:outline-none`}
+                      style={{ height: 'auto', minHeight: '1.5em' }}
+                    />
+                    <div className="flex items-center justify-start gap-2 mt-2">
+                      <button
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          const textarea = editingTextareaRef.current;
+                          if (textarea && textarea.selectionStart !== textarea.selectionEnd) {
+                            const start = textarea.selectionStart;
+                            const end = textarea.selectionEnd;
+                            const selectedText = textarea.value.substring(start, end);
+                            const beforeText = textarea.value.substring(start - 2, start);
+                            const afterText = textarea.value.substring(end, end + 2);
+                            
+                            let newText, newStart, newEnd;
+                            
+                            if (beforeText === '**' && afterText === '**') {
+                              // Remove bold formatting (expand selection to include **)
+                              newText = textarea.value.substring(0, start - 2) + selectedText + textarea.value.substring(end + 2);
+                              newStart = start - 2;
+                              newEnd = end - 2;
+                            } else {
+                              // Add bold formatting
+                              newText = textarea.value.substring(0, start) + `**${selectedText}**` + textarea.value.substring(end);
+                              newStart = start + 2;
+                              newEnd = end + 2;
+                            }
+                            
+                            onUpdateNote(note.id, newText);
+                            
+                            setTimeout(() => {
+                              textarea.focus();
+                              textarea.setSelectionRange(newStart, newEnd);
+                            }, 0);
+                          }
+                        }}
+                        className={`text-xs ${theme.textTertiary} hover:text-yellow-500 transition-colors duration-200 font-light`}
+                      >
+                        bold
+                      </button>
+                      <button
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          const currentFormatting = note.autoFormat !== false;
+                          
+                          let newContent;
+                          if (currentFormatting) {
+                            newContent = note.content
+                              .split('\n')
+                              .map(line => line.replace(/^(\d+\.|[•\-*]\s)/, '').trim())
+                              .join('\n');
+                          } else {
+                            newContent = formatText(note.content);
+                          }
+                          
+                          onUpdateNoteProperties(note.id, { 
+                            autoFormat: !currentFormatting,
+                            content: newContent
+                          });
+                        }}
+                        className={`text-xs ${theme.textTertiary} hover:text-blue-500 transition-colors duration-200 font-light`}
+                      >
+                        {note.autoFormat !== false ? 'auto' : 'manual'}
+                      </button>
+                    </div>
+                  </>
                 ) : (
                   <div>
                     <p 
                       onClick={() => setEditingNoteId(note.id)}
                       className={`${theme.text} text-base font-light leading-relaxed whitespace-pre-wrap break-words mb-3 cursor-pointer transition-smooth hover:${theme.textSecondary.replace('text-', 'hover:text-')}`}
                     >
-                      {shouldTruncateNote(note.content) && !expandedNotes.has(note.id) 
+                      {renderFormattedText(shouldTruncateNote(note.content) && !expandedNotes.has(note.id) 
                         ? getTruncatedContent(note.content)
                         : note.content
-                      }
+                      )}
                     </p>
                     {shouldTruncateNote(note.content) && (
                       <div className="flex items-center gap-2">

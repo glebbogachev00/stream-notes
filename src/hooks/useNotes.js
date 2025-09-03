@@ -109,6 +109,13 @@ export const useNotes = (deleteTimer = '24h', onToast = null, personalityEnabled
     saveNotes(updatedNotes);
   }, [notes, saveNotes]);
 
+  const updateNoteProperties = useCallback((id, properties) => {
+    const updatedNotes = notes.map(note => 
+      note.id === id ? { ...note, ...properties } : note
+    );
+    saveNotes(updatedNotes);
+  }, [notes, saveNotes]);
+
   const updateNoteDeleteTimer = useCallback((id, newDeleteTimerKey) => {
     const now = Date.now();
     const maxAgeHours = DELETE_TIMERS[newDeleteTimerKey]?.hours || 24;
@@ -148,6 +155,13 @@ export const useNotes = (deleteTimer = '24h', onToast = null, personalityEnabled
 
   const deleteSavedNote = useCallback((id) => {
     const updatedSavedNotes = savedNotes.filter(note => note.id !== id);
+    saveSavedNotes(updatedSavedNotes);
+  }, [savedNotes, saveSavedNotes]);
+
+  const updateSavedNoteProperties = useCallback((id, properties) => {
+    const updatedSavedNotes = savedNotes.map(note => 
+      note.id === id ? { ...note, ...properties } : note
+    );
     saveSavedNotes(updatedSavedNotes);
   }, [savedNotes, saveSavedNotes]);
 
@@ -251,12 +265,14 @@ export const useNotes = (deleteTimer = '24h', onToast = null, personalityEnabled
     saveNote,
     deleteSavedNote,
     updateSavedNoteContent,
+    updateSavedNoteProperties,
     transformToArt,
     deleteArtNote,
     updateArtNoteContent,
     getTimeInfo,
     updateNoteDeleteTimer,
     updateNoteContent,
+    updateNoteProperties,
     refreshNotes: loadNotes
   };
 };

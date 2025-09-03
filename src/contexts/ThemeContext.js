@@ -55,9 +55,9 @@ const THEMES = {
   dark: {
     name: 'dark',
     bg: 'bg-neutral-900',
-    text: 'text-neutral-100',
-    textSecondary: 'text-neutral-300',
-    textTertiary: 'text-neutral-500',
+    text: 'text-white',
+    textSecondary: 'text-neutral-200',
+    textTertiary: 'text-neutral-400',
     border: 'border-neutral-700',
     borderHover: 'hover:border-neutral-600',
     borderSecondary: 'border-neutral-800',
