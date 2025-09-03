@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useSettings } from '../contexts/SettingsContext';
+import { autoResize, handleTextareaChange, handleTextareaKeyDown, setupTextareaForEditing, handleTextareaClick } from '../utils/textareaHelpers';
 
 const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onTransformToSAMO }) => {
   const { theme } = useTheme();
@@ -12,9 +13,7 @@ const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onTransformToSAMO 
 
   useEffect(() => {
     if (editingNoteId && editingTextareaRef.current) {
-      editingTextareaRef.current.focus();
-      editingTextareaRef.current.style.height = 'auto';
-      editingTextareaRef.current.style.height = `${editingTextareaRef.current.scrollHeight}px`;
+      setupTextareaForEditing(editingTextareaRef.current);
     }
   }, [editingNoteId]);
 
@@ -32,9 +31,7 @@ const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onTransformToSAMO 
   }, [openMenuId]);
 
   const handleContentChange = (e, noteId) => {
-    onUpdateNote(noteId, e.target.value);
-    e.target.style.height = 'auto';
-    e.target.style.height = `${e.target.scrollHeight}px`;
+    handleTextareaChange(e, (value) => onUpdateNote(noteId, value));
   };
 
   const handleEditingFinished = (noteId, content) => {
@@ -112,12 +109,10 @@ const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onTransformToSAMO 
                     value={note.content}
                     onChange={(e) => handleContentChange(e, note.id)}
                     onBlur={() => handleEditingFinished(note.id, note.content)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-                        handleEditingFinished(note.id, note.content);
-                      }
-                    }}
+                    onKeyDown={(e) => handleTextareaKeyDown(e, () => handleEditingFinished(note.id, note.content))}
+                    onClick={handleTextareaClick}
                     className={`${theme.text} text-base font-light leading-relaxed whitespace-pre-wrap break-words mb-3 w-full bg-transparent resize-none focus:outline-none`}
+                    style={{ height: 'auto', minHeight: '1.5em' }}
                   />
                 ) : (
                   <div>

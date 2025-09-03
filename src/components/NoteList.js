@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useSettings, DELETE_TIMERS } from '../contexts/SettingsContext';
 import { getRandomMessage, EMPTY_STATE_MESSAGES } from '../utils/messages';
+import { autoResize, handleTextareaChange, handleTextareaKeyDown, setupTextareaForEditing, handleTextareaClick } from '../utils/textareaHelpers';
 
 const NoteList = ({ 
   notes, 
@@ -21,9 +22,7 @@ const NoteList = ({
 
   useEffect(() => {
     if (editingNoteId && editingTextareaRef.current) {
-      editingTextareaRef.current.focus();
-      editingTextareaRef.current.style.height = 'auto';
-      editingTextareaRef.current.style.height = `${editingTextareaRef.current.scrollHeight}px`;
+      setupTextareaForEditing(editingTextareaRef.current);
     }
   }, [editingNoteId]);
 
@@ -41,9 +40,7 @@ const NoteList = ({
   }, [openMenuId]);
 
   const handleContentChange = (e, noteId) => {
-    onUpdateNoteContent(noteId, e.target.value);
-    e.target.style.height = 'auto';
-    e.target.style.height = `${e.target.scrollHeight}px`;
+    handleTextareaChange(e, (value) => onUpdateNoteContent(noteId, value));
   };
 
   const handleEditingFinished = (noteId, content) => {
@@ -129,12 +126,10 @@ const NoteList = ({
                     value={note.content}
                     onChange={(e) => handleContentChange(e, note.id)}
                     onBlur={() => handleEditingFinished(note.id, note.content)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-                        handleEditingFinished(note.id, note.content);
-                      }
-                    }}
+                    onKeyDown={(e) => handleTextareaKeyDown(e, () => handleEditingFinished(note.id, note.content))}
+                    onClick={handleTextareaClick}
                     className={`${theme.text} text-base font-light leading-relaxed whitespace-pre-wrap break-words mb-3 w-full bg-transparent resize-none focus:outline-none`}
+                    style={{ height: 'auto', minHeight: '1.5em' }}
                   />
                 ) : (
                   <div>

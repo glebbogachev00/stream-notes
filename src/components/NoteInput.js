@@ -3,6 +3,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useSettings } from '../contexts/SettingsContext';
 import { getRotatingMessage, INPUT_PLACEHOLDER_MESSAGES } from '../utils/messages';
 import { detectQuotePattern, unlockMatrix, checkMatrixUnlock } from '../utils/quoteDetection';
+import { autoResize, handleTextareaChange, handleTextareaKeyDown } from '../utils/textareaHelpers';
 
 const NoteInput = ({ onAddNote, onMatrixUnlock }) => {
   const [content, setContent] = useState('');
@@ -55,6 +56,12 @@ const NoteInput = ({ onAddNote, onMatrixUnlock }) => {
 
   const handleFocus = () => {
     setIsFocused(true);
+    // Auto-resize when focused
+    setTimeout(() => {
+      if (textareaRef.current) {
+        autoResize(textareaRef.current);
+      }
+    }, 0);
   };
 
   const handleBlur = () => {
@@ -82,8 +89,8 @@ const NoteInput = ({ onAddNote, onMatrixUnlock }) => {
           <textarea
             ref={textareaRef}
             value={content}
-            onChange={(e) => setContent(e.target.value)}
-            onKeyDown={handleKeyDown}
+            onChange={(e) => handleTextareaChange(e, setContent)}
+            onKeyDown={(e) => handleTextareaKeyDown(e)}
             onFocus={handleFocus}
             onBlur={handleBlur}
             onPaste={handlePaste}
@@ -93,7 +100,8 @@ const NoteInput = ({ onAddNote, onMatrixUnlock }) => {
                 ? `min-h-[120px] p-4 rounded-lg ${theme.inputBg} border ${theme.border}` 
                 : `min-h-[40px] border-0 border-b ${theme.border} ${theme.borderHover} p-2 bg-transparent`
             }`}
-            rows={isFocused ? 6 : 1}
+            style={{ height: isFocused ? 'auto' : '40px' }}
+            rows={1}
           />
           
           {isFocused && content.trim() && (
