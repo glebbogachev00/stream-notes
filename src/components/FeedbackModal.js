@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
-import { useSettings } from '../contexts/SettingsContext';
 
 const FeedbackModal = ({ isOpen, onClose, onSubmit }) => {
   const { theme } = useTheme();
-  const { settings } = useSettings();
   const [feedback, setFeedback] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
