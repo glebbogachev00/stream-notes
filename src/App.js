@@ -15,10 +15,13 @@ import StyleSelector from './components/StyleSelector';
 import QuoteCollection from './components/QuoteCollection';
 import Toast from './components/Toast';
 import MatrixUnlockNotification from './components/MatrixUnlockNotification';
+import FeedbackModal from './components/FeedbackModal';
+import { submitFeedback } from './utils/feedback';
 
 function AppContent() {
   const [activeTab, setActiveTab] = useState('active');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [editingNoteId, setEditingNoteId] = useState(null);
   const [logoStyle, setLogoStyle] = useState(() => {
     return localStorage.getItem('stream-logo-style') || 'originalText';
@@ -51,6 +54,16 @@ function AppContent() {
 
   const handleMatrixUnlock = () => {
     setShowMatrixUnlock(true);
+  };
+
+  const handleFeedbackSubmit = async (feedbackText) => {
+    try {
+      await submitFeedback(feedbackText);
+      showToast("Feedback sent! Thanks for helping Stream grow");
+      setTimeout(() => setIsFeedbackOpen(false), 2000);
+    } catch (error) {
+      showToast(error.message || "Couldn't send feedback. Try again?");
+    }
   };
   const { theme } = useTheme();
   const { settings } = useSettings();
@@ -134,6 +147,15 @@ function AppContent() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsFeedbackOpen(true)}
+              className={`p-2 ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} transition-colors dynamic-text-base`}
+              title={settings.personalityEnabled ? "Help improve stream" : "Feedback"}
+            >
+              <svg className="w-1em h-1em" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
+            </button>
             <button
               onClick={() => setIsSettingsOpen(true)}
               className={`p-2 ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} transition-colors dynamic-text-base`}
@@ -241,6 +263,12 @@ function AppContent() {
       <SettingsModal 
         isOpen={isSettingsOpen} 
         onClose={() => setIsSettingsOpen(false)} 
+      />
+
+      <FeedbackModal
+        isOpen={isFeedbackOpen}
+        onClose={() => setIsFeedbackOpen(false)}
+        onSubmit={handleFeedbackSubmit}
       />
 
       
