@@ -59,7 +59,7 @@ function AppContent() {
   const handleFeedbackSubmit = async (feedbackText) => {
     try {
       await submitFeedback(feedbackText);
-      showToast("Feedback sent! Thanks for helping Stream grow");
+      showToast("Feedback sent! Thanks for helping stream grow");
       setTimeout(() => setIsFeedbackOpen(false), 2000);
     } catch (error) {
       showToast(error.message || "Couldn't send feedback. Try again?");

@@ -9,7 +9,7 @@ const TalkToStream = ({ onClose }) => {
     {
       id: 1,
       content: settings.personalityEnabled 
-        ? "Hey! I'm Stream, your note-taking companion. What's on your mind?"
+        ? "Hey! I'm stream, your note-taking companion. What's on your mind?"
         : "Hello! I'm here to help you with your notes and answer questions about the app.",
       sender: 'stream',
       timestamp: new Date()
@@ -38,7 +38,7 @@ const TalkToStream = ({ onClose }) => {
     if (message.includes('how') && (message.includes('work') || message.includes('use'))) {
       return settings.personalityEnabled 
         ? "I'm pretty simple! Just start typing your thoughts and I'll organize them for you. Your notes auto-save and disappear after a while (unless you save them permanently). It's like having a digital stream of consciousness!"
-        : "Stream is a self-managing notes app. Type your thoughts, and they're automatically saved. Notes expire after a set time unless you save them permanently. Use the settings to customize timers and preferences.";
+        : "stream is a self-managing notes app. Type your thoughts, and they're automatically saved. Notes expire after a set time unless you save them permanently. Use the settings to customize timers and preferences.";
     }
     
     if (message.includes('save') || message.includes('permanent')) {
@@ -109,7 +109,7 @@ const TalkToStream = ({ onClose }) => {
       : [
           "I can help with questions about the app or note-taking. What would you like to know?",
           "Ask me about features, shortcuts, or how to use the app effectively.",
-          "I'm here to help you understand and use Stream's note-taking features.",
+          "I'm here to help you understand and use stream's note-taking features.",
           "Feel free to ask about saving notes, timers, shortcuts, or any other app features."
         ];
     
@@ -155,7 +155,7 @@ const TalkToStream = ({ onClose }) => {
         <div className={`flex items-center justify-between p-6 border-b ${theme.borderSecondary}`}>
           <div>
             <h2 className={`text-xl font-light ${theme.text}`}>
-              Talk to Stream
+              Talk to stream
             </h2>
             <p className={`text-sm ${theme.textTertiary} font-light mt-1`}>
               {settings.personalityEnabled 

@@ -39,7 +39,7 @@ const Onboarding = () => {
     },
     {
       title: settings.personalityEnabled ? "Check it out! This is us working together." : "Preview and Confirmation",
-      subtitle: settings.personalityEnabled ? "You dump thoughts, I organize and clean. Perfect partnership! Ready to let your mind run wild?" : "Review your selections and confirm to start using Stream."
+      subtitle: settings.personalityEnabled ? "You dump thoughts, I organize and clean. Perfect partnership! Ready to let your mind run wild?" : "Review your selections and confirm to start using stream."
     }
   ];
 
@@ -83,7 +83,7 @@ const Onboarding = () => {
       <div className="text-6xl mb-4">💧</div>
       <div className="space-y-0">
         <h1 className={`text-xl font-light ${theme.text} mb-4`}>
-          {settings.personalityEnabled ? "Hey! I'm Stream, your new note buddy" : "Welcome to Stream"}
+          {settings.personalityEnabled ? "Hey! I'm stream, your new note buddy" : "Welcome to stream"}
         </h1>
         <div className={`space-y-3 text-sm ${theme.textSecondary} font-light leading-relaxed max-w-sm mx-auto`}>
           {settings.personalityEnabled ? (
@@ -94,7 +94,7 @@ const Onboarding = () => {
             </>
           ) : (
             <>
-              <p>Stream is a self-managing note application designed to help you organize your thoughts efficiently.</p>
+              <p>stream is a self-managing note application designed to help you organize your thoughts efficiently.</p>
               <p>This onboarding process will guide you through the initial setup of your preferences.</p>
             </>
           )}
@@ -279,7 +279,7 @@ const Onboarding = () => {
         </div>
         
         <div className={`text-sm ${theme.text} font-light leading-relaxed text-center`}>
-          {settings.personalityEnabled ? "Ready to let your mind run wild?" : "Ready to start using Stream?"}
+          {settings.personalityEnabled ? "Ready to let your mind run wild?" : "Ready to start using stream?"}
         </div>
       </div>
     );

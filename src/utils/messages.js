@@ -2,7 +2,7 @@
 
 export const EMPTY_STATE_MESSAGES = {
   personality: [
-    "Stream here! What chaos should we organize today?",
+    "stream here! What chaos should we organize today?",
     "No clutter, no stress - just pure flow",
     "I cleaned up while you were away",
     "Ready to turn brain dump into brain flow?",
@@ -20,7 +20,7 @@ export const INPUT_PLACEHOLDER_MESSAGES = {
     "What's racing through your mind?",
     "Brain dump incoming...",
     "Let it flow...",
-    "Stream your thoughts here",
+    "stream your thoughts here",
     "Quick! Before you forget..."
   ],
   professional: [

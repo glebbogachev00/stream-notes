@@ -40,7 +40,7 @@ const FeedbackModal = ({ isOpen, onClose, onSubmit }) => {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h2 className={`dynamic-text-lg font-light ${theme.text}`}>
-              What's on your mind about Stream?
+              What's on your mind about stream?
             </h2>
           </div>
           <button
@@ -55,7 +55,7 @@ const FeedbackModal = ({ isOpen, onClose, onSubmit }) => {
           <textarea
             value={feedback}
             onChange={(e) => setFeedback(e.target.value)}
-            placeholder="Your thoughts help Stream grow…"
+            placeholder="Your thoughts help stream grow…"
             className={`w-full h-32 p-3 ${theme.inputBg} ${theme.text} ${theme.border} border transition-all duration-200 font-light dynamic-text-base resize-none`}
             style={{
               outline: 'none',
