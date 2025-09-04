@@ -197,13 +197,17 @@ export const SettingsProvider = ({ children }) => {
         // Remove list markers while preserving any formatting
         let cleaned = line.replace(/^(\d+\.|[•\-*])\s*/, '').trim();
         
-        // Fix malformed formatting patterns
-        // Handle cases like "*- text**" -> "**text**"
+        // Fix common malformed patterns from mixed bold+list formatting
+        // Handle cases like "**- text**" -> "**text**"
+        cleaned = cleaned.replace(/^\*\*[-*]\s*/, '**');
+        // Handle cases like "*- text**" -> "**text**"  
         cleaned = cleaned.replace(/^\*[-*]\s*/, '**');
-        // Handle cases like "- hola**" after removing "- " 
+        // Handle cases where single * got left behind: "*text**" -> "**text**"
         if (cleaned.startsWith('*') && !cleaned.startsWith('**') && cleaned.includes('**')) {
           cleaned = '**' + cleaned.substring(1);
         }
+        // Clean up any double asterisks that got merged incorrectly
+        cleaned = cleaned.replace(/\*\*\*\*+/g, '**');
         
         return cleaned;
       })
