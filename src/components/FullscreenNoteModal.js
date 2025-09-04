@@ -1,7 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useSettings } from '../contexts/SettingsContext';
-import { handleTextareaChange, handleTextareaKeyDown, setupTextareaForEditing, handleTextareaClick } from '../utils/textareaHelpers';
+import { handleTextareaChange, setupTextareaForEditing, handleTextareaClick } from '../utils/textareaHelpers';
 import DeleteTimerControl from './DeleteTimerControl';
 
 const FullscreenNoteModal = ({ 
