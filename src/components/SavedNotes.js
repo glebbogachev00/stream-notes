@@ -5,7 +5,7 @@ import { handleTextareaChange, handleTextareaKeyDown, setupTextareaForEditing, h
 import TagSignature from './TagSignature';
 import FullscreenNoteModal from './FullscreenNoteModal';
 
-const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onUpdateNoteProperties, onTransformToSAMO }) => {
+const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onUpdateNoteProperties, onToggleSavedNotePin, onTransformToSAMO }) => {
   const { theme } = useTheme();
   const { settings, formatText, removeListFormatting } = useSettings();
   const [editingNoteId, setEditingNoteId] = useState(null);
@@ -192,14 +192,19 @@ const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onUpdateNoteProper
   };
 
 
-  return (
-    <div className="space-y-6">
-        {savedNotes.map((note) => (
-          <article
-            key={note.id}
-            tabIndex={0}
-            onKeyDown={(e) => handleNoteKeyDown(e, note.id)}
-            className={`group relative pb-6 border-b ${theme.borderSecondary} ${theme.borderSecondaryHover} transition-all duration-200`}
+  // Separate pinned and unpinned saved notes
+  const pinnedSavedNotes = savedNotes.filter(note => note.isPinned);
+  const unpinnedSavedNotes = savedNotes.filter(note => !note.isPinned);
+
+  const renderSavedNote = (note) => {
+    return (
+      <article
+        key={note.id}
+        tabIndex={0}
+        onKeyDown={(e) => handleNoteKeyDown(e, note.id)}
+        className={`group relative pb-6 border-b ${theme.borderSecondary} ${theme.borderSecondaryHover} transition-all duration-200 ${
+          note.isPinned ? `${theme.bg} ${theme.border} border rounded-lg p-4 mb-4` : ''
+        }`}
           >
             <div className="relative">
               <div>
@@ -402,6 +407,19 @@ const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onUpdateNoteProper
                   {openMenuId === note.id && (
                     <div className={`absolute ${menuPosition.top ? 'bottom-full mb-1' : 'top-full mt-1'} right-0 ${theme.bg} ${theme.borderPrimary} border rounded shadow-lg py-1 z-10 min-w-20`}>
                       <button
+                        onClick={() => {
+                          onToggleSavedNotePin(note.id);
+                          setOpenMenuId(null);
+                        }}
+                        className={`w-full px-3 py-2 dynamic-text-base font-light text-left ${theme.textTertiary} hover:text-orange-500 hover:${theme.bgSecondary} transition-colors duration-200 flex items-center gap-2`}
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                        </svg>
+                        {note.isPinned ? 'unpin' : 'pin'}
+                      </button>
+
+                      <button
                         onClick={async () => {
                           const textToCopy = note.content;
                           console.log('Attempting to copy saved note:', textToCopy);
@@ -492,8 +510,38 @@ const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onUpdateNoteProper
                 </div>
               </div>
             </div>
-          </article>
-        ))}
+      </article>
+    );
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Pinned Saved Notes Section */}
+      {pinnedSavedNotes.length > 0 && (
+        <>
+          <div className="space-y-6">
+            <div className={`flex items-center gap-2 ${theme.textTertiary} text-xs font-light`}>
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+              </svg>
+              pinned
+            </div>
+            {pinnedSavedNotes.map(renderSavedNote)}
+          </div>
+          
+          {/* Divider */}
+          {unpinnedSavedNotes.length > 0 && (
+            <div className={`border-t ${theme.borderSecondary} pt-6`}>
+              <div className={`text-xs font-light ${theme.textTertiary} mb-6`}>saved</div>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Unpinned Saved Notes Section */}
+      <div className="space-y-6">
+        {unpinnedSavedNotes.map(renderSavedNote)}
+      </div>
         
         <FullscreenNoteModal
           note={savedNotes.find(n => n.id === fullscreenNoteId)}

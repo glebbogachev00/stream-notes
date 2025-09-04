@@ -174,6 +174,13 @@ export const useNotes = (deleteTimer = '24h', onToast = null, personalityEnabled
     saveSavedNotes(updatedSavedNotes);
   }, [savedNotes, saveSavedNotes]);
 
+  const toggleSavedNotePin = useCallback((id) => {
+    const updatedSavedNotes = savedNotes.map(note => 
+      note.id === id ? { ...note, isPinned: !note.isPinned } : note
+    );
+    saveSavedNotes(updatedSavedNotes);
+  }, [savedNotes, saveSavedNotes]);
+
   const updateSavedNoteContent = useCallback((id, newContent) => {
     const sanitizedContent = sanitizeNoteContent(newContent);
     const updatedSavedNotes = savedNotes.map(note => 
@@ -301,6 +308,7 @@ export const useNotes = (deleteTimer = '24h', onToast = null, personalityEnabled
     deleteSavedNote,
     updateSavedNoteContent,
     updateSavedNoteProperties,
+    toggleSavedNotePin,
     transformToArt,
     deleteArtNote,
     updateArtNoteContent,

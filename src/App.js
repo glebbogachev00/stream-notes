@@ -88,6 +88,7 @@ function AppContent() {
     deleteSavedNote,
     updateSavedNoteContent,
     updateSavedNoteProperties,
+    toggleSavedNotePin,
     transformToArt,
     deleteArtNote,
     updateArtNoteContent,
@@ -279,6 +280,7 @@ function AppContent() {
               onDeleteNote={deleteSavedNote}
               onUpdateNote={updateSavedNoteContent}
               onUpdateNoteProperties={updateSavedNoteProperties}
+              onToggleSavedNotePin={toggleSavedNotePin}
               onTransformToSAMO={handleTransformToArt}
               getTimeInfo={getTimeInfo}
             />
