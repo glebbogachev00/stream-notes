@@ -127,15 +127,13 @@ const FullscreenNoteModal = ({
       <div className={`${theme.bg} ${theme.text} rounded-lg shadow-2xl w-full max-w-4xl h-full max-h-[90vh] flex flex-col`}>
         {/* Header */}
         <div className={`flex items-center justify-between p-4 border-b ${theme.borderSecondary}`}>
-          <h2 className={`text-lg font-light ${theme.text}`}>Note Editor</h2>
+          <h2 className={`text-lg font-light ${theme.text}`}>better view</h2>
           <button
             onClick={onClose}
             className={`p-2 ${theme.textTertiary} hover:${theme.text} transition-colors duration-200`}
             aria-label="Close fullscreen"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            [close]
           </button>
         </div>
 
@@ -147,12 +145,17 @@ const FullscreenNoteModal = ({
             onChange={handleContentChange}
             onClick={handleTextareaClick}
             className={`${theme.text} text-base font-light leading-relaxed whitespace-pre-wrap break-words w-full bg-transparent resize-none focus:outline-none flex-1`}
+            style={{
+              WebkitAppearance: 'none',
+              WebkitUserSelect: 'text',
+              overflow: 'hidden'
+            }}
             placeholder="Start typing..."
           />
         </div>
 
         {/* Controls */}
-        <div className={`flex items-center justify-start gap-4 p-4 border-t ${theme.borderSecondary}`}>
+        <div className={`flex items-center justify-start gap-2 mt-2 p-4 border-t ${theme.borderSecondary}`}>
           {isActiveNote && (
             <DeleteTimerControl 
               note={note} 

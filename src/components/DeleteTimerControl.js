@@ -25,6 +25,9 @@ const DeleteTimerControl = ({ note, onUpdateNoteDeleteTimer }) => {
     return '24h'; // If no match, assume 24h (the default global setting)
   })();
 
+  const currentTimer = DELETE_TIMERS[currentTimerKey];
+  const selectedText = currentTimer ? currentTimer.name.toLowerCase() : '';
+  
   return (
     <select
       value={currentTimerKey}

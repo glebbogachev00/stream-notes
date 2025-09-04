@@ -189,9 +189,15 @@ const NoteList = ({
                       onKeyDown={(e) => handleTextareaKeyDown(e, () => handleEditingFinished(note.id, note.content))}
                       onClick={handleTextareaClick}
                       className={`${theme.text} text-base font-light leading-relaxed whitespace-pre-wrap break-words mb-3 w-full bg-transparent resize-none focus:outline-none`}
-                      style={{ height: 'auto', minHeight: '1.5em' }}
+                      style={{ 
+                        height: 'auto', 
+                        minHeight: '1.5em',
+                        WebkitAppearance: 'none',
+                        WebkitUserSelect: 'text',
+                        overflow: 'hidden'
+                      }}
                     />
-                    <div ref={deleteTimerControlRef} className="flex items-center justify-start gap-2 mt-2 editing-controls">
+                    <div ref={deleteTimerControlRef} className="flex items-center justify-start gap-4 mt-2 editing-controls">
                       <DeleteTimerControl note={note} onUpdateNoteDeleteTimer={onUpdateNoteDeleteTimer} />
                       <button
                         onMouseDown={(e) => e.preventDefault()}
@@ -273,6 +279,17 @@ const NoteList = ({
                       >
                         list
                       </button>
+                      <button
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setFullscreenNoteId(note.id);
+                        }}
+                        className={`text-xs ${theme.textTertiary} hover:text-green-500 transition-colors duration-200 font-light`}
+                      >
+                        expand
+                      </button>
                     </div>
                   </>
                 ) : (
@@ -345,18 +362,7 @@ const NoteList = ({
                         </svg>
                         copy
                       </button>
-                      <button
-                        onClick={(e) => {
-                          setFullscreenNoteId(note.id);
-                          setOpenMenuId(null);
-                        }}
-                        className={`w-full px-3 py-2 dynamic-text-base font-light text-left ${theme.textTertiary} hover:text-green-500 hover:${theme.bgSecondary} transition-colors duration-200 flex items-center gap-2`}
-                      >
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-                        </svg>
-                        expand
-                      </button>
+                      
                       <button
                         onClick={(e) => {
                           onSaveNote(note.id);
