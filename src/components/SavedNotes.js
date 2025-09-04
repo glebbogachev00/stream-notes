@@ -12,7 +12,24 @@ const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onUpdateNoteProper
   const [openMenuId, setOpenMenuId] = useState(null);
   const [expandedNotes, setExpandedNotes] = useState(new Set());
   const [fullscreenNoteId, setFullscreenNoteId] = useState(null);
+  const [menuPosition, setMenuPosition] = useState({ top: false });
   const editingTextareaRef = useRef(null);
+
+  const handleMenuToggle = (noteId, event) => {
+    if (openMenuId === noteId) {
+      setOpenMenuId(null);
+      return;
+    }
+
+    const buttonRect = event.target.getBoundingClientRect();
+    const viewportHeight = window.innerHeight;
+    const menuHeight = 200; // Approximate menu height
+    const spaceBelow = viewportHeight - buttonRect.bottom;
+    const shouldShowAbove = spaceBelow < menuHeight && buttonRect.top > menuHeight;
+
+    setMenuPosition({ top: shouldShowAbove });
+    setOpenMenuId(noteId);
+  };
 
   useEffect(() => {
     if (editingNoteId && editingTextareaRef.current) {
@@ -304,7 +321,7 @@ const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onUpdateNoteProper
               <div className={`absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-all duration-300`}>
                 <div className="relative" data-menu>
                   <button
-                    onClick={() => setOpenMenuId(openMenuId === note.id ? null : note.id)}
+                    onClick={(e) => handleMenuToggle(note.id, e)}
                     className={`px-3 py-2 text-lg font-bold ${theme.textTertiary} hover:${theme.text} transition-colors duration-200 ${theme.bg}/90 backdrop-blur-sm rounded shadow-sm`}
                     title="More actions"
                   >
@@ -312,7 +329,7 @@ const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onUpdateNoteProper
                   </button>
                   
                   {openMenuId === note.id && (
-                    <div className={`absolute top-full right-0 mt-1 ${theme.bg} ${theme.borderPrimary} border rounded shadow-lg py-1 z-10 min-w-20`}>
+                    <div className={`absolute ${menuPosition.top ? 'bottom-full mb-1' : 'top-full mt-1'} right-0 ${theme.bg} ${theme.borderPrimary} border rounded shadow-lg py-1 z-10 min-w-20`}>
                       <button
                         onClick={async () => {
                           const textToCopy = note.content;
