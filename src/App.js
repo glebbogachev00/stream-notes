@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNotes } from './hooks/useNotes';
 import { useToast } from './hooks/useToast';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
@@ -95,8 +95,20 @@ function AppContent() {
     updateNoteContent,
     updateNoteDeleteTimer,
     updateNoteProperties,
-    toggleNotePin
+    toggleNotePin,
+    updateGlobalDeleteTimer
   } = useNotes(settings.deleteTimer, showToast, settings.personalityEnabled, handleEdgeUnlock);
+
+  // Track previous deleteTimer to detect changes
+  const previousDeleteTimer = useRef(settings.deleteTimer);
+  
+  // Update global delete timer when setting changes
+  useEffect(() => {
+    if (previousDeleteTimer.current !== settings.deleteTimer && updateGlobalDeleteTimer) {
+      updateGlobalDeleteTimer(settings.deleteTimer);
+      previousDeleteTimer.current = settings.deleteTimer;
+    }
+  }, [settings.deleteTimer, updateGlobalDeleteTimer]);
 
   // Show onboarding if not completed
   if (!settings.onboardingCompleted) {

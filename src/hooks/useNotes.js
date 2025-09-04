@@ -131,7 +131,7 @@ export const useNotes = (deleteTimer = '24h', onToast = null, personalityEnabled
     const expiresAt = maxAgeHours === Infinity ? Infinity : now + (maxAgeHours * 60 * 60 * 1000);
 
     const updatedNotes = notes.map(note => 
-      note.id === id ? { ...note, expiresAt: expiresAt } : note
+      note.id === id ? { ...note, expiresAt: expiresAt, hasCustomDeleteTimer: true } : note
     );
     saveNotes(updatedNotes);
   }, [notes, saveNotes]);
@@ -273,6 +273,24 @@ export const useNotes = (deleteTimer = '24h', onToast = null, personalityEnabled
     return () => clearInterval(interval);
   }, [loadNotes]);
 
+  const updateGlobalDeleteTimer = useCallback((newDeleteTimerKey) => {
+    const now = Date.now();
+    const maxAgeHours = DELETE_TIMERS[newDeleteTimerKey]?.hours || 24;
+    
+    const updatedNotes = notes.map(note => {
+      // Only update notes that haven't been manually customized
+      if (note.hasCustomDeleteTimer) {
+        return note; // Keep custom timer
+      }
+      
+      // Update with new global timer
+      const expiresAt = maxAgeHours === Infinity ? Infinity : now + (maxAgeHours * 60 * 60 * 1000);
+      return { ...note, expiresAt: expiresAt };
+    });
+    
+    saveNotes(updatedNotes);
+  }, [notes, saveNotes]);
+
   return {
     notes,
     savedNotes,
@@ -291,6 +309,7 @@ export const useNotes = (deleteTimer = '24h', onToast = null, personalityEnabled
     updateNoteContent,
     updateNoteProperties,
     toggleNotePin,
+    updateGlobalDeleteTimer,
     refreshNotes: loadNotes
   };
 };

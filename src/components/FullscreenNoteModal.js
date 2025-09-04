@@ -97,25 +97,6 @@ const FullscreenNoteModal = ({
     }
   };
 
-  const handleListToggle = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const currentFormatting = note.autoFormat !== false;
-    
-    let newContent;
-    if (currentFormatting) {
-      newContent = removeListFormatting(note.content);
-    } else {
-      newContent = formatText(note.content);
-    }
-    
-    if (onUpdateNoteProperties) {
-      onUpdateNoteProperties(note.id, { 
-        autoFormat: !currentFormatting,
-        content: newContent
-      });
-    }
-  };
 
   if (!isOpen || !note) return null;
 
@@ -196,7 +177,7 @@ const FullscreenNoteModal = ({
                       formatText(textToFormat);
                     const newText = textarea.value.substring(0, start) + processedText + textarea.value.substring(end);
                     
-                    onUpdateNoteContent(note.id, newText);
+                    onUpdateNote(note.id, newText);
                     
                     setTimeout(() => {
                       textarea.focus();

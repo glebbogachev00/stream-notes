@@ -126,33 +126,68 @@ const NoteList = ({
   };
 
   const renderFormattedText = (content) => {
-    const lines = content.split('\n');
-    return lines.map((line, lineIndex) => {
-      const boldRegex = /\*\*(.*?)\*\*/g;
-      const parts = [];
-      let lastIndex = 0;
-      let match;
-      let keyIndex = 0;
+    // Handle multi-line bold formatting by processing the entire content first
+    const boldRegex = /\*\*([\s\S]*?)\*\*/g;
+    const parts = [];
+    let lastIndex = 0;
+    let match;
+    let keyIndex = 0;
 
-      while ((match = boldRegex.exec(line)) !== null) {
-        if (match.index > lastIndex) {
-          parts.push(line.slice(lastIndex, match.index));
-        }
-        parts.push(<strong key={`bold-${lineIndex}-${keyIndex++}`} className="font-bold">{match[1]}</strong>);
-        lastIndex = match.index + match[0].length;
+    while ((match = boldRegex.exec(content)) !== null) {
+      // Add text before the match
+      if (match.index > lastIndex) {
+        const beforeText = content.slice(lastIndex, match.index);
+        parts.push(beforeText);
       }
-
-      if (lastIndex < line.length) {
-        parts.push(line.slice(lastIndex));
-      }
-
-      return (
-        <span key={`line-${lineIndex}`}>
-          {parts.length > 0 ? parts : line}
-          {lineIndex < lines.length - 1 && '\n'}
-        </span>
+      
+      // Add bold text (preserving line breaks within)
+      const boldText = match[1];
+      parts.push(
+        <strong key={`bold-${keyIndex++}`} className="font-bold">
+          {boldText}
+        </strong>
       );
-    });
+      lastIndex = match.index + match[0].length;
+    }
+
+    // Add remaining text after last match
+    if (lastIndex < content.length) {
+      parts.push(content.slice(lastIndex));
+    }
+
+    // If no bold formatting found, return original content
+    if (parts.length === 0) {
+      return content;
+    }
+
+    // Split into lines while preserving formatting
+    return parts.map((part, index) => {
+      if (typeof part === 'string') {
+        // Split string parts by newlines
+        return part.split('\n').map((line, lineIndex, array) => (
+          <React.Fragment key={`text-${index}-${lineIndex}`}>
+            {line}
+            {lineIndex < array.length - 1 && '\n'}
+          </React.Fragment>
+        ));
+      } else {
+        // For bold elements, split their content by newlines
+        const boldContent = part.props.children;
+        if (typeof boldContent === 'string' && boldContent.includes('\n')) {
+          return (
+            <strong key={part.key} className="font-bold">
+              {boldContent.split('\n').map((line, lineIndex, array) => (
+                <React.Fragment key={`bold-line-${lineIndex}`}>
+                  {line}
+                  {lineIndex < array.length - 1 && '\n'}
+                </React.Fragment>
+              ))}
+            </strong>
+          );
+        }
+        return part;
+      }
+    }).flat();
   };
 
   if (notes.length === 0) {
@@ -210,44 +245,48 @@ const NoteList = ({
                             e.preventDefault();
                             e.stopPropagation();
                             const textarea = editingTextareaRef.current;
-                            if (textarea && textarea.selectionStart !== textarea.selectionEnd) {
-                              const start = textarea.selectionStart;
-                              const end = textarea.selectionEnd;
-                              const selectedText = textarea.value.substring(start, end);
-                              
-                              let newText, newStart, newEnd;
-                              
-                              // Check if selected text is already bold (includes ** in selection)
-                              if (selectedText.startsWith('**') && selectedText.endsWith('**') && selectedText.length > 4) {
-                                // Remove bold formatting from selected text
-                                const unboldText = selectedText.slice(2, -2);
-                                newText = textarea.value.substring(0, start) + unboldText + textarea.value.substring(end);
-                                newStart = start;
-                                newEnd = start + unboldText.length;
-                              } else {
-                                // Check if selection is surrounded by ** (not included in selection)
-                                const beforeText = textarea.value.substring(Math.max(0, start - 2), start);
-                                const afterText = textarea.value.substring(end, Math.min(textarea.value.length, end + 2));
+                            if (textarea) {
+                              // Only apply bold if text is actually selected
+                              if (textarea.selectionStart !== textarea.selectionEnd) {
+                                const start = textarea.selectionStart;
+                                const end = textarea.selectionEnd;
+                                const selectedText = textarea.value.substring(start, end);
                                 
-                                if (beforeText === '**' && afterText === '**') {
-                                  // Remove surrounding ** 
-                                  newText = textarea.value.substring(0, start - 2) + selectedText + textarea.value.substring(end + 2);
-                                  newStart = start - 2;
-                                  newEnd = end - 2;
+                                let newText, newStart, newEnd;
+                                
+                                // Check if selected text is already bold (includes ** in selection)
+                                if (selectedText.startsWith('**') && selectedText.endsWith('**') && selectedText.length > 4) {
+                                  // Remove bold formatting from selected text
+                                  const unboldText = selectedText.slice(2, -2);
+                                  newText = textarea.value.substring(0, start) + unboldText + textarea.value.substring(end);
+                                  newStart = start;
+                                  newEnd = start + unboldText.length;
                                 } else {
-                                  // Add bold formatting
-                                  newText = textarea.value.substring(0, start) + `**${selectedText}**` + textarea.value.substring(end);
-                                  newStart = start + 2;
-                                  newEnd = end + 2;
+                                  // Check if selection is surrounded by ** (not included in selection)
+                                  const beforeText = textarea.value.substring(Math.max(0, start - 2), start);
+                                  const afterText = textarea.value.substring(end, Math.min(textarea.value.length, end + 2));
+                                  
+                                  if (beforeText === '**' && afterText === '**') {
+                                    // Remove surrounding ** 
+                                    newText = textarea.value.substring(0, start - 2) + selectedText + textarea.value.substring(end + 2);
+                                    newStart = start - 2;
+                                    newEnd = end - 2;
+                                  } else {
+                                    // Add bold formatting
+                                    newText = textarea.value.substring(0, start) + `**${selectedText}**` + textarea.value.substring(end);
+                                    newStart = start + 2;
+                                    newEnd = end + 2;
+                                  }
                                 }
+                                
+                                onUpdateNoteContent(note.id, newText);
+                                
+                                setTimeout(() => {
+                                  textarea.focus();
+                                  textarea.setSelectionRange(newStart, newEnd);
+                                }, 0);
                               }
-                              
-                              onUpdateNoteContent(note.id, newText);
-                              
-                              setTimeout(() => {
-                                textarea.focus();
-                                textarea.setSelectionRange(newStart, newEnd);
-                              }, 0);
+                              // If no text is selected, do nothing (user needs to select text first)
                             }
                           }}
                           className={`text-xs ${theme.textTertiary} hover:text-yellow-500 transition-colors duration-200 font-light`}
