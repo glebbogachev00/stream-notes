@@ -331,9 +331,8 @@ const Onboarding = () => {
         </div>
         
         <div className="space-y-3 text-center">
-          <div className="flex justify-center items-center">
-            <span className={`text-sm ${theme.text}`}>[</span>
-            <input
+          <div className={`text-sm ${theme.text} inline-flex items-center justify-center`}>
+            [<input
               type="text"
               value={selections.userTag}
               onChange={(e) => {
@@ -343,10 +342,9 @@ const Onboarding = () => {
               }}
               placeholder="your-name"
               className={`bg-transparent ${theme.text} text-sm font-light focus:outline-none text-center`}
-              size={selections.userTag.length || 'your-name'.length}
+              style={{ width: `${Math.max((selections.userTag || 'your-name').length, 1)}ch`, minWidth: '1ch' }}
               maxLength={15}
-            />
-            <span className={`text-sm ${theme.text}`}>]©</span>
+            />]©
           </div>
           
           {selections.userTag && validateUserTag(selections.userTag) && (

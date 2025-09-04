@@ -173,21 +173,32 @@ const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onUpdateNoteProper
                             const start = textarea.selectionStart;
                             const end = textarea.selectionEnd;
                             const selectedText = textarea.value.substring(start, end);
-                            const beforeText = textarea.value.substring(start - 2, start);
-                            const afterText = textarea.value.substring(end, end + 2);
                             
                             let newText, newStart, newEnd;
                             
-                            if (beforeText === '**' && afterText === '**') {
-                              // Remove bold formatting (expand selection to include **)
-                              newText = textarea.value.substring(0, start - 2) + selectedText + textarea.value.substring(end + 2);
-                              newStart = start - 2;
-                              newEnd = end - 2;
+                            // Check if selected text is already bold (includes ** in selection)
+                            if (selectedText.startsWith('**') && selectedText.endsWith('**') && selectedText.length > 4) {
+                              // Remove bold formatting from selected text
+                              const unboldText = selectedText.slice(2, -2);
+                              newText = textarea.value.substring(0, start) + unboldText + textarea.value.substring(end);
+                              newStart = start;
+                              newEnd = start + unboldText.length;
                             } else {
-                              // Add bold formatting
-                              newText = textarea.value.substring(0, start) + `**${selectedText}**` + textarea.value.substring(end);
-                              newStart = start + 2;
-                              newEnd = end + 2;
+                              // Check if selection is surrounded by ** (not included in selection)
+                              const beforeText = textarea.value.substring(Math.max(0, start - 2), start);
+                              const afterText = textarea.value.substring(end, Math.min(textarea.value.length, end + 2));
+                              
+                              if (beforeText === '**' && afterText === '**') {
+                                // Remove surrounding ** 
+                                newText = textarea.value.substring(0, start - 2) + selectedText + textarea.value.substring(end + 2);
+                                newStart = start - 2;
+                                newEnd = end - 2;
+                              } else {
+                                // Add bold formatting
+                                newText = textarea.value.substring(0, start) + `**${selectedText}**` + textarea.value.substring(end);
+                                newStart = start + 2;
+                                newEnd = end + 2;
+                              }
                             }
                             
                             onUpdateNote(note.id, newText);
@@ -226,7 +237,7 @@ const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onUpdateNoteProper
                         }}
                         className={`text-xs ${theme.textTertiary} hover:text-blue-500 transition-colors duration-200 font-light`}
                       >
-                        {note.autoFormat !== false ? 'auto' : 'manual'}
+                        list
                       </button>
                     </div>
                   </>
