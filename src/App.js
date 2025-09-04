@@ -25,7 +25,7 @@ function AppContent() {
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [editingNoteId, setEditingNoteId] = useState(null);
   const [logoStyle, setLogoStyle] = useState(() => {
-    return localStorage.getItem('stream-logo-style') || 'originalText';
+    return localStorage.getItem('stream-logo-style') || 'graffiti';
   });
   const [styleSelectorOpen, setStyleSelectorOpen] = useState(false);
   const [pendingTransformId, setPendingTransformId] = useState(null);
@@ -33,7 +33,7 @@ function AppContent() {
   const [showMatrixUnlock, setShowMatrixUnlock] = useState(false);
 
   const cycleLogo = () => {
-    const styles = ['originalText', 'raindrop', 'samo'];
+    const styles = ['graffiti', 'originalText', 'raindrop'];
     const currentIndex = styles.indexOf(logoStyle);
     const nextStyle = styles[(currentIndex + 1) % styles.length];
     setLogoStyle(nextStyle);
@@ -115,6 +115,16 @@ function AppContent() {
               className="flex items-center mb-2 cursor-pointer transition-all duration-300"
               onClick={cycleLogo}
             >
+              {logoStyle === 'graffiti' && (
+                <div className="bg-black text-white px-3 py-1 rounded transform -rotate-1">
+                  <span className="font-bold text-lg tracking-wide" style={{
+                    textShadow: '1px 1px 2px rgba(255,255,255,0.1)',
+                    letterSpacing: '1px'
+                  }}>
+                    [stream]©
+                  </span>
+                </div>
+              )}
               {logoStyle === 'originalText' && (
                 <h1 className={`dynamic-text-xl font-light ${theme.text} tracking-tight transition-all duration-300`}>
                   [stream]
@@ -128,16 +138,6 @@ function AppContent() {
                 >
                   <path d="M12 2c-4 0-8 6-8 10 0 4.4 3.6 8 8 8s8-3.6 8-8c0-4-4-10-8-10z"/>
                 </svg>
-              )}
-              {logoStyle === 'samo' && (
-                <div className="bg-black text-white px-3 py-1 rounded transform -rotate-1">
-                  <span className="font-bold text-lg tracking-wide" style={{
-                    textShadow: '1px 1px 2px rgba(255,255,255,0.1)',
-                    letterSpacing: '1px'
-                  }}>
-                    [stream]©
-                  </span>
-                </div>
               )}
             </div>
             <div className="flex items-center gap-2">
