@@ -190,6 +190,26 @@ export const SettingsProvider = ({ children }) => {
     return text;
   };
 
+  const removeListFormatting = (text) => {
+    return text
+      .split('\n')
+      .map(line => {
+        // Remove list markers while preserving any formatting
+        let cleaned = line.replace(/^(\d+\.|[•\-*])\s*/, '').trim();
+        
+        // Fix malformed formatting patterns
+        // Handle cases like "*- text**" -> "**text**"
+        cleaned = cleaned.replace(/^\*[-*]\s*/, '**');
+        // Handle cases like "- hola**" after removing "- " 
+        if (cleaned.startsWith('*') && !cleaned.startsWith('**') && cleaned.includes('**')) {
+          cleaned = '**' + cleaned.substring(1);
+        }
+        
+        return cleaned;
+      })
+      .join('\n');
+  };
+
   return (
     <SettingsContext.Provider value={{
       settings,
@@ -198,6 +218,7 @@ export const SettingsProvider = ({ children }) => {
       resetSettings,
       togglePersonality,
       formatText,
+      removeListFormatting,
       shouldOrganizeText,
       ORGANIZATION_STYLES,
       DELETE_TIMERS

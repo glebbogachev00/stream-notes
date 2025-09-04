@@ -99,6 +99,30 @@ const THEMES = {
     inputBgDark: 'bg-green-900',
     panelBg: 'rgba(0, 0, 0, 0.95)',
     separatorColor: 'rgb(34, 197, 94)'
+  },
+  edge: {
+    name: 'edge',
+    bg: 'bg-slate-900',
+    text: 'text-cyan-400',
+    textSecondary: 'text-cyan-300',
+    textTertiary: 'text-slate-400',
+    border: 'border-cyan-500',
+    borderHover: 'hover:border-cyan-400',
+    borderSecondary: 'border-slate-700',
+    borderSecondaryHover: 'hover:border-cyan-600',
+    buttonHover: 'hover:bg-slate-800',
+    inputBg: 'bg-slate-800',
+    ring: 'ring-cyan-400',
+    textDestructive: 'hover:text-cyan-200',
+    focusColor: 'rgba(12, 188, 231, 0.3)',
+    focusBorder: '#0cbce7',
+    focusColorOuter: 'rgba(12, 188, 231, 0.15)',
+    themeAccent: '#0cbce7',
+    themeAccentLight: '#22d3ee',
+    inputBgLight: 'bg-slate-800',
+    inputBgDark: 'bg-slate-700',
+    panelBg: 'rgba(15, 23, 42, 0.95)',
+    separatorColor: 'rgb(12, 188, 231)'
   }
 };
 
@@ -110,12 +134,18 @@ export const useTheme = () => {
   return context;
 };
 
+const checkEdgeUnlock = () => {
+  const artNotes = JSON.parse(localStorage.getItem('stream_art_notes') || '[]');
+  return artNotes.some(note => note.artStyle === 'samo' || note.artStyle === 'stencil');
+};
+
 export const ThemeProvider = ({ children }) => {
   const [currentTheme, setCurrentTheme] = useState(() => {
     const saved = localStorage.getItem('stream_theme');
     return saved && THEMES[saved] ? saved : 'white';
   });
   const [matrixUnlocked, setMatrixUnlocked] = useState(() => checkMatrixUnlock());
+  const [edgeUnlocked, setEdgeUnlocked] = useState(() => checkEdgeUnlock());
 
   useEffect(() => {
     localStorage.setItem('stream_theme', currentTheme);
@@ -131,9 +161,16 @@ export const ThemeProvider = ({ children }) => {
     setMatrixUnlocked(true);
   };
 
+  const unlockEdgeTheme = () => {
+    setEdgeUnlocked(true);
+  };
+
   const getAvailableThemes = () => {
     const baseThemes = ['white', 'beige', 'dark'];
-    return matrixUnlocked ? [...baseThemes, 'matrix'] : baseThemes;
+    const unlockedThemes = [...baseThemes];
+    if (matrixUnlocked) unlockedThemes.push('matrix');
+    if (edgeUnlocked) unlockedThemes.push('edge');
+    return unlockedThemes;
   };
 
   const theme = THEMES[currentTheme];
@@ -145,7 +182,9 @@ export const ThemeProvider = ({ children }) => {
       switchTheme,
       themes: getAvailableThemes(),
       unlockMatrixTheme,
-      matrixUnlocked
+      matrixUnlocked,
+      unlockEdgeTheme,
+      edgeUnlocked
     }}>
       {children}
     </ThemeContext.Provider>

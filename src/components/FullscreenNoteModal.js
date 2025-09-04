@@ -14,7 +14,7 @@ const FullscreenNoteModal = ({
   isActiveNote = false
 }) => {
   const { theme } = useTheme();
-  const { formatText } = useSettings();
+  const { formatText, removeListFormatting } = useSettings();
   const textareaRef = useRef(null);
 
   useEffect(() => {
@@ -104,10 +104,7 @@ const FullscreenNoteModal = ({
     
     let newContent;
     if (currentFormatting) {
-      newContent = note.content
-        .split('\n')
-        .map(line => line.replace(/^(\d+\.|[•\-*]\s)/, '').trim())
-        .join('\n');
+      newContent = removeListFormatting(note.content);
     } else {
       newContent = formatText(note.content);
     }
@@ -137,6 +134,35 @@ const FullscreenNoteModal = ({
           </button>
         </div>
 
+        {/* Sticky Controls for Mobile and Desktop */}
+        <div className={`sticky top-0 z-30 px-4 py-3 ${theme.bg} backdrop-blur-sm border-b ${theme.borderSecondary}`}>
+          <div className="flex items-center justify-start gap-4">
+            {isActiveNote && (
+              <DeleteTimerControl 
+                note={note} 
+                onUpdateNoteDeleteTimer={onUpdateNoteDeleteTimer} 
+                textSize="text-xs"
+              />
+            )}
+            <button
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={handleBoldClick}
+              className={`text-xs ${theme.textTertiary} hover:text-yellow-500 transition-colors duration-200 font-light`}
+            >
+              bold
+            </button>
+            {onUpdateNoteProperties && (
+              <button
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={handleListToggle}
+                className={`text-xs ${theme.textTertiary} hover:text-blue-500 transition-colors duration-200 font-light`}
+              >
+                list
+              </button>
+            )}
+          </div>
+        </div>
+
         {/* Content */}
         <div className="flex-1 p-4 flex flex-col">
           <textarea
@@ -154,32 +180,6 @@ const FullscreenNoteModal = ({
           />
         </div>
 
-        {/* Controls */}
-        <div className={`flex items-center justify-start gap-2 mt-2 p-4 border-t ${theme.borderSecondary}`}>
-          {isActiveNote && (
-            <DeleteTimerControl 
-              note={note} 
-              onUpdateNoteDeleteTimer={onUpdateNoteDeleteTimer} 
-              textSize="text-base"
-            />
-          )}
-          <button
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={handleBoldClick}
-            className={`text-base ${theme.textTertiary} hover:text-yellow-500 transition-colors duration-200 font-light`}
-          >
-            bold
-          </button>
-          {onUpdateNoteProperties && (
-            <button
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={handleListToggle}
-              className={`text-base ${theme.textTertiary} hover:text-blue-500 transition-colors duration-200 font-light`}
-            >
-              list
-            </button>
-          )}
-        </div>
       </div>
     </div>
   );

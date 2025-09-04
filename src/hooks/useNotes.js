@@ -3,6 +3,7 @@ import { DELETE_TIMERS } from '../contexts/SettingsContext';
 import { getRandomMessage, AUTO_DELETE_MESSAGES, SAVE_NOTE_MESSAGES } from '../utils/messages';
 import { useStorage } from '../contexts/StorageContext';
 import { sanitizeNoteContent } from '../utils/security';
+import { useTheme } from '../contexts/ThemeContext';
 
 const NOTES_KEY = 'stream_notes';
 const SAVED_NOTES_KEY = 'stream_saved_notes';
@@ -13,6 +14,7 @@ export const useNotes = (deleteTimer = '24h', onToast = null, personalityEnabled
   const [savedNotes, setSavedNotes] = useState([]);
   const [artNotes, setArtNotes] = useState([]);
   const { storage } = useStorage();
+  const { unlockEdgeTheme } = useTheme();
 
   const loadNotes = useCallback(async () => {
     try {
@@ -116,6 +118,13 @@ export const useNotes = (deleteTimer = '24h', onToast = null, personalityEnabled
     saveNotes(updatedNotes);
   }, [notes, saveNotes]);
 
+  const toggleNotePin = useCallback((id) => {
+    const updatedNotes = notes.map(note => 
+      note.id === id ? { ...note, isPinned: !note.isPinned } : note
+    );
+    saveNotes(updatedNotes);
+  }, [notes, saveNotes]);
+
   const updateNoteDeleteTimer = useCallback((id, newDeleteTimerKey) => {
     const now = Date.now();
     const maxAgeHours = DELETE_TIMERS[newDeleteTimerKey]?.hours || 24;
@@ -190,10 +199,15 @@ export const useNotes = (deleteTimer = '24h', onToast = null, personalityEnabled
     saveArtNotes(updatedArtNotes);
     // Keep original note in source collection
     
+    // Check if this unlocks the edge theme
+    if (artStyle === 'samo' || artStyle === 'stencil') {
+      unlockEdgeTheme();
+    }
+    
     if (onToast) {
       onToast("Note transformed into art!");
     }
-  }, [notes, savedNotes, artNotes, saveArtNotes, onToast]);
+  }, [notes, savedNotes, artNotes, saveArtNotes, onToast, unlockEdgeTheme]);
 
   const deleteArtNote = useCallback((id) => {
     const updatedArtNotes = artNotes.filter(note => note.id !== id);
@@ -273,6 +287,7 @@ export const useNotes = (deleteTimer = '24h', onToast = null, personalityEnabled
     updateNoteDeleteTimer,
     updateNoteContent,
     updateNoteProperties,
+    toggleNotePin,
     refreshNotes: loadNotes
   };
 };

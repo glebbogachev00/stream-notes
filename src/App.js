@@ -86,7 +86,8 @@ function AppContent() {
     getTimeInfo,
     updateNoteContent,
     updateNoteDeleteTimer,
-    updateNoteProperties
+    updateNoteProperties,
+    toggleNotePin
   } = useNotes(settings.deleteTimer, showToast, settings.personalityEnabled);
 
   // Show onboarding if not completed
@@ -247,6 +248,7 @@ function AppContent() {
                 onUpdateNoteContent={updateNoteContent}
                 onUpdateNoteDeleteTimer={updateNoteDeleteTimer}
                 onUpdateNoteProperties={updateNoteProperties}
+                onTogglePin={toggleNotePin}
               />
             </div>
           )}

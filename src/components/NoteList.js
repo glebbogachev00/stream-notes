@@ -17,10 +17,11 @@ const NoteList = ({
   onSetEditingNoteId, 
   onUpdateNoteContent,
   onUpdateNoteDeleteTimer,
-  onUpdateNoteProperties
+  onUpdateNoteProperties,
+  onTogglePin
 }) => {
   const { theme } = useTheme();
-  const { settings, formatText } = useSettings();
+  const { settings, formatText, removeListFormatting } = useSettings();
   const editingTextareaRef = useRef(null);
   const deleteTimerControlRef = useRef(null);
   const [expandedNotes, setExpandedNotes] = useState(new Set());
@@ -150,9 +151,11 @@ const NoteList = ({
   }
 
 
-  return (
-    <div className="space-y-6">
-        {notes.map((note) => {
+  // Separate pinned and unpinned notes
+  const pinnedNotes = notes.filter(note => note.isPinned);
+  const unpinnedNotes = notes.filter(note => !note.isPinned);
+
+  const renderNote = (note) => {
           const timeInfo = getTimeInfo(note);
           
           return (
@@ -164,7 +167,7 @@ const NoteList = ({
                 timeInfo.isExpiringSoon 
                   ? 'border-orange-200' 
                   : `${theme.borderSecondary} ${theme.borderSecondaryHover}`
-              }`}
+              } ${note.isPinned ? `${theme.bg} ${theme.border} border rounded-lg p-4 mb-4` : ''}`}
             >
             {/* Expiration progress bar */}
             <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gray-100">
@@ -181,6 +184,101 @@ const NoteList = ({
               <div className="pr-2">
                 {editingNoteId === note.id ? (
                   <>
+                    {/* Controls at top for both mobile and desktop */}
+                    <div className={`sticky top-0 z-20 mb-4 -mx-4 px-4 py-3 ${theme.bg} backdrop-blur-sm`}>
+                      <div ref={deleteTimerControlRef} className={`flex items-center justify-start gap-4 editing-controls ${theme.borderSecondary} border-b pb-3`}>
+                        <DeleteTimerControl note={note} onUpdateNoteDeleteTimer={onUpdateNoteDeleteTimer} textSize="text-xs" />
+                        <button
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            const textarea = editingTextareaRef.current;
+                            if (textarea && textarea.selectionStart !== textarea.selectionEnd) {
+                              const start = textarea.selectionStart;
+                              const end = textarea.selectionEnd;
+                              const selectedText = textarea.value.substring(start, end);
+                              
+                              let newText, newStart, newEnd;
+                              
+                              // Check if selected text is already bold (includes ** in selection)
+                              if (selectedText.startsWith('**') && selectedText.endsWith('**') && selectedText.length > 4) {
+                                // Remove bold formatting from selected text
+                                const unboldText = selectedText.slice(2, -2);
+                                newText = textarea.value.substring(0, start) + unboldText + textarea.value.substring(end);
+                                newStart = start;
+                                newEnd = start + unboldText.length;
+                              } else {
+                                // Check if selection is surrounded by ** (not included in selection)
+                                const beforeText = textarea.value.substring(Math.max(0, start - 2), start);
+                                const afterText = textarea.value.substring(end, Math.min(textarea.value.length, end + 2));
+                                
+                                if (beforeText === '**' && afterText === '**') {
+                                  // Remove surrounding ** 
+                                  newText = textarea.value.substring(0, start - 2) + selectedText + textarea.value.substring(end + 2);
+                                  newStart = start - 2;
+                                  newEnd = end - 2;
+                                } else {
+                                  // Add bold formatting
+                                  newText = textarea.value.substring(0, start) + `**${selectedText}**` + textarea.value.substring(end);
+                                  newStart = start + 2;
+                                  newEnd = end + 2;
+                                }
+                              }
+                              
+                              onUpdateNoteContent(note.id, newText);
+                              
+                              setTimeout(() => {
+                                textarea.focus();
+                                textarea.setSelectionRange(newStart, newEnd);
+                              }, 0);
+                            }
+                          }}
+                          className={`text-xs ${theme.textTertiary} hover:text-yellow-500 transition-colors duration-200 font-light`}
+                        >
+                          bold
+                        </button>
+                        <button
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            // Toggle auto-formatting for this note
+                            const currentFormatting = note.autoFormat !== false; // default to true
+                            
+                            let newContent;
+                            if (currentFormatting) {
+                              // Remove existing list formatting when switching to manual
+                              newContent = removeListFormatting(note.content);
+                            } else {
+                              // Apply formatting when switching back to auto
+                              newContent = formatText(note.content);
+                            }
+                            
+                            // Update both content and property at once
+                            onUpdateNoteProperties(note.id, { 
+                              autoFormat: !currentFormatting,
+                              content: newContent
+                            });
+                          }}
+                          className={`text-xs ${theme.textTertiary} hover:text-blue-500 transition-colors duration-200 font-light`}
+                        >
+                          list
+                        </button>
+                        <button
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setFullscreenNoteId(note.id);
+                          }}
+                          className={`text-xs ${theme.textTertiary} hover:text-green-500 transition-colors duration-200 font-light`}
+                        >
+                          expand
+                        </button>
+                      </div>
+                    </div>
+
                     <textarea
                       ref={editingTextareaRef}
                       value={note.content}
@@ -197,100 +295,6 @@ const NoteList = ({
                         overflow: 'hidden'
                       }}
                     />
-                    <div ref={deleteTimerControlRef} className="flex items-center justify-start gap-4 mt-2 editing-controls">
-                      <DeleteTimerControl note={note} onUpdateNoteDeleteTimer={onUpdateNoteDeleteTimer} textSize="text-xs" />
-                      <button
-                        onMouseDown={(e) => e.preventDefault()}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          const textarea = editingTextareaRef.current;
-                          if (textarea && textarea.selectionStart !== textarea.selectionEnd) {
-                            const start = textarea.selectionStart;
-                            const end = textarea.selectionEnd;
-                            const selectedText = textarea.value.substring(start, end);
-                            
-                            let newText, newStart, newEnd;
-                            
-                            // Check if selected text is already bold (includes ** in selection)
-                            if (selectedText.startsWith('**') && selectedText.endsWith('**') && selectedText.length > 4) {
-                              // Remove bold formatting from selected text
-                              const unboldText = selectedText.slice(2, -2);
-                              newText = textarea.value.substring(0, start) + unboldText + textarea.value.substring(end);
-                              newStart = start;
-                              newEnd = start + unboldText.length;
-                            } else {
-                              // Check if selection is surrounded by ** (not included in selection)
-                              const beforeText = textarea.value.substring(Math.max(0, start - 2), start);
-                              const afterText = textarea.value.substring(end, Math.min(textarea.value.length, end + 2));
-                              
-                              if (beforeText === '**' && afterText === '**') {
-                                // Remove surrounding ** 
-                                newText = textarea.value.substring(0, start - 2) + selectedText + textarea.value.substring(end + 2);
-                                newStart = start - 2;
-                                newEnd = end - 2;
-                              } else {
-                                // Add bold formatting
-                                newText = textarea.value.substring(0, start) + `**${selectedText}**` + textarea.value.substring(end);
-                                newStart = start + 2;
-                                newEnd = end + 2;
-                              }
-                            }
-                            
-                            onUpdateNoteContent(note.id, newText);
-                            
-                            setTimeout(() => {
-                              textarea.focus();
-                              textarea.setSelectionRange(newStart, newEnd);
-                            }, 0);
-                          }
-                        }}
-                        className={`text-xs ${theme.textTertiary} hover:text-yellow-500 transition-colors duration-200 font-light`}
-                      >
-                        bold
-                      </button>
-                      <button
-                        onMouseDown={(e) => e.preventDefault()}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          // Toggle auto-formatting for this note
-                          const currentFormatting = note.autoFormat !== false; // default to true
-                          
-                          let newContent;
-                          if (currentFormatting) {
-                            // Remove existing list formatting when switching to manual
-                            newContent = note.content
-                              .split('\n')
-                              .map(line => line.replace(/^(\d+\.|[•\-*]\s)/, '').trim())
-                              .join('\n');
-                          } else {
-                            // Apply formatting when switching back to auto
-                            newContent = formatText(note.content);
-                          }
-                          
-                          // Update both content and property at once
-                          onUpdateNoteProperties(note.id, { 
-                            autoFormat: !currentFormatting,
-                            content: newContent
-                          });
-                        }}
-                        className={`text-xs ${theme.textTertiary} hover:text-blue-500 transition-colors duration-200 font-light`}
-                      >
-                        list
-                      </button>
-                      <button
-                        onMouseDown={(e) => e.preventDefault()}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setFullscreenNoteId(note.id);
-                        }}
-                        className={`text-xs ${theme.textTertiary} hover:text-green-500 transition-colors duration-200 font-light`}
-                      >
-                        expand
-                      </button>
-                    </div>
                   </>
                 ) : (
                   <div>
@@ -346,6 +350,19 @@ const NoteList = ({
                   
                   {openMenuId === note.id && (
                     <div className={`absolute top-full right-0 mt-1 ${theme.bg} ${theme.borderPrimary} border rounded shadow-lg py-1 z-10 min-w-20`}>
+                      <button
+                        onClick={() => {
+                          onTogglePin(note.id);
+                          setOpenMenuId(null);
+                        }}
+                        className={`w-full px-3 py-2 dynamic-text-base font-light text-left ${theme.textTertiary} hover:text-orange-500 hover:${theme.bgSecondary} transition-colors duration-200 flex items-center gap-2`}
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                        </svg>
+                        {note.isPinned ? 'unpin' : 'pin'}
+                      </button>
+
                       <button
                         onClick={(e) => {
                           navigator.clipboard.writeText(note.content);
@@ -413,7 +430,36 @@ const NoteList = ({
             </div>
           </article>
         );
-      })}
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Pinned Notes Section */}
+      {pinnedNotes.length > 0 && (
+        <>
+          <div className="space-y-6">
+            <div className={`flex items-center gap-2 ${theme.textTertiary} text-xs font-light`}>
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+              </svg>
+              pinned
+            </div>
+            {pinnedNotes.map(renderNote)}
+          </div>
+          
+          {/* Divider */}
+          {unpinnedNotes.length > 0 && (
+            <div className={`border-t ${theme.borderSecondary} pt-6`}>
+              <div className={`text-xs font-light ${theme.textTertiary} mb-6`}>recent</div>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Unpinned Notes Section */}
+      <div className="space-y-6">
+        {unpinnedNotes.map(renderNote)}
+      </div>
       
       <FullscreenNoteModal
         note={notes.find(n => n.id === fullscreenNoteId)}

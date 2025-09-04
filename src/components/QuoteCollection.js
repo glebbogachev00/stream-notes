@@ -41,14 +41,42 @@ const QuoteCollection = () => {
           onClick={async () => {
             const textToCopy = `"${currentQuote.text}" — ${currentQuote.author}`;
             console.log('Attempting to copy:', textToCopy);
+            
+            // Try modern clipboard API first
+            if (navigator.clipboard && window.isSecureContext) {
+              try {
+                await navigator.clipboard.writeText(textToCopy);
+                showToast('Quote copied to clipboard!', 'success');
+                console.log('Copy successful (clipboard API)!');
+                return;
+              } catch (err) {
+                console.warn('Clipboard API failed, trying fallback:', err);
+              }
+            }
+            
+            // Fallback method for mobile/older browsers
             try {
-              await navigator.clipboard.writeText(textToCopy);
-              showToast('Quote copied to clipboard!', 'success');
-              console.log('Copy successful!');
+              const textArea = document.createElement('textarea');
+              textArea.value = textToCopy;
+              textArea.style.position = 'fixed';
+              textArea.style.left = '-999999px';
+              textArea.style.top = '-999999px';
+              document.body.appendChild(textArea);
+              textArea.focus();
+              textArea.select();
+              
+              const successful = document.execCommand('copy');
+              document.body.removeChild(textArea);
+              
+              if (successful) {
+                showToast('Quote copied to clipboard!', 'success');
+                console.log('Copy successful (fallback)!');
+              } else {
+                throw new Error('execCommand failed');
+              }
             } catch (err) {
-              console.error('Failed to copy quote: ', err);
-              showToast('Failed to copy quote.', 'error');
-              console.log('Copy failed!');
+              console.error('All copy methods failed:', err);
+              showToast('Unable to copy. Please select and copy manually.', 'error');
             }
           }}
           className={`flex items-center gap-2 px-4 py-2 dynamic-text-base font-light ${theme.textTertiary} hover:text-green-500 transition-colors`}
