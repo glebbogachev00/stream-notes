@@ -26,7 +26,9 @@ function AppContent() {
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [editingNoteId, setEditingNoteId] = useState(null);
   const [logoStyle, setLogoStyle] = useState(() => {
-    return localStorage.getItem('stream-logo-style') || 'originalText';
+    const saved = localStorage.getItem('stream-logo-style');
+    const validStyles = ['originalText', 'graffiti', 'raindrop'];
+    return validStyles.includes(saved) ? saved : 'originalText';
   });
   const [styleSelectorOpen, setStyleSelectorOpen] = useState(false);
   const [pendingTransformId, setPendingTransformId] = useState(null);
