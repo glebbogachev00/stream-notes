@@ -61,9 +61,8 @@ const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onUpdateNoteProper
   };
 
   const handleEditingFinished = (noteId, content) => {
-    const note = savedNotes.find(n => n.id === noteId);
-    const formattedContent = (note?.autoFormat !== false) ? formatText(content) : content;
-    onUpdateNote(noteId, formattedContent);
+    // Disable auto-formatting - user must explicitly use List control
+    onUpdateNote(noteId, content);
     setEditingNoteId(null);
   };
 
@@ -229,19 +228,49 @@ const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onUpdateNoteProper
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
-                            const currentFormatting = note.autoFormat !== false;
-                            
-                            let newContent;
-                            if (currentFormatting) {
-                              newContent = removeListFormatting(note.content);
-                            } else {
-                              newContent = formatText(note.content);
+                            const textarea = editingTextareaRef.current;
+                            if (textarea) {
+                              textarea.select();
+                              textarea.focus();
                             }
-                            
-                            onUpdateNoteProperties(note.id, { 
-                              autoFormat: !currentFormatting,
-                              content: newContent
-                            });
+                          }}
+                          className={`text-xs ${theme.textTertiary} hover:text-purple-500 transition-colors duration-200 font-light`}
+                        >
+                          select all
+                        </button>
+                        <button
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            const textarea = editingTextareaRef.current;
+                            if (textarea) {
+                              let textToFormat;
+                              let start, end;
+                              
+                              if (textarea.selectionStart !== textarea.selectionEnd) {
+                                // User has selected text - format only selection
+                                start = textarea.selectionStart;
+                                end = textarea.selectionEnd;
+                                textToFormat = textarea.value.substring(start, end);
+                              } else {
+                                // No selection - format entire content
+                                start = 0;
+                                end = textarea.value.length;
+                                textToFormat = textarea.value;
+                              }
+                              
+                              // Apply list formatting to the text
+                              const formattedText = formatText(textToFormat);
+                              const newText = textarea.value.substring(0, start) + formattedText + textarea.value.substring(end);
+                              
+                              onUpdateNote(note.id, newText);
+                              
+                              setTimeout(() => {
+                                textarea.focus();
+                                textarea.setSelectionRange(start, start + formattedText.length);
+                              }, 0);
+                            }
                           }}
                           className={`text-xs ${theme.textTertiary} hover:text-blue-500 transition-colors duration-200 font-light`}
                         >

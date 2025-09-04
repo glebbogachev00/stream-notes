@@ -33,7 +33,8 @@ const NoteInput = ({ onAddNote, onMatrixUnlock }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (content.trim()) {
-      const formattedContent = formatText(content);
+      // Disable auto-formatting - user must explicitly use List control
+      const formattedContent = content;
       
       // Add save animation
       if (textareaRef.current) {

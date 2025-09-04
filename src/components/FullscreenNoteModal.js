@@ -151,10 +151,52 @@ const FullscreenNoteModal = ({
             >
               bold
             </button>
+            <button
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => {
+                const textarea = textareaRef.current;
+                if (textarea) {
+                  textarea.select();
+                  textarea.focus();
+                }
+              }}
+              className={`text-xs ${theme.textTertiary} hover:text-purple-500 transition-colors duration-200 font-light`}
+            >
+              select all
+            </button>
             {onUpdateNoteProperties && (
               <button
                 onMouseDown={(e) => e.preventDefault()}
-                onClick={handleListToggle}
+                onClick={() => {
+                  const textarea = textareaRef.current;
+                  if (textarea) {
+                    let textToFormat;
+                    let start, end;
+                    
+                    if (textarea.selectionStart !== textarea.selectionEnd) {
+                      // User has selected text - format only selection
+                      start = textarea.selectionStart;
+                      end = textarea.selectionEnd;
+                      textToFormat = textarea.value.substring(start, end);
+                    } else {
+                      // No selection - format entire content
+                      start = 0;
+                      end = textarea.value.length;
+                      textToFormat = textarea.value;
+                    }
+                    
+                    // Apply list formatting to the text
+                    const formattedText = formatText(textToFormat);
+                    const newText = textarea.value.substring(0, start) + formattedText + textarea.value.substring(end);
+                    
+                    onUpdateNoteContent(note.id, newText);
+                    
+                    setTimeout(() => {
+                      textarea.focus();
+                      textarea.setSelectionRange(start, start + formattedText.length);
+                    }, 0);
+                  }
+                }}
                 className={`text-xs ${theme.textTertiary} hover:text-blue-500 transition-colors duration-200 font-light`}
               >
                 list

@@ -81,9 +81,8 @@ const NoteList = ({
     )) {
       return; // Don't close if focus moved to controls
     }
-    const note = notes.find(n => n.id === noteId);
-    const formattedContent = (note?.autoFormat !== false) ? formatText(content) : content;
-    onUpdateNoteContent(noteId, formattedContent);
+    // Disable auto-formatting - user must explicitly use List control
+    onUpdateNoteContent(noteId, content);
     onSetEditingNoteId(null);
   };
 
@@ -260,23 +259,49 @@ const NoteList = ({
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
-                            // Toggle auto-formatting for this note
-                            const currentFormatting = note.autoFormat !== false; // default to true
-                            
-                            let newContent;
-                            if (currentFormatting) {
-                              // Remove existing list formatting when switching to manual
-                              newContent = removeListFormatting(note.content);
-                            } else {
-                              // Apply formatting when switching back to auto
-                              newContent = formatText(note.content);
+                            const textarea = editingTextareaRef.current;
+                            if (textarea) {
+                              textarea.select();
+                              textarea.focus();
                             }
-                            
-                            // Update both content and property at once
-                            onUpdateNoteProperties(note.id, { 
-                              autoFormat: !currentFormatting,
-                              content: newContent
-                            });
+                          }}
+                          className={`text-xs ${theme.textTertiary} hover:text-purple-500 transition-colors duration-200 font-light`}
+                        >
+                          select all
+                        </button>
+                        <button
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            const textarea = editingTextareaRef.current;
+                            if (textarea) {
+                              let textToFormat;
+                              let start, end;
+                              
+                              if (textarea.selectionStart !== textarea.selectionEnd) {
+                                // User has selected text - format only selection
+                                start = textarea.selectionStart;
+                                end = textarea.selectionEnd;
+                                textToFormat = textarea.value.substring(start, end);
+                              } else {
+                                // No selection - format entire content
+                                start = 0;
+                                end = textarea.value.length;
+                                textToFormat = textarea.value;
+                              }
+                              
+                              // Apply list formatting to the text
+                              const formattedText = formatText(textToFormat);
+                              const newText = textarea.value.substring(0, start) + formattedText + textarea.value.substring(end);
+                              
+                              onUpdateNoteContent(note.id, newText);
+                              
+                              setTimeout(() => {
+                                textarea.focus();
+                                textarea.setSelectionRange(start, start + formattedText.length);
+                              }, 0);
+                            }
                           }}
                           className={`text-xs ${theme.textTertiary} hover:text-blue-500 transition-colors duration-200 font-light`}
                         >
