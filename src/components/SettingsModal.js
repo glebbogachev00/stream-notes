@@ -73,15 +73,13 @@ const SettingsModal = ({ isOpen, onClose }) => {
             <h2 className={`dynamic-text-lg font-light ${theme.text}`}>
               {settings.personalityEnabled ? "stream's command center" : "application settings"}
             </h2>
-            <p className={`dynamic-text-base ${theme.textSecondary} font-light mt-1`}>
-              {settings.personalityEnabled ? "let's tweak how i help your brain flow!" : "adjust application preferences."}
-            </p>
+            
           </div>
           <button
             onClick={onClose}
             className={`dynamic-text-xs font-light ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} transition-colors`}
           >
-            close
+            [close]
           </button>
         </div>
 

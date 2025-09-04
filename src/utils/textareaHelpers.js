@@ -2,20 +2,19 @@
 
 export const autoResize = (textarea) => {
   if (!textarea) return;
-  
+
   // Store current scroll position to prevent jumps
   const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-  
-  // Temporarily set height to auto to get the correct scrollHeight
-  const currentHeight = textarea.style.height;
-  textarea.style.height = 'auto';
+
+  // Reset height to allow scrollHeight to be accurately calculated
+  textarea.style.height = '0px'; // Collapse it first
   const newHeight = `${textarea.scrollHeight}px`;
-  
+
   // Only update if height actually changed to avoid unnecessary reflows
-  if (newHeight !== currentHeight) {
+  if (newHeight !== textarea.style.height) { // Compare with current style height
     textarea.style.height = newHeight;
   }
-  
+
   // Restore scroll position if it changed unexpectedly
   requestAnimationFrame(() => {
     const newScrollTop = window.pageYOffset || document.documentElement.scrollTop;
@@ -52,12 +51,11 @@ export const handleTextareaChange = (event, callback) => {
   // Update content
   callback(value);
   
-  // Use requestAnimationFrame for smooth updates
+  // Auto-resize without causing scroll jumps
+  autoResize(textarea);
+  
+  // Restore cursor position after DOM updates
   requestAnimationFrame(() => {
-    // Auto-resize without causing scroll jumps
-    autoResize(textarea);
-    
-    // Restore cursor position
     try {
       if (textarea.setSelectionRange) {
         textarea.setSelectionRange(cursorStart, cursorEnd);
@@ -119,7 +117,5 @@ export const handleTextareaKeyDown = (event, onSave) => {
   }
   
   // Auto-resize on key input with smooth animation
-  requestAnimationFrame(() => {
-    autoResize(event.target);
-  });
+  autoResize(event.target);
 };

@@ -152,6 +152,13 @@ function AppContent() {
           </div>
           <div className="flex items-center gap-2">
             <button
+              onClick={() => window.open('https://gleb-bogachev.notion.site/updates-stream?pvs=73', '_blank')}
+              className={`p-2 ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} transition-colors dynamic-text-base`}
+              title="View updates"
+            >
+              !
+            </button>
+            <button
               onClick={() => setIsFeedbackOpen(true)}
               className={`p-2 ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} transition-colors dynamic-text-base`}
               title={settings.personalityEnabled ? "Help improve stream" : "Feedback"}

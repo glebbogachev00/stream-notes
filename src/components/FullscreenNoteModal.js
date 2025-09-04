@@ -124,7 +124,7 @@ const FullscreenNoteModal = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className={`${theme.bg} ${theme.text} rounded-lg shadow-2xl w-full max-w-4xl h-full max-h-[90vh] flex flex-col`}>
+      <div className={`${theme.bg} ${theme.text} rounded-lg shadow-2xl w-full h-full flex flex-col`}>
         {/* Header */}
         <div className={`flex items-center justify-between p-4 border-b ${theme.borderSecondary}`}>
           <h2 className={`text-lg font-light ${theme.text}`}>better view</h2>
