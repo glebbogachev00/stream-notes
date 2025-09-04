@@ -15,6 +15,7 @@ import StyleSelector from './components/StyleSelector';
 import QuoteCollection from './components/QuoteCollection';
 import Toast from './components/Toast';
 import MatrixUnlockNotification from './components/MatrixUnlockNotification';
+import EdgeUnlockNotification from './components/EdgeUnlockNotification';
 import FeedbackModal from './components/FeedbackModal';
 import BackToTop from './components/BackToTop';
 import { submitFeedback } from './utils/feedback';
@@ -31,6 +32,7 @@ function AppContent() {
   const [pendingTransformId, setPendingTransformId] = useState(null);
   const [pendingFromSaved, setPendingFromSaved] = useState(false);
   const [showMatrixUnlock, setShowMatrixUnlock] = useState(false);
+  const [showEdgeUnlock, setShowEdgeUnlock] = useState(false);
 
   const cycleLogo = () => {
     const styles = ['originalText', 'graffiti', 'raindrop'];
@@ -55,6 +57,10 @@ function AppContent() {
 
   const handleMatrixUnlock = () => {
     setShowMatrixUnlock(true);
+  };
+
+  const handleEdgeUnlock = () => {
+    setShowEdgeUnlock(true);
   };
 
   const handleFeedbackSubmit = async (feedbackText) => {
@@ -88,7 +94,7 @@ function AppContent() {
     updateNoteDeleteTimer,
     updateNoteProperties,
     toggleNotePin
-  } = useNotes(settings.deleteTimer, showToast, settings.personalityEnabled);
+  } = useNotes(settings.deleteTimer, showToast, settings.personalityEnabled, handleEdgeUnlock);
 
   // Show onboarding if not completed
   if (!settings.onboardingCompleted) {
@@ -311,6 +317,13 @@ function AppContent() {
       {showMatrixUnlock && (
         <MatrixUnlockNotification 
           onClose={() => setShowMatrixUnlock(false)} 
+        />
+      )}
+      
+      {/* Edge unlock notification */}
+      {showEdgeUnlock && (
+        <EdgeUnlockNotification 
+          onClose={() => setShowEdgeUnlock(false)} 
         />
       )}
       

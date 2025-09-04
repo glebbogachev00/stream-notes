@@ -9,7 +9,7 @@ const NOTES_KEY = 'stream_notes';
 const SAVED_NOTES_KEY = 'stream_saved_notes';
 const ART_NOTES_KEY = 'stream_art_notes';
 
-export const useNotes = (deleteTimer = '24h', onToast = null, personalityEnabled = true) => {
+export const useNotes = (deleteTimer = '24h', onToast = null, personalityEnabled = true, onEdgeUnlock = null) => {
   const [notes, setNotes] = useState([]);
   const [savedNotes, setSavedNotes] = useState([]);
   const [artNotes, setArtNotes] = useState([]);
@@ -202,12 +202,15 @@ export const useNotes = (deleteTimer = '24h', onToast = null, personalityEnabled
     // Check if this unlocks the edge theme
     if (artStyle === 'samo' || artStyle === 'stencil') {
       unlockEdgeTheme();
+      if (onEdgeUnlock) {
+        onEdgeUnlock();
+      }
     }
     
     if (onToast) {
       onToast("Note transformed into art!");
     }
-  }, [notes, savedNotes, artNotes, saveArtNotes, onToast, unlockEdgeTheme]);
+  }, [notes, savedNotes, artNotes, saveArtNotes, onToast, unlockEdgeTheme, onEdgeUnlock]);
 
   const deleteArtNote = useCallback((id) => {
     const updatedArtNotes = artNotes.filter(note => note.id !== id);
