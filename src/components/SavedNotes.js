@@ -313,6 +313,64 @@ const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onUpdateNoteProper
                   
                   {openMenuId === note.id && (
                     <div className={`absolute top-full right-0 mt-1 ${theme.bg} ${theme.borderPrimary} border rounded shadow-lg py-1 z-10 min-w-20`}>
+                      <button
+                        onClick={async () => {
+                          const textToCopy = note.content;
+                          console.log('Attempting to copy saved note:', textToCopy);
+                          
+                          // Try modern clipboard API first
+                          if (navigator.clipboard && window.isSecureContext) {
+                            try {
+                              await navigator.clipboard.writeText(textToCopy);
+                              console.log('Copy successful (clipboard API)!');
+                              setOpenMenuId(null);
+                              return;
+                            } catch (err) {
+                              console.warn('Clipboard API failed, trying fallback:', err);
+                            }
+                          }
+                          
+                          // Fallback method for mobile/older browsers
+                          try {
+                            const textArea = document.createElement('textarea');
+                            textArea.value = textToCopy;
+                            textArea.style.position = 'fixed';
+                            textArea.style.left = '-999999px';
+                            textArea.style.top = '-999999px';
+                            document.body.appendChild(textArea);
+                            textArea.focus();
+                            textArea.select();
+                            
+                            const successful = document.execCommand('copy');
+                            document.body.removeChild(textArea);
+                            
+                            if (successful) {
+                              console.log('Copy successful (fallback)!');
+                            } else {
+                              throw new Error('execCommand failed');
+                            }
+                          } catch (err) {
+                            console.error('All copy methods failed:', err);
+                          }
+                          
+                          setOpenMenuId(null);
+                          // Add animation effect
+                          const button = document.querySelector(`[data-menu] button`);
+                          if (button) {
+                            button.classList.add('animate-pulse');
+                            setTimeout(() => {
+                              button.classList.remove('animate-pulse');
+                            }, 600);
+                          }
+                        }}
+                        className={`w-full px-3 py-2 dynamic-text-base font-light text-left ${theme.textTertiary} hover:text-blue-500 hover:${theme.bgSecondary} transition-colors duration-200 flex items-center gap-2`}
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                        copy
+                      </button>
+
                       {settings.samoModeEnabled && (
                         <button
                           onClick={() => {
