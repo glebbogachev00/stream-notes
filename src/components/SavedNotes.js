@@ -260,15 +260,22 @@ const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onUpdateNoteProper
                                 textToFormat = textarea.value;
                               }
                               
-                              // Apply list formatting to the text
-                              const formattedText = formatText(textToFormat);
-                              const newText = textarea.value.substring(0, start) + formattedText + textarea.value.substring(end);
+                              // Check if text is already formatted as a list
+                              const isAlreadyList = textToFormat.split('\n').every(line => 
+                                line.trim() === '' || /^(\d+\.|[•\-*])\s/.test(line.trim())
+                              );
+                              
+                              // Toggle list formatting
+                              const processedText = isAlreadyList ? 
+                                removeListFormatting(textToFormat) : 
+                                formatText(textToFormat);
+                              const newText = textarea.value.substring(0, start) + processedText + textarea.value.substring(end);
                               
                               onUpdateNote(note.id, newText);
                               
                               setTimeout(() => {
                                 textarea.focus();
-                                textarea.setSelectionRange(start, start + formattedText.length);
+                                textarea.setSelectionRange(start, start + processedText.length);
                               }, 0);
                             }
                           }}
