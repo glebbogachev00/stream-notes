@@ -25,7 +25,7 @@ function AppContent() {
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [editingNoteId, setEditingNoteId] = useState(null);
   const [logoStyle, setLogoStyle] = useState(() => {
-    return localStorage.getItem('stream-logo-style') || 'graffiti';
+    return localStorage.getItem('stream-logo-style') || 'originalText';
   });
   const [styleSelectorOpen, setStyleSelectorOpen] = useState(false);
   const [pendingTransformId, setPendingTransformId] = useState(null);
@@ -33,7 +33,7 @@ function AppContent() {
   const [showMatrixUnlock, setShowMatrixUnlock] = useState(false);
 
   const cycleLogo = () => {
-    const styles = ['graffiti', 'originalText', 'raindrop'];
+    const styles = ['originalText', 'graffiti', 'raindrop'];
     const currentIndex = styles.indexOf(logoStyle);
     const nextStyle = styles[(currentIndex + 1) % styles.length];
     setLogoStyle(nextStyle);
@@ -115,6 +115,11 @@ function AppContent() {
               className="flex items-center mb-2 cursor-pointer transition-all duration-300"
               onClick={cycleLogo}
             >
+              {logoStyle === 'originalText' && (
+                <h1 className={`dynamic-text-xl font-light ${theme.text} tracking-tight transition-all duration-300`}>
+                  [stream]
+                </h1>
+              )}
               {logoStyle === 'graffiti' && (
                 <div className="bg-black text-white px-3 py-1 rounded transform -rotate-1">
                   <span className="font-bold text-lg tracking-wide" style={{
@@ -124,11 +129,6 @@ function AppContent() {
                     [stream]©
                   </span>
                 </div>
-              )}
-              {logoStyle === 'originalText' && (
-                <h1 className={`dynamic-text-xl font-light ${theme.text} tracking-tight transition-all duration-300`}>
-                  [stream]
-                </h1>
               )}
               {logoStyle === 'raindrop' && (
                 <svg 
