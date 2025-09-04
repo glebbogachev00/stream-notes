@@ -5,6 +5,7 @@ import { getRandomMessage, EMPTY_STATE_MESSAGES } from '../utils/messages';
 import { handleTextareaChange, handleTextareaKeyDown, setupTextareaForEditing, handleTextareaClick } from '../utils/textareaHelpers';
 import TagSignature from './TagSignature';
 import DeleteTimerControl from './DeleteTimerControl';
+import FullscreenNoteModal from './FullscreenNoteModal';
 
 const NoteList = ({ 
   notes, 
@@ -24,6 +25,7 @@ const NoteList = ({
   const deleteTimerControlRef = useRef(null);
   const [expandedNotes, setExpandedNotes] = useState(new Set());
   const [openMenuId, setOpenMenuId] = useState(null);
+  const [fullscreenNoteId, setFullscreenNoteId] = useState(null);
 
   useEffect(() => {
     if (editingNoteId && editingTextareaRef.current) {
@@ -345,6 +347,18 @@ const NoteList = ({
                       </button>
                       <button
                         onClick={(e) => {
+                          setFullscreenNoteId(note.id);
+                          setOpenMenuId(null);
+                        }}
+                        className={`w-full px-3 py-2 dynamic-text-base font-light text-left ${theme.textTertiary} hover:text-green-500 hover:${theme.bgSecondary} transition-colors duration-200 flex items-center gap-2`}
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                        </svg>
+                        expand
+                      </button>
+                      <button
+                        onClick={(e) => {
                           onSaveNote(note.id);
                           setOpenMenuId(null);
                           e.target.closest('button').classList.add('animate-bounce');
@@ -394,6 +408,16 @@ const NoteList = ({
           </article>
         );
       })}
+      
+      <FullscreenNoteModal
+        note={notes.find(n => n.id === fullscreenNoteId)}
+        isOpen={!!fullscreenNoteId}
+        onClose={() => setFullscreenNoteId(null)}
+        onUpdateNote={onUpdateNoteContent}
+        onUpdateNoteProperties={onUpdateNoteProperties}
+        onUpdateNoteDeleteTimer={onUpdateNoteDeleteTimer}
+        isActiveNote={true}
+      />
     </div>
   );
 };

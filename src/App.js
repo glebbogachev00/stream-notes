@@ -16,6 +16,7 @@ import QuoteCollection from './components/QuoteCollection';
 import Toast from './components/Toast';
 import MatrixUnlockNotification from './components/MatrixUnlockNotification';
 import FeedbackModal from './components/FeedbackModal';
+import BackToTop from './components/BackToTop';
 import { submitFeedback } from './utils/feedback';
 
 function AppContent() {
@@ -303,6 +304,8 @@ function AppContent() {
           onClose={() => setShowMatrixUnlock(false)} 
         />
       )}
+      
+      <BackToTop />
     </div>
   );
 }
