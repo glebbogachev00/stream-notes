@@ -2,7 +2,7 @@ import React from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { DELETE_TIMERS } from '../contexts/SettingsContext';
 
-const DeleteTimerControl = ({ note, onUpdateNoteDeleteTimer }) => {
+const DeleteTimerControl = ({ note, onUpdateNoteDeleteTimer, textSize = 'text-xs' }) => {
   const { theme } = useTheme();
 
   const currentTimerKey = (() => {
@@ -29,7 +29,7 @@ const DeleteTimerControl = ({ note, onUpdateNoteDeleteTimer }) => {
     <select
       value={currentTimerKey}
       onChange={(e) => onUpdateNoteDeleteTimer(note.id, e.target.value)}
-      className={`appearance-none bg-transparent ${theme.text} text-xs font-light focus:outline-none`}
+      className={`appearance-none bg-transparent ${theme.text} ${textSize} font-light focus:outline-none`}
     >
       {Object.entries(DELETE_TIMERS).map(([key, timer]) => (
         <option key={key} value={key}>

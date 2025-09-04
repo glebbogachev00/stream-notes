@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useSettings } from '../contexts/SettingsContext';
 import { CREATIVE_QUOTES } from '../data/quotes';
+import { useToast } from '../hooks/useToast';
 
 const QuoteCollection = () => {
   const { theme } = useTheme();
   const { settings } = useSettings();
+  const { showToast } = useToast();
   const [currentQuoteIndex, setCurrentQuoteIndex] = useState(0);
 
   const cycleQuote = () => {
@@ -36,7 +38,19 @@ const QuoteCollection = () => {
         </button>
         
         <button
-          onClick={() => navigator.clipboard.writeText(`"${currentQuote.text}" — ${currentQuote.author}`)}
+          onClick={async () => {
+            const textToCopy = `"${currentQuote.text}" — ${currentQuote.author}`;
+            console.log('Attempting to copy:', textToCopy);
+            try {
+              await navigator.clipboard.writeText(textToCopy);
+              showToast('Quote copied to clipboard!', 'success');
+              console.log('Copy successful!');
+            } catch (err) {
+              console.error('Failed to copy quote: ', err);
+              showToast('Failed to copy quote.', 'error');
+              console.log('Copy failed!');
+            }
+          }}
           className={`flex items-center gap-2 px-4 py-2 dynamic-text-base font-light ${theme.textTertiary} hover:text-green-500 transition-colors`}
         >
           steal this quote

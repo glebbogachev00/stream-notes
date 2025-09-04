@@ -38,14 +38,14 @@ const FeedbackModal = ({ isOpen, onClose, onSubmit }) => {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h2 className={`dynamic-text-lg font-light ${theme.text}`}>
-              What's on your mind about stream?
+              improve stream
             </h2>
           </div>
           <button
             onClick={onClose}
             className={`dynamic-text-xs font-light ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} transition-colors`}
           >
-            close
+            [close]
           </button>
         </div>
 
@@ -53,7 +53,7 @@ const FeedbackModal = ({ isOpen, onClose, onSubmit }) => {
           <textarea
             value={feedback}
             onChange={(e) => setFeedback(e.target.value)}
-            placeholder="Your thoughts help stream grow…"
+            placeholder="your thoughts help stream grow…"
             className={`w-full h-32 p-3 ${theme.inputBg} ${theme.text} ${theme.border} border transition-all duration-200 font-light dynamic-text-base resize-none`}
             style={{
               outline: 'none',
@@ -77,7 +77,7 @@ const FeedbackModal = ({ isOpen, onClose, onSubmit }) => {
               className={`px-4 py-2 dynamic-text-xs font-light ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} transition-colors`}
               disabled={isSubmitting}
             >
-              Cancel
+              cancel
             </button>
             <button
               type="submit"
@@ -88,7 +88,7 @@ const FeedbackModal = ({ isOpen, onClose, onSubmit }) => {
                   : `${theme.text} ${theme.buttonHover}`
               } transition-colors disabled:cursor-not-allowed`}
             >
-              {isSubmitting ? 'sending...' : 'Send feedback'}
+              {isSubmitting ? 'sending...' : 'send feedback'}
             </button>
           </div>
         </form>

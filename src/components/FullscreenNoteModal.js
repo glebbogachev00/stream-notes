@@ -123,7 +123,7 @@ const FullscreenNoteModal = ({
   if (!isOpen || !note) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-0">
       <div className={`${theme.bg} ${theme.text} rounded-lg shadow-2xl w-full h-full flex flex-col`}>
         {/* Header */}
         <div className={`flex items-center justify-between p-4 border-b ${theme.borderSecondary}`}>
@@ -160,12 +160,13 @@ const FullscreenNoteModal = ({
             <DeleteTimerControl 
               note={note} 
               onUpdateNoteDeleteTimer={onUpdateNoteDeleteTimer} 
+              textSize="text-base"
             />
           )}
           <button
             onMouseDown={(e) => e.preventDefault()}
             onClick={handleBoldClick}
-            className={`text-xs ${theme.textTertiary} hover:text-yellow-500 transition-colors duration-200 font-light`}
+            className={`text-base ${theme.textTertiary} hover:text-yellow-500 transition-colors duration-200 font-light`}
           >
             bold
           </button>
@@ -173,7 +174,7 @@ const FullscreenNoteModal = ({
             <button
               onMouseDown={(e) => e.preventDefault()}
               onClick={handleListToggle}
-              className={`text-xs ${theme.textTertiary} hover:text-blue-500 transition-colors duration-200 font-light`}
+              className={`text-base ${theme.textTertiary} hover:text-blue-500 transition-colors duration-200 font-light`}
             >
               list
             </button>

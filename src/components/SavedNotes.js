@@ -247,6 +247,17 @@ const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onUpdateNoteProper
                       >
                         list
                       </button>
+                      <button
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setFullscreenNoteId(note.id);
+                        }}
+                        className={`text-xs ${theme.textTertiary} hover:text-green-500 transition-colors duration-200 font-light`}
+                      >
+                        expand
+                      </button>
                     </div>
                   </>
                 ) : (

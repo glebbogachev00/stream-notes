@@ -198,7 +198,7 @@ const NoteList = ({
                       }}
                     />
                     <div ref={deleteTimerControlRef} className="flex items-center justify-start gap-4 mt-2 editing-controls">
-                      <DeleteTimerControl note={note} onUpdateNoteDeleteTimer={onUpdateNoteDeleteTimer} />
+                      <DeleteTimerControl note={note} onUpdateNoteDeleteTimer={onUpdateNoteDeleteTimer} textSize="text-xs" />
                       <button
                         onMouseDown={(e) => e.preventDefault()}
                         onClick={(e) => {
