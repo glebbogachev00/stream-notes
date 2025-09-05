@@ -474,7 +474,7 @@ const Onboarding = () => {
             onClick={handleNext}
             className={`text-xs font-light ${theme.text} hover:${theme.textSecondary.replace('text-', 'hover:text-')} transition-all duration-200`}
           >
-            {currentStep === -1 ? (settings.personalityEnabled ? 'let\'s go!' : 'Start') : currentStep === steps.length - 1 ? (settings.personalityEnabled ? 'start flowing' : 'Finish') : 'next'}
+            {currentStep === -1 ? 'let\'s go!' : currentStep === steps.length - 1 ? (settings.personalityEnabled ? 'start flowing' : 'finish') : 'next'}
           </button>
         </div>
       </div>
