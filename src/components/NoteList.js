@@ -583,41 +583,16 @@ const NoteList = ({
                         </button>
                       )}
                       <button
-                        onClick={(e) => {
-                          const noteElement = e.target.closest('article');
+                        onClick={() => {
                           setOpenMenuId(null);
-                          
-                          // Fun "poof" animation - note shrinks and spins away
-                          noteElement.style.transformOrigin = 'center';
-                          noteElement.style.transition = 'all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55)';
-                          noteElement.style.transform = 'scale(0) rotate(180deg)';
-                          noteElement.style.opacity = '0';
-                          
-                          // Create sparkle effect
-                          for (let i = 0; i < 6; i++) {
-                            const sparkle = document.createElement('div');
-                            sparkle.innerHTML = ['✨', '💫', '⭐', '🌟'][Math.floor(Math.random() * 4)];
-                            sparkle.style.position = 'absolute';
-                            sparkle.style.fontSize = '12px';
-                            sparkle.style.pointerEvents = 'none';
-                            sparkle.style.zIndex = '1000';
-                            sparkle.style.left = Math.random() * 100 + '%';
-                            sparkle.style.top = Math.random() * 100 + '%';
-                            sparkle.style.animation = 'sparkle-pop 0.8s ease-out forwards';
-                            noteElement.appendChild(sparkle);
-                            setTimeout(() => sparkle.remove(), 800);
-                          }
-                          
-                          setTimeout(() => {
-                            onDeleteNote(note.id);
-                          }, 600);
+                          onDeleteNote(note.id);
                         }}
-                        className={`w-full px-3 py-2 dynamic-text-base font-light text-left ${theme.textTertiary} hover:text-purple-500 hover:${theme.bgSecondary} transition-all duration-200 flex items-center gap-2 hover:translate-x-1 active:scale-95`}
+                        className={`w-full px-3 py-2 dynamic-text-base font-light text-left ${theme.textTertiary} hover:text-red-500 hover:${theme.bgSecondary} transition-all duration-200 flex items-center gap-2 hover:translate-x-1 active:scale-95`}
                       >
                         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 13v-1m4 1v-3m4 3V8M8 21l4-7 4 7M3 4h18M4 4h16v1a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                         </svg>
-                        poof
+                        delete
                       </button>
                     </div>
                   )}
