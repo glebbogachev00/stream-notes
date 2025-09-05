@@ -64,6 +64,38 @@ const NoteList = ({
     }
   }, [openMenuId]);
 
+  // Handle clicking outside of editing note to close edit mode
+  useEffect(() => {
+    const handleClickOutsideEdit = (event) => {
+      if (editingNoteId && 
+          !event.target.closest('textarea') && 
+          !event.target.closest('.editing-controls') &&
+          !event.target.closest('button') &&
+          !event.target.closest('.note-content')) {
+        const note = notes.find(n => n.id === editingNoteId);
+        if (note) {
+          onUpdateNoteContent(editingNoteId, note.content);
+        }
+        onSetEditingNoteId(null);
+      }
+    };
+
+    if (editingNoteId) {
+      // Use touchend for better mobile support, click for desktop
+      const eventType = 'ontouchstart' in window ? 'touchend' : 'click';
+      
+      // Add slight delay to prevent immediate closure when entering edit mode
+      const timeoutId = setTimeout(() => {
+        document.addEventListener(eventType, handleClickOutsideEdit, { passive: true });
+      }, 150);
+      
+      return () => {
+        clearTimeout(timeoutId);
+        document.removeEventListener(eventType, handleClickOutsideEdit);
+      };
+    }
+  }, [editingNoteId, notes, onUpdateNoteContent, onSetEditingNoteId]);
+
   const handleContentChange = (e, noteId) => {
     handleTextareaChange(e, (value) => {
       if (value.trim() === '') {
@@ -84,6 +116,19 @@ const NoteList = ({
     // Disable auto-formatting - user must explicitly use List control
     onUpdateNoteContent(noteId, content);
     onSetEditingNoteId(null);
+  };
+
+  const handleNoteClick = (noteId, event) => {
+    // Prevent triggering when clicking on buttons or controls
+    if (event.target.closest('button') || event.target.closest('.editing-controls')) {
+      return;
+    }
+    
+    // Prevent default to avoid any mobile touch conflicts
+    event.preventDefault();
+    event.stopPropagation();
+    
+    onSetEditingNoteId(noteId);
   };
 
   const handleNoteKeyDown = (e, noteId) => {
@@ -214,23 +259,8 @@ const NoteList = ({
               key={note.id}
               tabIndex={0}
               onKeyDown={(e) => handleNoteKeyDown(e, note.id)}
-              className={`group pb-6 border-b transition-all duration-200 relative ${
-                timeInfo.isExpiringSoon 
-                  ? 'border-orange-200' 
-                  : `${theme.borderSecondary} ${theme.borderSecondaryHover}`
-              } ${note.isPinned ? `${theme.bg} ${theme.border} border rounded-lg p-4 mb-4` : ''}`}
+              className={`group pb-6 transition-all duration-200 relative ${note.isPinned ? `${theme.bg} ${theme.border} border rounded-lg p-4 mb-4` : ''}`}
             >
-            {/* Expiration progress bar */}
-            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gray-100">
-              <div 
-                className={`h-full transition-all duration-1000 ${
-                  timeInfo.isExpiringSoon ? 'bg-orange-400' : 'bg-gray-300'
-                }`}
-                style={{
-                  width: `${timeInfo.hoursRemaining === Infinity ? 100 : Math.max(0, (timeInfo.hoursRemaining / (DELETE_TIMERS[settings.deleteTimer]?.hours || 24)) * 100)}%`
-                }}
-              />
-            </div>
             <div className="relative">
               <div className="pr-2">
                 {editingNoteId === note.id ? (
@@ -371,7 +401,10 @@ const NoteList = ({
                       ref={editingTextareaRef}
                       value={note.content}
                       onChange={(e) => handleContentChange(e, note.id)}
-                      onBlur={(e) => handleEditingFinished(note.id, note.content, e)}
+                      onBlur={(e) => {
+                        // Small delay to allow button clicks to register before closing edit mode
+                        setTimeout(() => handleEditingFinished(note.id, note.content, e), 50);
+                      }}
                       onKeyDown={(e) => handleTextareaKeyDown(e, () => handleEditingFinished(note.id, note.content))}
                       onClick={handleTextareaClick}
                       className={`${theme.text} text-base font-light leading-relaxed whitespace-pre-wrap break-words mb-3 w-full bg-transparent resize-none focus:outline-none`}
@@ -385,9 +418,14 @@ const NoteList = ({
                     />
                   </>
                 ) : (
-                  <div>
+                  <div className="note-content">
                     <p 
-                      onClick={() => onSetEditingNoteId(note.id)}
+                      onClick={(e) => handleNoteClick(note.id, e)}
+                      onTouchEnd={(e) => {
+                        // Handle touch events for better mobile response
+                        e.preventDefault();
+                        handleNoteClick(note.id, e);
+                      }}
                       className={`${theme.text} text-base font-light leading-relaxed whitespace-pre-wrap break-words mb-3 cursor-pointer transition-smooth hover:${theme.textSecondary.replace('text-', 'hover:text-')}`}
                     >
                       {renderFormattedText(shouldTruncateNote(note.content) && !expandedNotes.has(note.id) 
@@ -515,6 +553,42 @@ const NoteList = ({
                   )}
                 </div>
               </div>
+            </div>
+            
+            {/* Simple colored line separator */}
+            <div className="mt-3 px-2">
+              <div className={`w-full h-0.5 ${
+                (() => {
+                  // Determine the note's actual timer setting (same logic as DeleteTimerControl)
+                  const getCurrentTimerKey = () => {
+                    if (note.expiresAt === undefined) return '24h';
+                    
+                    const now = Date.now();
+                    for (const key in DELETE_TIMERS) {
+                      const timer = DELETE_TIMERS[key];
+                      if (timer.hours !== null && timer.hours !== Infinity) {
+                        const calculatedExpiresAt = now + (timer.hours * 60 * 60 * 1000);
+                        if (Math.abs(note.expiresAt - calculatedExpiresAt) < 5000) {
+                          return key;
+                        }
+                      }
+                    }
+                    return '24h';
+                  };
+                  
+                  // Color based on the note's actual timer setting
+                  const timerKey = getCurrentTimerKey();
+                  
+                  switch(timerKey) {
+                    case '7d': return 'bg-green-400';    // 7 days - green
+                    case '3d': return 'bg-blue-400';     // 3 days - blue
+                    case '24h': return 'bg-yellow-400';  // 24 hours - yellow
+                    case '6h': return 'bg-orange-400';   // 6 hours - orange
+                    case '1h': return 'bg-red-400';      // 1 hour - red
+                    default: return 'bg-yellow-400';     // Default to yellow
+                  }
+                })()
+              }`}></div>
             </div>
           </article>
         );

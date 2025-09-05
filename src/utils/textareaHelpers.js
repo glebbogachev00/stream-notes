@@ -75,10 +75,10 @@ export const setupTextareaForEditing = (textarea) => {
     // Auto-resize to fit content first
     autoResize(textarea);
     
-    // Focus and position cursor at end
+    // Focus immediately for better UX
     textarea.focus();
     
-    // Set cursor to end of content
+    // Set cursor to end of content for immediate typing
     const length = textarea.value.length;
     try {
       textarea.setSelectionRange(length, length);
@@ -86,6 +86,13 @@ export const setupTextareaForEditing = (textarea) => {
       // Fallback for cursor positioning
       textarea.focus();
     }
+    
+    // Ensure the textarea is visible and scrolled into view on mobile
+    textarea.scrollIntoView({ 
+      behavior: 'smooth', 
+      block: 'center',
+      inline: 'nearest'
+    });
   });
 };
 

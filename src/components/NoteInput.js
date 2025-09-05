@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
-import { useSettings } from '../contexts/SettingsContext';
+import { useSettings, DELETE_TIMERS } from '../contexts/SettingsContext';
 import { getRotatingMessage, INPUT_PLACEHOLDER_MESSAGES } from '../utils/messages';
 import { detectQuotePattern, unlockMatrix, checkMatrixUnlock } from '../utils/quoteDetection';
 import { autoResize, handleTextareaChange, handleTextareaKeyDown } from '../utils/textareaHelpers';
@@ -117,10 +117,7 @@ const NoteInput = ({ onAddNote, onMatrixUnlock }) => {
       
       {!isFocused && (
         <div className={`mt-2 dynamic-text-base ${theme.textSecondary} font-light typography-system`}>
-          {settings.personalityEnabled ? 
-            `Notes expire in ${settings.deleteTimer === '1h' ? '1 hour' : settings.deleteTimer === '6h' ? '6 hours' : '24 hours'}` : 
-            `Notes expire in ${settings.deleteTimer === '1h' ? '1 hour' : settings.deleteTimer === '6h' ? '6 hours' : '24 hours'}`
-          }
+          Notes expire in {DELETE_TIMERS[settings.deleteTimer]?.name.toLowerCase() || '24 hours'}
         </div>
       )}
     </section>

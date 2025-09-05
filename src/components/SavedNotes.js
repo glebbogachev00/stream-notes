@@ -50,6 +50,38 @@ const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onUpdateNoteProper
     }
   }, [openMenuId]);
 
+  // Handle clicking outside of editing note to close edit mode
+  useEffect(() => {
+    const handleClickOutsideEdit = (event) => {
+      if (editingNoteId && 
+          !event.target.closest('textarea') && 
+          !event.target.closest('.editing-controls') &&
+          !event.target.closest('button') &&
+          !event.target.closest('.note-content')) {
+        const note = savedNotes.find(n => n.id === editingNoteId);
+        if (note) {
+          onUpdateNote(editingNoteId, note.content);
+        }
+        setEditingNoteId(null);
+      }
+    };
+
+    if (editingNoteId) {
+      // Use touchend for better mobile support, click for desktop
+      const eventType = 'ontouchstart' in window ? 'touchend' : 'click';
+      
+      // Add slight delay to prevent immediate closure when entering edit mode
+      const timeoutId = setTimeout(() => {
+        document.addEventListener(eventType, handleClickOutsideEdit, { passive: true });
+      }, 150);
+      
+      return () => {
+        clearTimeout(timeoutId);
+        document.removeEventListener(eventType, handleClickOutsideEdit);
+      };
+    }
+  }, [editingNoteId, savedNotes, onUpdateNote]);
+
   const handleContentChange = (e, noteId) => {
     handleTextareaChange(e, (value) => {
       if (value.trim() === '') {
@@ -64,6 +96,19 @@ const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onUpdateNoteProper
     // Disable auto-formatting - user must explicitly use List control
     onUpdateNote(noteId, content);
     setEditingNoteId(null);
+  };
+
+  const handleNoteClick = (noteId, event) => {
+    // Prevent triggering when clicking on buttons or controls
+    if (event.target.closest('button') || event.target.closest('.editing-controls')) {
+      return;
+    }
+    
+    // Prevent default to avoid any mobile touch conflicts
+    event.preventDefault();
+    event.stopPropagation();
+    
+    setEditingNoteId(noteId);
   };
 
   const handleNoteKeyDown = (e, noteId) => {
@@ -202,10 +247,12 @@ const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onUpdateNoteProper
         key={note.id}
         tabIndex={0}
         onKeyDown={(e) => handleNoteKeyDown(e, note.id)}
-        className={`group relative pb-6 border-b ${theme.borderSecondary} ${theme.borderSecondaryHover} transition-all duration-200 ${
+        className={`group relative pb-6 transition-all duration-200 ${
           note.isPinned ? `${theme.bg} ${theme.border} border rounded-lg p-4 mb-4` : ''
         }`}
           >
+            {/* Separator line */}
+            <div className={`absolute bottom-0 left-0 right-0 h-px ${theme.borderSecondary}`}></div>
             <div className="relative">
               <div>
                 {editingNoteId === note.id ? (
@@ -341,7 +388,10 @@ const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onUpdateNoteProper
                       ref={editingTextareaRef}
                       value={note.content}
                       onChange={(e) => handleContentChange(e, note.id)}
-                      onBlur={() => handleEditingFinished(note.id, note.content)}
+                      onBlur={() => {
+                        // Small delay to allow button clicks to register before closing edit mode
+                        setTimeout(() => handleEditingFinished(note.id, note.content), 50);
+                      }}
                       onKeyDown={(e) => handleTextareaKeyDown(e, () => handleEditingFinished(note.id, note.content))}
                       onClick={handleTextareaClick}
                       className={`${theme.text} text-base font-light leading-relaxed whitespace-pre-wrap break-words mb-3 w-full bg-transparent resize-none focus:outline-none`}
@@ -355,9 +405,14 @@ const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onUpdateNoteProper
                     />
                   </>
                 ) : (
-                  <div>
+                  <div className="note-content">
                     <p 
-                      onClick={() => setEditingNoteId(note.id)}
+                      onClick={(e) => handleNoteClick(note.id, e)}
+                      onTouchEnd={(e) => {
+                        // Handle touch events for better mobile response
+                        e.preventDefault();
+                        handleNoteClick(note.id, e);
+                      }}
                       className={`${theme.text} text-base font-light leading-relaxed whitespace-pre-wrap break-words mb-3 cursor-pointer transition-smooth hover:${theme.textSecondary.replace('text-', 'hover:text-')}`}
                     >
                       {renderFormattedText(shouldTruncateNote(note.content) && !expandedNotes.has(note.id) 

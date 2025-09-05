@@ -23,36 +23,36 @@ const Onboarding = () => {
 
   const steps = [
     {
-      title: settings.personalityEnabled ? "First things first - what colors make your brain happy?" : "Theme Selection",
-      subtitle: settings.personalityEnabled ? "I'm pretty flexible, but these are my favorites:" : "Choose your preferred application theme."
+      title: settings.personalityEnabled ? "Pick your colors" : "Theme Selection",
+      subtitle: settings.personalityEnabled ? "What feels right?" : "Choose your preferred theme."
     },
     {
-      title: "Your privacy matters",
-      subtitle: "stream keeps everything local. Your thoughts stay on your device."
+      title: "Privacy first",
+      subtitle: "Everything stays on your device."
     },
     {
-      title: settings.personalityEnabled ? "Choose your tag" : "Create Your Signature",
-      subtitle: settings.personalityEnabled ? "Like graffiti artists, create your signature" : "This tag will appear on all your notes"
+      title: settings.personalityEnabled ? "Your signature" : "Create Your Signature",
+      subtitle: settings.personalityEnabled ? "Make your mark" : "This tag appears on your notes"
     },
     {
-      title: settings.personalityEnabled ? "How big should the text be?" : "Font Size",
-      subtitle: settings.personalityEnabled ? "You can always change this later in the settings." : "Select your preferred font size."
+      title: "Text size",
+      subtitle: settings.personalityEnabled ? "Whatever works" : "Select your font size."
     },
     {
-      title: settings.personalityEnabled ? "Now, when your thoughts come rapid-fire, how should I catch them?" : "Note Organization Style",
-      subtitle: settings.personalityEnabled ? "Don't stress about this - I learn your style as we go." : "Select how your notes should be organized."
+      title: settings.personalityEnabled ? "Note style" : "Note Organization",
+      subtitle: settings.personalityEnabled ? "How should notes look?" : "Choose your organization style."
     },
     {
-      title: settings.personalityEnabled ? "Here's my favorite part - the cleanup!" : "Auto-Delete Timer",
-      subtitle: settings.personalityEnabled ? "I'm like a helpful roommate who actually does the dishes. How long should thoughts hang around before I tidy up?" : "Set the duration after which notes are automatically deleted."
+      title: settings.personalityEnabled ? "Auto-cleanup" : "Auto-Delete Timer",
+      subtitle: settings.personalityEnabled ? "When should old notes disappear?" : "Set auto-delete duration."
     },
     {
-      title: settings.personalityEnabled ? "How should I store your thoughts?" : "Data Storage",
-      subtitle: settings.personalityEnabled ? "I can keep everything on this device, or sync across your browsers if you want." : "Choose whether to store notes locally or sync across devices."
+      title: "Storage",
+      subtitle: settings.personalityEnabled ? "Local only or sync across devices?" : "Local or synced storage."
     },
     {
-      title: settings.personalityEnabled ? "Check it out! This is us working together." : "Preview and Confirmation",
-      subtitle: settings.personalityEnabled ? "You dump thoughts, I organize and clean. Perfect partnership! Ready to let your mind run wild?" : "Review your selections and confirm to start using stream."
+      title: settings.personalityEnabled ? "All set!" : "Preview",
+      subtitle: settings.personalityEnabled ? "Ready to start?" : "Review and confirm."
     }
   ];
 
@@ -127,19 +127,18 @@ const Onboarding = () => {
       </div>
       <div className="space-y-0">
         <h1 className={`text-xl font-light ${theme.text} mb-4`}>
-          {settings.personalityEnabled ? "Hey! I'm stream, your new note buddy" : "Welcome to stream"}
+          {settings.personalityEnabled ? "Hey! I'm stream" : "Welcome to stream"}
         </h1>
         <div className={`space-y-3 text-sm ${theme.textSecondary} font-light leading-relaxed max-w-sm mx-auto`}>
           {settings.personalityEnabled ? (
             <>
-              <p>I noticed something... your brain moves FAST, but your notes? Total chaos, right?</p>
-              <p>I get it. I'm the same way. That's why I exist.</p>
-              <p>Let me show you how I keep brilliant minds like yours flowing freely...</p>
+              <p>Fast thoughts, organized notes.</p>
+              <p>Let's get you set up.</p>
             </>
           ) : (
             <>
-              <p>stream is a self-managing note application designed to help you organize your thoughts efficiently.</p>
-              <p>This onboarding process will guide you through the initial setup of your preferences.</p>
+              <p>Self-managing notes for fast thinkers.</p>
+              <p>Quick setup ahead.</p>
             </>
           )}
         </div>
@@ -294,7 +293,7 @@ const Onboarding = () => {
       )}
       
       <div className={`text-xs ${theme.textTertiary} font-light leading-relaxed p-3`}>
-        browser sync uses your existing browser account to sync notes across devices. your data never goes to stream servers.
+        Uses browser sync. No stream servers.
       </div>
     </div>
   );
@@ -308,8 +307,7 @@ const Onboarding = () => {
           </svg>
         </div>
         <div className={`text-sm ${theme.textSecondary} font-light leading-relaxed max-w-xs mx-auto space-y-3`}>
-          <p>stream keeps everything local. Your thoughts stay on your device.</p>
-          <p>No cloud storage. No data collection. Complete privacy.</p>
+          <p>Local storage only. Complete privacy.</p>
         </div>
       </div>
     </div>
@@ -325,8 +323,7 @@ const Onboarding = () => {
             </svg>
           </div>
           <div className={`text-xs ${theme.textSecondary} font-light leading-relaxed space-y-2 text-center`}>
-            <p>Your tag is your unique signature, inspired by graffiti tagging.</p>
-            <p>It's how you sign your notes, like a username.</p>
+            <p>Your unique signature for notes.</p>
           </div>
         </div>
         
@@ -408,10 +405,10 @@ const Onboarding = () => {
         
         <div className="space-y-4">
           <div className={`text-xs ${theme.textTertiary} font-light text-center`}>
-            Your notes and preferences are saved securely on your device.
+            Saved securely on your device.
           </div>
           <div className={`text-sm ${theme.text} font-light leading-relaxed text-center`}>
-            {settings.personalityEnabled ? "Ready to let your mind run wild?" : "Ready to start using stream?"}
+            {settings.personalityEnabled ? "Ready to go?" : "Ready to start?"}
           </div>
         </div>
       </div>

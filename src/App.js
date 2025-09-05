@@ -204,12 +204,12 @@ function AppContent() {
         </header>
 
         <nav className="mb-8 sm:mb-12">
-          <div className={`flex space-x-6 border-b ${theme.border} transition-all duration-200`}>
+          <div className="flex space-x-6 transition-all duration-200">
             <button
               onClick={() => setActiveTab('active')}
-              className={`pb-3 dynamic-text-base font-light transition-all duration-200 border-b ${
+              className={`pb-3 dynamic-text-base font-light transition-all duration-200 border-b-2 ${
                 activeTab === 'active'
-                  ? `${theme.text} ${theme.text.replace('text-', 'border-')}`
+                  ? `${theme.text} ${theme.themeAccent ? `border-[${theme.themeAccent}]` : theme.text.replace('text-', 'border-')} shadow-[0_2px_0_0_currentColor]`
                   : `${theme.textTertiary} hover:${theme.textSecondary.replace('text-', 'hover:text-')} border-transparent`
               }`}
             >
@@ -217,9 +217,9 @@ function AppContent() {
             </button>
             <button
               onClick={() => setActiveTab('saved')}
-              className={`pb-3 dynamic-text-base font-light transition-all duration-200 border-b ${
+              className={`pb-3 dynamic-text-base font-light transition-all duration-200 border-b-2 ${
                 activeTab === 'saved'
-                  ? `${theme.text} ${theme.text.replace('text-', 'border-')}`
+                  ? `${theme.text} ${theme.themeAccent ? `border-[${theme.themeAccent}]` : theme.text.replace('text-', 'border-')} shadow-[0_2px_0_0_currentColor]`
                   : `${theme.textTertiary} hover:${theme.textSecondary.replace('text-', 'hover:text-')} border-transparent`
               }`}
             >
@@ -228,9 +228,9 @@ function AppContent() {
             {settings.samoModeEnabled && (
               <button
                 onClick={() => setActiveTab('art')}
-                className={`pb-3 dynamic-text-base font-light transition-all duration-200 border-b ${
+                className={`pb-3 dynamic-text-base font-light transition-all duration-200 border-b-2 ${
                   activeTab === 'art'
-                    ? `${theme.text} ${theme.text.replace('text-', 'border-')}`
+                    ? `${theme.text} ${theme.themeAccent ? `border-[${theme.themeAccent}]` : theme.text.replace('text-', 'border-')} shadow-[0_2px_0_0_currentColor]`
                     : `${theme.textTertiary} hover:${theme.textSecondary.replace('text-', 'hover:text-')} border-transparent`
                 }`}
                 title="samo mode transforms notes into street art inspired by jean-michel basquiat's legendary graffiti tag 'samo' - raw, authentic visual expression."
@@ -242,9 +242,9 @@ function AppContent() {
             {settings.stealThisQuoteEnabled && (
               <button
                 onClick={() => setActiveTab('quotes')}
-                className={`pb-3 dynamic-text-base font-light transition-all duration-200 border-b ${
+                className={`pb-3 dynamic-text-base font-light transition-all duration-200 border-b-2 ${
                   activeTab === 'quotes'
-                    ? `${theme.text} ${theme.text.replace('text-', 'border-')}`
+                    ? `${theme.text} ${theme.themeAccent ? `border-[${theme.themeAccent}]` : theme.text.replace('text-', 'border-')} shadow-[0_2px_0_0_currentColor]`
                     : `${theme.textTertiary} hover:${theme.textSecondary.replace('text-', 'hover:text-')} border-transparent`
                 }`}
               >

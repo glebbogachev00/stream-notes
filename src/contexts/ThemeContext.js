@@ -6,8 +6,8 @@ const ThemeContext = createContext();
 const THEMES = {
   white: {
     name: 'white',
-    bg: 'bg-white',
-    text: 'text-black',
+    bg: 'bg-gradient-to-br from-white to-gray-50',
+    text: 'text-gray-900',
     textSecondary: 'text-gray-700',
     textTertiary: 'text-gray-500',
     border: 'border-gray-200',
@@ -26,14 +26,14 @@ const THEMES = {
     inputBgLight: 'bg-gray-50',
     inputBgDark: 'bg-gray-100',
     panelBg: 'rgba(255, 255, 255, 0.95)',
-    separatorColor: 'rgb(0, 0, 0)'
+    separatorColor: 'rgb(55, 65, 81)'
   },
   beige: {
     name: 'beige',
-    bg: 'bg-amber-50',
+    bg: 'bg-gradient-to-br from-amber-50 to-orange-50',
     text: 'text-amber-950',
     textSecondary: 'text-amber-900',
-    textTertiary: 'text-amber-800',
+    textTertiary: 'text-amber-700',
     border: 'border-amber-200',
     borderHover: 'hover:border-amber-300',
     borderSecondary: 'border-amber-100',
@@ -54,8 +54,8 @@ const THEMES = {
   },
   dark: {
     name: 'dark',
-    bg: 'bg-neutral-900',
-    text: 'text-white',
+    bg: 'bg-gradient-to-br from-neutral-900 to-slate-900',
+    text: 'text-neutral-100',
     textSecondary: 'text-neutral-200',
     textTertiary: 'text-neutral-400',
     border: 'border-neutral-700',
