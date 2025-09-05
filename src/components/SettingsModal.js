@@ -413,6 +413,24 @@ const SettingsModal = ({ isOpen, onClose }) => {
             </div>
           </CollapsibleSection>
 
+          {/* Auto-Sorting */}
+          <CollapsibleSection title={settings.personalityEnabled ? "smart lists" : "auto-sorting"}>
+            <div>
+              <div className={`dynamic-text-xs ${theme.textTertiary} font-light mb-2`}>Intelligent list detection</div>
+              <div className={`dynamic-text-xs ${theme.textTertiary} font-light mb-3`}>
+                {settings.personalityEnabled ? "Auto-organize short notes into lists" : "Automatically format short tasks and comma-separated items into organized lists"}
+              </div>
+              <button
+                onClick={() => updateSettings({ autoSortingEnabled: !settings.autoSortingEnabled })}
+                className={`w-full text-left pb-3 border-b transition-all duration-200 ${theme.border} ${theme.text} hover:${theme.textSecondary.replace('text-', 'hover:text-')}`}
+              >
+                <div className="dynamic-text-xs font-light">
+                  {settings.autoSortingEnabled ? 'disable smart formatting' : 'enable smart formatting'}
+                </div>
+              </button>
+            </div>
+          </CollapsibleSection>
+
           {/* Folders */}
           <CollapsibleSection title="folders">
             <div>

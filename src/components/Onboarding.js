@@ -1,23 +1,23 @@
 import React, { useState } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useSettings, ORGANIZATION_STYLES, DELETE_TIMERS } from '../contexts/SettingsContext';
-import { useStorage } from '../contexts/StorageContext';
 import { setUserTag, validateUserTag, formatUserTag } from '../utils/tags';
 import { sanitizeInput } from '../utils/security';
 
 const Onboarding = () => {
   const { theme, switchTheme, themes } = useTheme();
   const { completeOnboarding, settings } = useSettings();
-  const { isSyncSupported } = useStorage();
   const [currentStep, setCurrentStep] = useState(-1); // Start with welcome screen
   const [selections, setSelections] = useState({
     theme: 'white',
     fontSize: 'base',
     organizationStyle: 'bullets',
+    autoSortingEnabled: false,
     deleteTimer: '24h',
     syncEnabled: false,
     userTag: '',
-    securityAcknowledged: false
+    securityAcknowledged: false,
+    enhancedEditingEnabled: false
   });
   const [tagError, setTagError] = useState('');
 
@@ -43,12 +43,16 @@ const Onboarding = () => {
       subtitle: settings.personalityEnabled ? "How should notes look?" : "Choose your organization style."
     },
     {
+      title: settings.personalityEnabled ? "Smart lists" : "Auto-Sorting",
+      subtitle: settings.personalityEnabled ? "Auto-organize short notes?" : "Automatically format lists and tasks."
+    },
+    {
       title: settings.personalityEnabled ? "Auto-cleanup" : "Auto-Delete Timer",
       subtitle: settings.personalityEnabled ? "When should old notes disappear?" : "Set auto-delete duration."
     },
     {
-      title: "Storage",
-      subtitle: settings.personalityEnabled ? "Local only or sync across devices?" : "Local or synced storage."
+      title: settings.personalityEnabled ? "Add-ons" : "Add-ons",
+      subtitle: settings.personalityEnabled ? "Extra features to enhance your workflow" : "Additional functionality that can be turned off anytime"
     },
     {
       title: settings.personalityEnabled ? "All set!" : "Preview",
@@ -236,6 +240,42 @@ const Onboarding = () => {
     </div>
   );
 
+  const renderAutoSortingStep = () => (
+    <div className="space-y-0">
+      <button
+        onClick={() => setSelections({ ...selections, autoSortingEnabled: false })}
+        className={`w-full text-left p-4 transition-all duration-200 border-b ${
+          !selections.autoSortingEnabled
+            ? `${theme.text} ${theme.text.replace('text-', 'border-')}`
+            : `${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} border-transparent`
+        }`}
+      >
+        <div className="text-sm font-light mb-2">
+          {settings.personalityEnabled ? "manual" : "Manual"}
+        </div>
+        <div className={`text-xs ${theme.textTertiary} font-light`}>
+          Format lists yourself
+        </div>
+      </button>
+      
+      <button
+        onClick={() => setSelections({ ...selections, autoSortingEnabled: true })}
+        className={`w-full text-left p-4 transition-all duration-200 border-b ${
+          selections.autoSortingEnabled
+            ? `${theme.text} ${theme.text.replace('text-', 'border-')}`
+            : `${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} border-transparent`
+        }`}
+      >
+        <div className="text-sm font-light mb-2">
+          {settings.personalityEnabled ? "smart" : "Smart"}
+        </div>
+        <div className={`text-xs ${theme.textTertiary} font-light`}>
+          Auto-organize short lists
+        </div>
+      </button>
+    </div>
+  );
+
   const renderStep4 = () => (
     <div className="space-y-0">
       {Object.entries(DELETE_TIMERS).map(([key, timer]) => (
@@ -256,47 +296,6 @@ const Onboarding = () => {
     </div>
   );
 
-  const renderStep5 = () => (
-    <div className="space-y-0">
-      <button
-        onClick={() => setSelections({ ...selections, syncEnabled: false })}
-        className={`w-full text-left p-3 transition-all duration-200 border-b ${
-          !selections.syncEnabled
-            ? `${theme.text} ${theme.text.replace('text-', 'border-')}`
-            : `${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} border-transparent`
-        }`}
-      >
-        <div className="text-sm font-light mb-1">
-          local only (this device only)
-        </div>
-      </button>
-      
-      {isSyncSupported() ? (
-        <button
-          onClick={() => setSelections({ ...selections, syncEnabled: true })}
-          className={`w-full text-left p-3 transition-all duration-200 border-b ${
-            selections.syncEnabled
-              ? `${theme.text} ${theme.text.replace('text-', 'border-')}`
-              : `${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} border-transparent`
-          }`}
-        >
-          <div className="text-sm font-light mb-1">
-            browser sync (sync across devices)
-          </div>
-        </button>
-      ) : (
-        <div className={`p-3 border-b ${theme.borderSecondary}`}>
-          <div className={`text-sm font-light mb-1 ${theme.textTertiary}`}>
-            browser sync (not available)
-          </div>
-        </div>
-      )}
-      
-      <div className={`text-xs ${theme.textTertiary} font-light leading-relaxed p-3`}>
-        Uses browser sync. No stream servers.
-      </div>
-    </div>
-  );
 
   const renderSecurityStep = () => (
     <div className="space-y-6 text-center">
@@ -364,6 +363,51 @@ const Onboarding = () => {
     </div>
   );
 
+  const renderAddOnsStep = () => (
+    <div className="space-y-0">
+      <button
+        onClick={() => setSelections({ ...selections, enhancedEditingEnabled: false })}
+        className={`w-full text-left p-4 transition-all duration-200 border-b ${
+          !selections.enhancedEditingEnabled
+            ? `${theme.text} ${theme.text.replace('text-', 'border-')}`
+            : `${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} border-transparent`
+        }`}
+      >
+        <div className="text-sm font-light mb-2">
+          {settings.personalityEnabled ? "minimal" : "Minimal"}
+        </div>
+        <div className={`text-xs ${theme.textTertiary} font-light`}>
+          Just write and save
+        </div>
+      </button>
+      
+      <button
+        onClick={() => setSelections({ ...selections, enhancedEditingEnabled: true })}
+        className={`w-full text-left p-4 transition-all duration-200 border-b ${
+          selections.enhancedEditingEnabled
+            ? `${theme.text} ${theme.text.replace('text-', 'border-')}`
+            : `${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} border-transparent`
+        }`}
+      >
+        <div className="text-sm font-light mb-2">
+          {settings.personalityEnabled ? "enhanced" : "Enhanced"}
+        </div>
+        <div className={`text-xs ${theme.textTertiary} font-light`}>
+          Bold, lists, timers, expand
+        </div>
+      </button>
+
+      <div className={`p-4 ${theme.borderSecondary}`}>
+        <div className={`text-xs ${theme.textTertiary} mb-3 font-light`}>
+          enhanced example:
+        </div>
+        <div className={`${theme.text} font-mono whitespace-pre-line text-sm font-light leading-relaxed`}>
+          **Important note** with bold{'\n'}• List item 1{'\n'}• List item 2{'\n'}{'\n'}[bold] [list] [timer] [expand]
+        </div>
+      </div>
+    </div>
+  );
+
   const renderStep6 = () => {
     const sampleText = "Buy groceries\nCall mom\nFinish project";
     const formattedSample = ORGANIZATION_STYLES[selections.organizationStyle].format(
@@ -396,10 +440,13 @@ const Onboarding = () => {
             </div>
           )}
           <div className={`text-xs ${theme.textTertiary} mt-3 font-light`}>
-            deletes in: {DELETE_TIMERS[selections.deleteTimer].name.toLowerCase()}
+            auto-sorting: {selections.autoSortingEnabled ? 'enabled' : 'disabled'}
           </div>
           <div className={`text-xs ${theme.textTertiary} mt-2 font-light`}>
-            storage: {selections.syncEnabled ? 'browser sync' : 'local only'}
+            enhanced controls: {selections.enhancedEditingEnabled ? 'enabled' : 'disabled'}
+          </div>
+          <div className={`text-xs ${theme.textTertiary} mt-2 font-light`}>
+            deletes in: {DELETE_TIMERS[selections.deleteTimer].name.toLowerCase()}
           </div>
         </div>
         
@@ -450,9 +497,10 @@ const Onboarding = () => {
               {currentStep === 2 && renderTagStep()}
               {currentStep === 3 && renderFontSizeStep()}
               {currentStep === 4 && renderStep3()}
-              {currentStep === 5 && renderStep4()}
-              {currentStep === 6 && renderStep5()}
-              {currentStep === 7 && renderStep6()}
+              {currentStep === 5 && renderAutoSortingStep()}
+              {currentStep === 6 && renderStep4()}
+              {currentStep === 7 && renderAddOnsStep()}
+              {currentStep === 8 && renderStep6()}
             </div>
           </>
         )}

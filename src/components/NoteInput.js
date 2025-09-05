@@ -9,7 +9,7 @@ const NoteInput = ({ onAddNote, onMatrixUnlock }) => {
   const [content, setContent] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const { theme, unlockMatrixTheme } = useTheme();
-  const { settings } = useSettings();
+  const { settings, formatText } = useSettings();
   const [placeholder, setPlaceholder] = useState(() => 
     getRotatingMessage(INPUT_PLACEHOLDER_MESSAGES, settings?.personalityEnabled ?? true)
   );
@@ -33,8 +33,8 @@ const NoteInput = ({ onAddNote, onMatrixUnlock }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (content.trim()) {
-      // Disable auto-formatting - user must explicitly use List control
-      const formattedContent = content;
+      // Apply auto-formatting if enabled
+      const formattedContent = settings.autoSortingEnabled ? formatText(content) : content;
       
       // Add save animation
       if (textareaRef.current) {

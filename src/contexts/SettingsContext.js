@@ -48,7 +48,8 @@ const DEFAULT_SETTINGS = {
   enhancedEditingEnabled: false,
   foldersEnabled: true,
   folders: [],
-  availableThemes: ['white', 'beige', 'dark'] // All themes available by default
+  availableThemes: ['white', 'beige', 'dark'], // All themes available by default
+  autoSortingEnabled: false
 };
 
 export const useSettings = () => {
@@ -90,7 +91,8 @@ export const SettingsProvider = ({ children }) => {
         enhancedEditingEnabled: settings.enhancedEditingEnabled,
         foldersEnabled: settings.foldersEnabled,
         folders: settings.folders,
-        availableThemes: settings.availableThemes
+        availableThemes: settings.availableThemes,
+        autoSortingEnabled: settings.autoSortingEnabled
       }));
       localStorage.setItem('stream-onboarding-completed', settings.onboardingCompleted.toString());
     } catch (error) {
@@ -121,6 +123,11 @@ export const SettingsProvider = ({ children }) => {
   };
 
   const shouldOrganizeText = (text) => {
+    // If auto-sorting is disabled, don't organize
+    if (!settings.autoSortingEnabled) {
+      return false;
+    }
+
     const lines = text.split('\n').map(line => line.trim()).filter(Boolean);
     
     // Check if text is already formatted with bullets, numbers, or dashes
@@ -132,34 +139,71 @@ export const SettingsProvider = ({ children }) => {
       return false; // Don't format if already formatted
     }
     
-    // Single line - organize if it contains multiple short sentences or tasks
+    // Enhanced intelligent detection algorithm
     if (lines.length === 1) {
       const line = lines[0];
-      const sentences = line.split(/[.!?]/).map(s => s.trim()).filter(Boolean);
       
-      // Check if it looks like a task list (contains task keywords)
-      if (/\btask\b|\btodo\b/i.test(line)) {
+      // Don't organize very long text (likely paragraph/essay)
+      if (line.length > 200) {
+        return false;
+      }
+      
+      // Check for task/list keywords
+      const taskKeywords = /\b(task|todo|buy|call|email|remember|check|visit|schedule|book|order|pick up|drop off)\b/i;
+      if (taskKeywords.test(line)) {
+        return true;
+      }
+      
+      // Check for comma-separated items (shopping lists, etc.)
+      const commaSeparated = line.split(',').map(s => s.trim()).filter(Boolean);
+      if (commaSeparated.length >= 3 && commaSeparated.every(item => item.length < 80)) {
+        return true;
+      }
+      
+      // Check for semicolon-separated items
+      const semicolonSeparated = line.split(';').map(s => s.trim()).filter(Boolean);
+      if (semicolonSeparated.length >= 2 && semicolonSeparated.every(item => item.length < 80)) {
         return true;
       }
       
       // Multiple short sentences
-      if (sentences.length >= 2 && sentences.every(s => s.length < 50)) {
+      const sentences = line.split(/[.!?]/).map(s => s.trim()).filter(Boolean);
+      if (sentences.length >= 2 && sentences.every(s => s.length < 60)) {
         return true;
       }
       
       return false;
     }
     
-    // Multiple lines - organize if lines are generally short
+    // Multiple lines - be more selective
     if (lines.length > 1) {
+      // Don't organize if any line is very long (likely paragraph)
+      if (lines.some(line => line.length > 150)) {
+        return false;
+      }
+      
+      // Don't organize if there are too many lines (likely essay/article)
+      if (lines.length > 10) {
+        return false;
+      }
+      
+      // Check if it looks like a list of items/tasks
       const avgLength = lines.reduce((sum, line) => sum + line.length, 0) / lines.length;
-      return avgLength < 60;
+      const shortLines = lines.filter(line => line.length < 80).length;
+      
+      // Organize if most lines are short and average length is reasonable
+      return avgLength < 50 && (shortLines / lines.length) > 0.7;
     }
     
     return false;
   };
 
   const formatText = (text) => {
+    // Only auto-format if auto-sorting is enabled
+    if (!settings.autoSortingEnabled) {
+      return text;
+    }
+
     // Split by newline, but keep empty strings for empty lines
     const lines = text.split('\n'); 
     const style = ORGANIZATION_STYLES[settings.organizationStyle];
@@ -186,8 +230,27 @@ export const SettingsProvider = ({ children }) => {
     
     // Check if unformatted content should be organized
     if (shouldOrganizeText(unformattedLines.join('\n'))) {
-      // Format only the unformatted lines
-      const newlyFormatted = style.format(unformattedLines);
+      let itemsToFormat = unformattedLines;
+      
+      // Handle comma or semicolon separated items in single line
+      if (unformattedLines.length === 1) {
+        const line = unformattedLines[0];
+        
+        // Check for comma-separated items
+        const commaSeparated = line.split(',').map(s => s.trim()).filter(Boolean);
+        if (commaSeparated.length >= 3) {
+          itemsToFormat = commaSeparated;
+        } else {
+          // Check for semicolon-separated items
+          const semicolonSeparated = line.split(';').map(s => s.trim()).filter(Boolean);
+          if (semicolonSeparated.length >= 2) {
+            itemsToFormat = semicolonSeparated;
+          }
+        }
+      }
+      
+      // Format the items
+      const newlyFormatted = style.format(itemsToFormat);
       
       // Combine: existing formatted lines + newly formatted lines
       const allLines = [...formattedLines, ...newlyFormatted.split('\n')];
