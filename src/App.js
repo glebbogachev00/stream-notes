@@ -114,6 +114,14 @@ function AppContent() {
     }
   }, [settings.deleteTimer, updateGlobalDeleteTimer]);
 
+  // Auto-redirect to "All" when folders are disabled while viewing a folder
+  useEffect(() => {
+    if (!settings.foldersEnabled && activeFolder !== 'all') {
+      setActiveFolder('all');
+    }
+  }, [settings.foldersEnabled, activeFolder]);
+
+
   // Show onboarding if not completed
   if (!settings.onboardingCompleted) {
     return <Onboarding />;
@@ -125,12 +133,12 @@ function AppContent() {
   };
 
   const filteredNotes = notes.filter(note => {
-    if (activeFolder === 'all') return true;
+    if (activeFolder === 'all') return !note.folder; // Only show notes without folder in "All"
     return note.folder === activeFolder;
   });
 
   const filteredSavedNotes = savedNotes.filter(note => {
-    if (activeFolder === 'all') return true;
+    if (activeFolder === 'all') return !note.folder; // Only show notes without folder in "All"
     return note.folder === activeFolder;
   });
 

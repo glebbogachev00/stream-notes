@@ -139,6 +139,7 @@ const checkEdgeUnlock = () => {
   return artNotes.some(note => note.artStyle === 'samo' || note.artStyle === 'stencil');
 };
 
+
 export const ThemeProvider = ({ children }) => {
   const [currentTheme, setCurrentTheme] = useState(() => {
     const saved = localStorage.getItem('stream_theme');

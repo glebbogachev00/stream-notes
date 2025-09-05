@@ -115,8 +115,9 @@ const NoteList = ({
     )) {
       return; // Don't close if focus moved to controls
     }
-    // Disable auto-formatting - user must explicitly use List control
-    onUpdateNoteContent(noteId, content);
+    // Apply auto-formatting if enabled
+    const formattedContent = settings.autoSortingEnabled ? formatText(content) : content;
+    onUpdateNoteContent(noteId, formattedContent);
     onSetEditingNoteId(null);
   };
 
@@ -546,7 +547,7 @@ const NoteList = ({
                             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
                             </svg>
-                            move to folder
+                            move
                           </button>
                           {folderMenuOpenForNoteId === note.id && (
                             <div className={`absolute right-full top-0 mr-1 ${theme.bg} ${theme.borderPrimary} border rounded shadow-lg py-1 z-20 min-w-max animate-in slide-in-from-left-2 fade-in duration-200`}>
