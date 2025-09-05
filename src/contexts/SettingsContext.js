@@ -40,11 +40,15 @@ const DEFAULT_SETTINGS = {
   organizationStyle: 'bullets',
   deleteTimer: '24h',
   onboardingCompleted: false,
-  personalityEnabled: true,
-  samoModeEnabled: true,
-  stealThisQuoteEnabled: true,
-  stencilModeEnabled: true,
-  syncEnabled: false
+  personalityEnabled: false,
+  samoModeEnabled: false,
+  stealThisQuoteEnabled: false,
+  stencilModeEnabled: false,
+  syncEnabled: false,
+  enhancedEditingEnabled: false,
+  foldersEnabled: true,
+  folders: [],
+  availableThemes: ['white', 'beige', 'dark'] // All themes available by default
 };
 
 export const useSettings = () => {
@@ -82,7 +86,11 @@ export const SettingsProvider = ({ children }) => {
         samoModeEnabled: settings.samoModeEnabled,
         stealThisQuoteEnabled: settings.stealThisQuoteEnabled,
         stencilModeEnabled: settings.stencilModeEnabled,
-        syncEnabled: settings.syncEnabled
+        syncEnabled: settings.syncEnabled,
+        enhancedEditingEnabled: settings.enhancedEditingEnabled,
+        foldersEnabled: settings.foldersEnabled,
+        folders: settings.folders,
+        availableThemes: settings.availableThemes
       }));
       localStorage.setItem('stream-onboarding-completed', settings.onboardingCompleted.toString());
     } catch (error) {

@@ -177,7 +177,6 @@ export const ThemeProvider = ({ children }) => {
 
   return (
     <ThemeContext.Provider value={{ 
-      currentTheme, 
       theme, 
       switchTheme,
       themes: getAvailableThemes(),

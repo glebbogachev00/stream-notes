@@ -18,7 +18,8 @@ const NoteList = ({
   onUpdateNoteContent,
   onUpdateNoteDeleteTimer,
   onUpdateNoteProperties,
-  onTogglePin
+  onTogglePin,
+  onUpdateNoteFolder
 }) => {
   const { theme } = useTheme();
   const { settings, formatText, removeListFormatting } = useSettings();
@@ -26,6 +27,7 @@ const NoteList = ({
   const deleteTimerControlRef = useRef(null);
   const [expandedNotes, setExpandedNotes] = useState(new Set());
   const [openMenuId, setOpenMenuId] = useState(null);
+  const [folderMenuOpenForNoteId, setFolderMenuOpenForNoteId] = useState(null);
   const [fullscreenNoteId, setFullscreenNoteId] = useState(null);
   const [menuPosition, setMenuPosition] = useState({ top: false });
 
@@ -266,9 +268,10 @@ const NoteList = ({
                 {editingNoteId === note.id ? (
                   <>
                     {/* Controls at top for both mobile and desktop */}
-                    <div className={`sticky top-0 z-20 mb-4 -mx-4 px-4 py-3 ${theme.bg} backdrop-blur-sm`}>
-                      <div ref={deleteTimerControlRef} className={`flex items-center justify-start gap-4 editing-controls ${theme.borderSecondary} border-b pb-3`}>
-                        <DeleteTimerControl note={note} onUpdateNoteDeleteTimer={onUpdateNoteDeleteTimer} textSize="text-xs" />
+                    {settings.enhancedEditingEnabled && (
+                      <div className={`sticky top-0 z-20 mb-4 -mx-4 px-4 py-3 ${theme.bg} backdrop-blur-sm`}>
+                        <div ref={deleteTimerControlRef} className={`flex items-center justify-start gap-4 editing-controls ${theme.borderSecondary} border-b pb-3`}>
+                          <DeleteTimerControl note={note} onUpdateNoteDeleteTimer={onUpdateNoteDeleteTimer} textSize="text-xs" />
                         <button
                           onMouseDown={(e) => e.preventDefault()}
                           onClick={(e) => {
@@ -396,6 +399,7 @@ const NoteList = ({
                         </button>
                       </div>
                     </div>
+                    )}
 
                     <textarea
                       ref={editingTextareaRef}
@@ -533,6 +537,36 @@ const NoteList = ({
                         </svg>
                         save
                       </button>
+                      {settings.foldersEnabled && settings.folders.length > 0 && (
+                        <div className="relative">
+                          <button
+                            onClick={() => setFolderMenuOpenForNoteId(folderMenuOpenForNoteId === note.id ? null : note.id)}
+                            className={`w-full px-3 py-2 dynamic-text-base font-light text-left ${theme.textTertiary} hover:text-blue-500 hover:${theme.bgSecondary} transition-all duration-200 flex items-center gap-2 hover:translate-x-1 active:scale-95`}
+                          >
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                            </svg>
+                            move to folder
+                          </button>
+                          {folderMenuOpenForNoteId === note.id && (
+                            <div className={`absolute right-full top-0 mr-1 ${theme.bg} ${theme.borderPrimary} border rounded shadow-lg py-1 z-20 min-w-max animate-in slide-in-from-left-2 fade-in duration-200`}>
+                              {settings.folders.map(folder => (
+                                <button
+                                  key={folder}
+                                  onClick={() => {
+                                    onUpdateNoteFolder(note.id, folder, false);
+                                    setFolderMenuOpenForNoteId(null);
+                                    setOpenMenuId(null);
+                                  }}
+                                  className={`w-full px-3 py-2 dynamic-text-base font-light text-left ${theme.textTertiary} hover:text-blue-500 hover:${theme.bgSecondary} transition-all duration-200`}
+                                >
+                                  {folder}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
                       {settings.samoModeEnabled && (
                         <button
                           onClick={() => {

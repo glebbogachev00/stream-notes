@@ -18,6 +18,7 @@ import MatrixUnlockNotification from './components/MatrixUnlockNotification';
 import EdgeUnlockNotification from './components/EdgeUnlockNotification';
 import FeedbackModal from './components/FeedbackModal';
 import BackToTop from './components/BackToTop';
+import FolderFilter from './components/FolderFilter';
 import { submitFeedback } from './utils/feedback';
 
 function AppContent() {
@@ -35,6 +36,7 @@ function AppContent() {
   const [pendingFromSaved, setPendingFromSaved] = useState(false);
   const [showMatrixUnlock, setShowMatrixUnlock] = useState(false);
   const [showEdgeUnlock, setShowEdgeUnlock] = useState(false);
+  const [activeFolder, setActiveFolder] = useState('all');
 
   const cycleLogo = () => {
     const styles = ['originalText', 'graffiti', 'raindrop'];
@@ -97,7 +99,8 @@ function AppContent() {
     updateNoteDeleteTimer,
     updateNoteProperties,
     toggleNotePin,
-    updateGlobalDeleteTimer
+    updateGlobalDeleteTimer,
+    updateNoteFolder
   } = useNotes(settings.deleteTimer, showToast, settings.personalityEnabled, handleEdgeUnlock);
 
   // Track previous deleteTimer to detect changes
@@ -120,6 +123,16 @@ function AppContent() {
     const sizes = { sm: 14, base: 16, lg: 18, xl: 20 };
     return sizes[fontSize] || 16;
   };
+
+  const filteredNotes = notes.filter(note => {
+    if (activeFolder === 'all') return true;
+    return note.folder === activeFolder;
+  });
+
+  const filteredSavedNotes = savedNotes.filter(note => {
+    if (activeFolder === 'all') return true;
+    return note.folder === activeFolder;
+  });
 
   return (
     <div 
@@ -203,6 +216,10 @@ function AppContent() {
           </div>
         </header>
 
+        {(activeTab === 'active' || activeTab === 'saved') && (
+          <FolderFilter activeFolder={activeFolder} setActiveFolder={setActiveFolder} />
+        )}
+
         <nav className="mb-8 sm:mb-12">
           <div className="flex space-x-6 transition-all duration-200">
             <button
@@ -213,7 +230,7 @@ function AppContent() {
                   : `${theme.textTertiary} hover:${theme.textSecondary.replace('text-', 'hover:text-')} border-transparent`
               }`}
             >
-              active ({notes.length})
+              active ({filteredNotes.length})
             </button>
             <button
               onClick={() => setActiveTab('saved')}
@@ -223,7 +240,7 @@ function AppContent() {
                   : `${theme.textTertiary} hover:${theme.textSecondary.replace('text-', 'hover:text-')} border-transparent`
               }`}
             >
-              saved ({savedNotes.length})
+              saved ({filteredSavedNotes.length})
             </button>
             {settings.samoModeEnabled && (
               <button
@@ -259,7 +276,7 @@ function AppContent() {
             <div className="space-y-8">
               <NoteInput onAddNote={addNote} onMatrixUnlock={handleMatrixUnlock} />
               <NoteList
-                notes={notes}
+                notes={filteredNotes}
                 onDeleteNote={deleteNote}
                 onSaveNote={saveNote}
                 onTransformToSAMO={handleTransformToArt}
@@ -270,20 +287,24 @@ function AppContent() {
                 onUpdateNoteDeleteTimer={updateNoteDeleteTimer}
                 onUpdateNoteProperties={updateNoteProperties}
                 onTogglePin={toggleNotePin}
+                onUpdateNoteFolder={updateNoteFolder}
               />
             </div>
           )}
 
           {activeTab === 'saved' && (
-            <SavedNotes
-              savedNotes={savedNotes}
-              onDeleteNote={deleteSavedNote}
-              onUpdateNote={updateSavedNoteContent}
-              onUpdateNoteProperties={updateSavedNoteProperties}
-              onToggleSavedNotePin={toggleSavedNotePin}
-              onTransformToSAMO={handleTransformToArt}
-              getTimeInfo={getTimeInfo}
-            />
+            <>
+              <SavedNotes
+                savedNotes={filteredSavedNotes}
+                onDeleteNote={deleteSavedNote}
+                onUpdateNote={updateSavedNoteContent}
+                onUpdateNoteProperties={updateSavedNoteProperties}
+                onToggleSavedNotePin={toggleSavedNotePin}
+                onTransformToSAMO={handleTransformToArt}
+                getTimeInfo={getTimeInfo}
+                onUpdateNoteFolder={updateNoteFolder}
+              />
+            </>
           )}
 
           {activeTab === 'art' && settings.samoModeEnabled && (
@@ -350,13 +371,13 @@ function AppContent() {
 
 function App() {
   return (
-    <ThemeProvider>
-      <SettingsProvider>
+    <SettingsProvider>
+      <ThemeProvider>
         <StorageProvider>
           <AppContent />
         </StorageProvider>
-      </SettingsProvider>
-    </ThemeProvider>
+      </ThemeProvider>
+    </SettingsProvider>
   );
 }
 

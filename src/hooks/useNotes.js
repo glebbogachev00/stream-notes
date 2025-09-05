@@ -97,6 +97,7 @@ export const useNotes = (deleteTimer = '24h', onToast = null, personalityEnabled
       content: sanitizedContent,
       createdAt: now,
       expiresAt: expiresAt,
+      folder: null,
     };
     
     const updatedNotes = [newNote, ...notes];
@@ -188,6 +189,20 @@ export const useNotes = (deleteTimer = '24h', onToast = null, personalityEnabled
     );
     saveSavedNotes(updatedSavedNotes);
   }, [savedNotes, saveSavedNotes]);
+
+  const updateNoteFolder = useCallback((id, folder, isSaved) => {
+    if (isSaved) {
+      const updatedSavedNotes = savedNotes.map(note => 
+        note.id === id ? { ...note, folder: folder } : note
+      );
+      saveSavedNotes(updatedSavedNotes);
+    } else {
+      const updatedNotes = notes.map(note => 
+        note.id === id ? { ...note, folder: folder } : note
+      );
+      saveNotes(updatedNotes);
+    }
+  }, [notes, savedNotes, saveNotes, saveSavedNotes]);
 
   const transformToArt = useCallback((id, fromSaved = false, artStyle = 'samo') => {
     const sourceNotes = fromSaved ? savedNotes : notes;
@@ -318,6 +333,7 @@ export const useNotes = (deleteTimer = '24h', onToast = null, personalityEnabled
     updateNoteProperties,
     toggleNotePin,
     updateGlobalDeleteTimer,
+    updateNoteFolder,
     refreshNotes: loadNotes
   };
 };
