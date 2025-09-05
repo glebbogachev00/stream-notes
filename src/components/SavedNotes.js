@@ -248,12 +248,13 @@ const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onUpdateNoteProper
         key={note.id}
         tabIndex={0}
         onKeyDown={(e) => handleNoteKeyDown(e, note.id)}
-        className={`group relative pb-6 transition-all duration-200 ${
+        className={`group pb-6 transition-all duration-200 ${
           note.isPinned ? `${theme.bg} ${theme.border} border rounded-lg p-4 mb-4` : ''
         }`}
+        style={{
+          borderBottom: `1px solid ${theme.separatorColor.replace('rgb(', 'rgba(').replace(')', ', 0.6)')}`
+        }}
           >
-            {/* Separator line */}
-            <div className={`absolute bottom-0 left-0 right-0 h-px ${theme.borderSecondary}`}></div>
             <div className="relative">
               <div>
                 {editingNoteId === note.id ? (
