@@ -166,7 +166,6 @@ const SettingsModal = ({ isOpen, onClose }) => {
             <div className="space-y-4">
               {/* Personality Toggle */}
               <div>
-                <div className={`dynamic-text-xs ${theme.textTertiary} font-light mb-2`}>Personality toggle</div>
                 <button
                   onClick={togglePersonality}
                   className={`w-full text-left pb-3 border-b transition-all duration-200 ${theme.border} ${theme.text} hover:${theme.textSecondary.replace('text-', 'hover:text-')}`}
@@ -179,7 +178,6 @@ const SettingsModal = ({ isOpen, onClose }) => {
 
               {/* SAMO */}
               <div>
-                <div className={`dynamic-text-xs ${theme.textTertiary} font-light mb-2`}>SAMO</div>
                 <button
                   onClick={() => updateSettings({ samoModeEnabled: !settings.samoModeEnabled })}
                   className={`w-full text-left pb-3 border-b transition-all duration-200 ${theme.border} ${theme.text} hover:${theme.textSecondary.replace('text-', 'hover:text-')}`}
@@ -192,7 +190,6 @@ const SettingsModal = ({ isOpen, onClose }) => {
 
               {/* Steal This Quote */}
               <div>
-                <div className={`dynamic-text-xs ${theme.textTertiary} font-light mb-2`}>Steal this quote</div>
                 <button
                   onClick={() => updateSettings({ stealThisQuoteEnabled: !settings.stealThisQuoteEnabled })}
                   className={`w-full text-left pb-3 border-b transition-all duration-200 ${theme.border} ${theme.text} hover:${theme.textSecondary.replace('text-', 'hover:text-')}`}
@@ -375,10 +372,6 @@ const SettingsModal = ({ isOpen, onClose }) => {
           {/* Note Controls */}
           <CollapsibleSection title="note controls">
             <div>
-              <div className={`dynamic-text-xs ${theme.textTertiary} font-light mb-2`}>Enhanced editing</div>
-              <div className={`dynamic-text-xs ${theme.textTertiary} font-light mb-3`}>
-                Toggle for all note controls (bold, lists, timer display, etc.)
-              </div>
               <button
                 onClick={() => updateSettings({ enhancedEditingEnabled: !settings.enhancedEditingEnabled })}
                 className={`w-full text-left pb-3 border-b transition-all duration-200 ${theme.border} ${theme.text} hover:${theme.textSecondary.replace('text-', 'hover:text-')}`}
@@ -417,10 +410,6 @@ const SettingsModal = ({ isOpen, onClose }) => {
           {/* Auto-Sorting */}
           <CollapsibleSection title={settings.personalityEnabled ? "smart lists" : "auto-sorting"}>
             <div>
-              <div className={`dynamic-text-xs ${theme.textTertiary} font-light mb-2`}>Intelligent list detection</div>
-              <div className={`dynamic-text-xs ${theme.textTertiary} font-light mb-3`}>
-                {settings.personalityEnabled ? "Auto-organize short notes into lists" : "Automatically format short tasks and comma-separated items into organized lists"}
-              </div>
               <button
                 onClick={() => updateSettings({ autoSortingEnabled: !settings.autoSortingEnabled })}
                 className={`w-full text-left pb-3 border-b transition-all duration-200 ${theme.border} ${theme.text} hover:${theme.textSecondary.replace('text-', 'hover:text-')}`}
@@ -432,10 +421,23 @@ const SettingsModal = ({ isOpen, onClose }) => {
             </div>
           </CollapsibleSection>
 
+          {/* Show More by Default */}
+          <CollapsibleSection title={settings.personalityEnabled ? "expand notes" : "show more by default"}>
+            <div>
+              <button
+                onClick={() => updateSettings({ showMoreByDefault: !settings.showMoreByDefault })}
+                className={`w-full text-left pb-3 border-b transition-all duration-200 ${theme.border} ${theme.text} hover:${theme.textSecondary.replace('text-', 'hover:text-')}`}
+              >
+                <div className="dynamic-text-xs font-light">
+                  {settings.showMoreByDefault ? 'disable auto-expansion' : 'enable auto-expansion'}
+                </div>
+              </button>
+            </div>
+          </CollapsibleSection>
+
           {/* Folders */}
           <CollapsibleSection title="folders">
             <div>
-              <div className={`dynamic-text-xs ${theme.textTertiary} font-light mb-2`}>Enable folders</div>
               <button
                 onClick={() => updateSettings({ foldersEnabled: !settings.foldersEnabled })}
                 className={`w-full text-left pb-3 border-b transition-all duration-200 ${theme.border} ${theme.text} hover:${theme.textSecondary.replace('text-', 'hover:text-')}`}

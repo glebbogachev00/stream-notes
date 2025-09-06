@@ -29,7 +29,7 @@ const DeleteTimerControl = ({ note, onUpdateNoteDeleteTimer, textSize = 'text-xs
     <select
       value={currentTimerKey}
       onChange={(e) => onUpdateNoteDeleteTimer(note.id, e.target.value)}
-      className={`appearance-none bg-transparent ${theme.text} ${textSize} font-light focus:outline-none`}
+      className={`appearance-none bg-transparent ${theme.text} ${textSize} font-light focus:outline-none pr-2`}
     >
       {Object.entries(DELETE_TIMERS).map(([key, timer]) => (
         <option key={key} value={key}>

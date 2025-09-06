@@ -31,6 +31,21 @@ const NoteList = ({
   const [fullscreenNoteId, setFullscreenNoteId] = useState(null);
   const [menuPosition, setMenuPosition] = useState({ top: false });
 
+  // Handle showMoreByDefault setting - expand notes that should be truncated if the setting is enabled
+  useEffect(() => {
+    if (settings.showMoreByDefault) {
+      setExpandedNotes(prev => {
+        const newSet = new Set(prev);
+        notes.forEach(note => {
+          if (shouldTruncateNote(note.content)) {
+            newSet.add(note.id);
+          }
+        });
+        return newSet;
+      });
+    }
+  }, [settings.showMoreByDefault, notes]);
+
   const handleMenuToggle = (noteId, event) => {
     if (openMenuId === noteId) {
       setOpenMenuId(null);
@@ -271,9 +286,10 @@ const NoteList = ({
                     {/* Controls at top for both mobile and desktop */}
                     {settings.enhancedEditingEnabled && (
                       <div className={`sticky top-0 z-20 mb-4 -mx-4 px-4 py-3 ${theme.bg} backdrop-blur-sm`}>
-                        <div ref={deleteTimerControlRef} className={`flex items-center justify-start gap-4 editing-controls ${theme.borderSecondary} border-b pb-3`}>
+                        <div ref={deleteTimerControlRef} className={`flex items-center justify-start editing-controls ${theme.borderSecondary} border-b pb-3`}>
                           <DeleteTimerControl note={note} onUpdateNoteDeleteTimer={onUpdateNoteDeleteTimer} textSize="text-xs" />
                         <button
+                          className="ml-4"
                           onMouseDown={(e) => e.preventDefault()}
                           onClick={(e) => {
                             e.preventDefault();
@@ -338,7 +354,7 @@ const NoteList = ({
                               textarea.focus();
                             }
                           }}
-                          className={`text-xs ${theme.textTertiary} hover:text-purple-500 transition-colors duration-200 font-light`}
+                          className={`ml-4 text-xs ${theme.textTertiary} hover:text-purple-500 transition-colors duration-200 font-light`}
                         >
                           select all
                         </button>
@@ -383,7 +399,7 @@ const NoteList = ({
                               }, 0);
                             }
                           }}
-                          className={`text-xs ${theme.textTertiary} hover:text-blue-500 transition-colors duration-200 font-light`}
+                          className={`ml-4 text-xs ${theme.textTertiary} hover:text-blue-500 transition-colors duration-200 font-light`}
                         >
                           list
                         </button>
@@ -394,7 +410,7 @@ const NoteList = ({
                             e.stopPropagation();
                             setFullscreenNoteId(note.id);
                           }}
-                          className={`text-xs ${theme.textTertiary} hover:text-green-500 transition-colors duration-200 font-light`}
+                          className={`ml-4 text-xs ${theme.textTertiary} hover:text-green-500 transition-colors duration-200 font-light`}
                         >
                           expand
                         </button>

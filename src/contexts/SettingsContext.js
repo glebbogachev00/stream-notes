@@ -49,7 +49,8 @@ const DEFAULT_SETTINGS = {
   foldersEnabled: true,
   folders: [],
   availableThemes: ['white', 'beige', 'dark'], // All themes available by default
-  autoSortingEnabled: false
+  autoSortingEnabled: false,
+  showMoreByDefault: false
 };
 
 export const useSettings = () => {
@@ -92,7 +93,8 @@ export const SettingsProvider = ({ children }) => {
         foldersEnabled: settings.foldersEnabled,
         folders: settings.folders,
         availableThemes: settings.availableThemes,
-        autoSortingEnabled: settings.autoSortingEnabled
+        autoSortingEnabled: settings.autoSortingEnabled,
+        showMoreByDefault: settings.showMoreByDefault
       }));
       localStorage.setItem('stream-onboarding-completed', settings.onboardingCompleted.toString());
     } catch (error) {
