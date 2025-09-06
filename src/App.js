@@ -29,7 +29,7 @@ function AppContent() {
   const [logoStyle, setLogoStyle] = useState(() => {
     const saved = localStorage.getItem('stream-logo-style');
     const validStyles = ['originalText', 'graffiti', 'raindrop'];
-    return validStyles.includes(saved) ? saved : 'originalText';
+    return validStyles.includes(saved) ? saved : 'graffiti';
   });
   const [styleSelectorOpen, setStyleSelectorOpen] = useState(false);
   const [pendingTransformId, setPendingTransformId] = useState(null);
