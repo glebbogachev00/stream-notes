@@ -132,11 +132,11 @@ const ArtGallery = ({ artNotes, onDeleteNote }) => {
 
   return (
     <>
-      <div className="grid gap-6 sm:grid-cols-2">
+      <div className={`grid gap-6 ${artNotes.length === 1 ? 'justify-center' : 'sm:grid-cols-2'}`}>
         {artNotes.map((note) => (
           <article
             key={note.id}
-            className="group relative transition-transform hover:scale-105 duration-300"
+            className={`group relative transition-transform hover:scale-105 duration-300 ${artNotes.length === 1 ? 'max-w-lg' : ''}`}
           >
             {renderArtContent(note)}
             

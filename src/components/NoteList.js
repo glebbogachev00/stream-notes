@@ -289,7 +289,6 @@ const NoteList = ({
                         <div ref={deleteTimerControlRef} className={`flex items-center justify-start editing-controls ${theme.borderSecondary} border-b pb-3`}>
                           <DeleteTimerControl note={note} onUpdateNoteDeleteTimer={onUpdateNoteDeleteTimer} textSize="text-xs" />
                         <button
-                          className="ml-4"
                           onMouseDown={(e) => e.preventDefault()}
                           onClick={(e) => {
                             e.preventDefault();
@@ -339,7 +338,7 @@ const NoteList = ({
                               // If no text is selected, do nothing (user needs to select text first)
                             }
                           }}
-                          className={`text-xs ${theme.textTertiary} hover:text-yellow-500 transition-colors duration-200 font-light`}
+                          className={`ml-4 text-xs ${theme.textTertiary} hover:text-yellow-500 transition-colors duration-200 font-light`}
                         >
                           bold
                         </button>
