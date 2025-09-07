@@ -147,6 +147,17 @@ const NoteList = ({
     event.stopPropagation();
     
     onSetEditingNoteId(noteId);
+    
+    // Scroll the note into view after a brief delay to allow edit mode to activate
+    setTimeout(() => {
+      const noteElement = event.target.closest('article');
+      if (noteElement) {
+        noteElement.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'center'
+        });
+      }
+    }, 100);
   };
 
   const handleNoteKeyDown = (e, noteId) => {
