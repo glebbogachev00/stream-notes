@@ -213,8 +213,11 @@ export const SettingsProvider = ({ children }) => {
       const lines = text.split('\n').map(line => line.trim()).filter(Boolean);
       if (lines.length === 0) return text;
       
-      // Check if ALL non-empty lines are already formatted
-      const allFormatted = lines.every(line => /^(\d+\.|[•\-*])\s/.test(line));
+      // Check if ALL non-empty lines are already formatted (be more strict)
+      const allFormatted = lines.length > 0 && lines.every(line => {
+        const trimmed = line.trim();
+        return trimmed === '' || /^(\d+\.|[•\-*])\s/.test(trimmed);
+      });
       
       if (allFormatted) {
         // If all lines are formatted, remove formatting (toggle off)
@@ -286,23 +289,35 @@ export const SettingsProvider = ({ children }) => {
     return text
       .split('\n')
       .map(line => {
-        // Remove list markers while preserving any formatting
-        let cleaned = line.replace(/^(\d+\.|[•\-*])\s*/, '').trim();
+        // Remove ALL list markers (including nested ones) while preserving any formatting
+        let cleaned = line;
+        
+        // Keep removing list markers until none are left (handles nested bullets)
+        while (/^[\s]*(\d+\.|[•\-*])\s*/.test(cleaned)) {
+          cleaned = cleaned.replace(/^[\s]*(\d+\.|[•\-*])\s*/, '');
+        }
+        
+        // Trim and handle empty lines
+        cleaned = cleaned.trim();
         
         // Fix common malformed patterns from mixed bold+list formatting
         // Handle cases like "**- text**" -> "**text**"
-        cleaned = cleaned.replace(/^\*\*[-*]\s*/, '**');
+        cleaned = cleaned.replace(/^\*\*[-*•]\s*/, '**');
         // Handle cases like "*- text**" -> "**text**"  
-        cleaned = cleaned.replace(/^\*[-*]\s*/, '**');
+        cleaned = cleaned.replace(/^\*[-*•]\s*/, '**');
         // Handle cases where single * got left behind: "*text**" -> "**text**"
         if (cleaned.startsWith('*') && !cleaned.startsWith('**') && cleaned.includes('**')) {
           cleaned = '**' + cleaned.substring(1);
         }
-        // Clean up any double asterisks that got merged incorrectly
-        cleaned = cleaned.replace(/\*\*\*\*+/g, '**');
+        // Clean up any multiple asterisks that got merged incorrectly
+        cleaned = cleaned.replace(/\*\*\*+/g, '**');
+        // Fix orphaned asterisks at the end
+        cleaned = cleaned.replace(/\*\*$/, '');
+        cleaned = cleaned.replace(/^\*\*$/, '');
         
         return cleaned;
       })
+      .filter(line => line.trim() !== '') // Remove empty lines
       .join('\n');
   };
 
