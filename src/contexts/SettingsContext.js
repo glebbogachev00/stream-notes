@@ -200,15 +200,34 @@ export const SettingsProvider = ({ children }) => {
     return false;
   };
 
-  const formatText = (text) => {
-    // Only auto-format if auto-sorting is enabled
-    if (!settings.autoSortingEnabled) {
+  const formatText = (text, forceFormat = false) => {
+    // Only auto-format if auto-sorting is enabled, unless explicitly forced
+    if (!settings.autoSortingEnabled && !forceFormat) {
       return text;
     }
 
+    const style = ORGANIZATION_STYLES[settings.organizationStyle];
+    
+    // If force formatting (manual button), format everything as a simple list
+    if (forceFormat) {
+      const lines = text.split('\n').map(line => line.trim()).filter(Boolean);
+      if (lines.length === 0) return text;
+      
+      // Check if ALL non-empty lines are already formatted
+      const allFormatted = lines.every(line => /^(\d+\.|[•\-*])\s/.test(line));
+      
+      if (allFormatted) {
+        // If all lines are formatted, remove formatting (toggle off)
+        return removeListFormatting(text);
+      } else {
+        // If not all lines are formatted, format everything (toggle on)
+        return style.format(lines);
+      }
+    }
+
+    // Original auto-formatting logic
     // Split by newline, but keep empty strings for empty lines
     const lines = text.split('\n'); 
-    const style = ORGANIZATION_STYLES[settings.organizationStyle];
     
     // Separate formatted and unformatted lines
     const formattedLines = [];

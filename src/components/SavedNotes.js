@@ -365,15 +365,8 @@ const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onUpdateNoteProper
                                   textToFormat = textarea.value;
                                 }
                                 
-                                // Check if text is already formatted as a list
-                                const isAlreadyList = textToFormat.split('\n').every(line => 
-                                  line.trim() === '' || /^(\d+\.|[•\-*])\s/.test(line.trim())
-                                );
-                                
-                                // Toggle list formatting
-                                const processedText = isAlreadyList ? 
-                                  removeListFormatting(textToFormat) : 
-                                  formatText(textToFormat);
+                                // Apply list formatting (formatText handles toggle internally)
+                                const processedText = formatText(textToFormat, true);
                                 const newText = textarea.value.substring(0, start) + processedText + textarea.value.substring(end);
                                 
                                 onUpdateNote(note.id, newText);
