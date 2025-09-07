@@ -7,7 +7,7 @@ import FullscreenNoteModal from './FullscreenNoteModal';
 
 const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onUpdateNoteProperties, onToggleSavedNotePin, onTransformToSAMO, onUpdateNoteFolder }) => {
   const { theme } = useTheme();
-  const { settings, formatText, removeListFormatting } = useSettings();
+  const { settings, formatText } = useSettings();
   const [editingNoteId, setEditingNoteId] = useState(null);
   const [openMenuId, setOpenMenuId] = useState(null);
   const [folderMenuOpenForNoteId, setFolderMenuOpenForNoteId] = useState(null);

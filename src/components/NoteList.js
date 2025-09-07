@@ -22,7 +22,7 @@ const NoteList = ({
   onUpdateNoteFolder
 }) => {
   const { theme } = useTheme();
-  const { settings, formatText, removeListFormatting } = useSettings();
+  const { settings, formatText } = useSettings();
   const editingTextareaRef = useRef(null);
   const deleteTimerControlRef = useRef(null);
   const [expandedNotes, setExpandedNotes] = useState(new Set());
