@@ -10,7 +10,7 @@ const Onboarding = () => {
   const [currentStep, setCurrentStep] = useState(-1); // Start with welcome screen
   const [selections, setSelections] = useState({
     theme: 'white',
-    fontSize: 'base',
+    fontSize: 'xl',
     organizationStyle: 'bullets',
     autoSortingEnabled: false,
     deleteTimer: '24h',
@@ -174,7 +174,7 @@ const Onboarding = () => {
   );
 
   const renderFontSizeStep = () => {
-    const FONT_SIZES = { sm: 14, base: 16, lg: 18, xl: 20 };
+    const FONT_SIZES = { lg: 18, xl: 20, xxl: 22, xxxl: 24, xxxxl: 26, xxxxxl: 28 };
     
     const handleDecrease = () => {
       const sizes = Object.keys(FONT_SIZES);
@@ -463,8 +463,8 @@ const Onboarding = () => {
   };
 
   const getFontSizeValue = (fontSize) => {
-    const sizes = { sm: 14, base: 16, lg: 18, xl: 20 };
-    return sizes[fontSize] || 16;
+    const sizes = { lg: 18, xl: 20, xxl: 22, xxxl: 24, xxxxl: 26, xxxxxl: 28 };
+    return sizes[fontSize] || 20;
   };
 
   return (

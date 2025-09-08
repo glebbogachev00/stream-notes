@@ -7,10 +7,12 @@ const FontSizeControl = ({ isAlwaysEditing = false }) => {
   const { settings, updateSettings } = useSettings();
 
   const FONT_SIZES = {
-    sm: 14,
-    base: 16,
     lg: 18,
     xl: 20,
+    xxl: 22,
+    xxxl: 24,
+    xxxxl: 26,
+    xxxxxl: 28,
   };
 
   const handleDecrease = () => {
