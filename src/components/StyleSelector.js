@@ -30,7 +30,7 @@ const StyleSelector = ({ isOpen, onClose, onSelectStyle, noteContent }) => {
         <div className="space-y-4 mb-6">
           <button
             onClick={() => onSelectStyle('samo')}
-            className={`w-full p-4 text-left border rounded transition-all duration-200 ${theme.borderSecondary} hover:${theme.borderPrimary} group`}
+            className={`w-full p-4 text-left border rounded transition-all duration-200 ${theme.borderSecondary} ${theme.borderHover} group`}
           >
             <div className="flex items-center gap-4">
               <div className="bg-black text-white p-3 rounded flex-shrink-0">
@@ -47,7 +47,7 @@ const StyleSelector = ({ isOpen, onClose, onSelectStyle, noteContent }) => {
 
           <button
             onClick={() => onSelectStyle('stencil')}
-            className={`w-full p-4 text-left border rounded transition-all duration-200 ${theme.borderSecondary} hover:${theme.borderPrimary} group`}
+            className={`w-full p-4 text-left border rounded transition-all duration-200 ${theme.borderSecondary} ${theme.borderHover} group`}
           >
             <div className="flex items-center gap-4">
               <div className="bg-white text-black border-2 border-black p-3 rounded flex-shrink-0">

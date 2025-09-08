@@ -499,7 +499,7 @@ const NoteList = ({
                   </button>
                   
                   {openMenuId === note.id && (
-                    <div className={`absolute ${menuPosition.top ? 'bottom-full mb-1' : 'top-full mt-1'} right-0 ${theme.bg} ${theme.borderPrimary} border rounded shadow-lg py-1 z-10 min-w-20 animate-in slide-in-from-top-2 fade-in duration-200`}>
+                    <div className={`absolute ${menuPosition.top ? 'bottom-full mb-1' : 'top-full mt-1'} right-0 ${theme.bg} ${theme.border} border rounded shadow-lg py-1 z-10 min-w-20 animate-in slide-in-from-top-2 fade-in duration-200`}>
                       <button
                         onClick={() => {
                           onTogglePin(note.id);
@@ -569,7 +569,7 @@ const NoteList = ({
                             move
                           </button>
                           {folderMenuOpenForNoteId === note.id && (
-                            <div className={`absolute right-full top-0 mr-1 ${theme.bg} ${theme.borderPrimary} border rounded shadow-lg py-1 z-20 min-w-max animate-in slide-in-from-left-2 fade-in duration-200`}>
+                            <div className={`absolute right-full top-0 mr-1 ${theme.bg} ${theme.border} border rounded shadow-lg py-1 z-20 min-w-max animate-in slide-in-from-left-2 fade-in duration-200`}>
                               {settings.folders.map(folder => (
                                 <button
                                   key={folder}

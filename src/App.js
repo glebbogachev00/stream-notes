@@ -261,7 +261,6 @@ function AppContent() {
                 title="samo mode transforms notes into street art inspired by jean-michel basquiat's legendary graffiti tag 'samo' - raw, authentic visual expression."
               >
                 samo ({artNotes.length})
-                  <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/>
               </button>
             )}
             {settings.stealThisQuoteEnabled && (
