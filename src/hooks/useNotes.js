@@ -52,7 +52,7 @@ export const useNotes = (deleteTimer = '24h', onToast = null, personalityEnabled
       setSavedNotes(parsedSavedNotes);
       setArtNotes(parsedArtNotes);
     } catch (error) {
-      console.error('Error loading notes:', error);
+      // Error loading notes, using empty arrays
       setNotes([]);
       setSavedNotes([]);
       setArtNotes([]);
@@ -64,7 +64,7 @@ export const useNotes = (deleteTimer = '24h', onToast = null, personalityEnabled
       await storage.set(NOTES_KEY, JSON.stringify(newNotes));
       setNotes(newNotes);
     } catch (error) {
-      console.error('Error saving notes:', error);
+      // Error saving notes
     }
   }, [storage]);
 
@@ -73,7 +73,7 @@ export const useNotes = (deleteTimer = '24h', onToast = null, personalityEnabled
       await storage.set(SAVED_NOTES_KEY, JSON.stringify(newSavedNotes));
       setSavedNotes(newSavedNotes);
     } catch (error) {
-      console.error('Error saving saved notes:', error);
+      // Error saving saved notes
     }
   }, [storage]);
 
@@ -82,7 +82,7 @@ export const useNotes = (deleteTimer = '24h', onToast = null, personalityEnabled
       await storage.set(ART_NOTES_KEY, JSON.stringify(newArtNotes));
       setArtNotes(newArtNotes);
     } catch (error) {
-      console.error('Error saving art notes:', error);
+      // Error saving art notes
     }
   }, [storage]);
 

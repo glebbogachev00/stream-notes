@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo, useCallback, lazy, Suspense, memo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback, lazy, Suspense } from 'react';
 import { useNotes } from './hooks/useNotes';
 import { useToast } from './hooks/useToast';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
@@ -10,20 +10,20 @@ import SavedNotes from './components/SavedNotes';
 import ThemeToggle from './components/ThemeToggle';
 import Onboarding from './components/Onboarding';
 import Toast from './components/Toast';
-import FolderFilter from './components/FolderFilter';
 import { submitFeedback } from './utils/feedback';
 
-// Lazy load non-critical components with preloading hints
-const SettingsModal = lazy(() => import(/* webpackChunkName: "settings" */ './components/SettingsModal'));
-const ArtGallery = lazy(() => import(/* webpackChunkName: "art-gallery" */ './components/ArtGallery'));
-const StyleSelector = lazy(() => import(/* webpackChunkName: "style-selector" */ './components/StyleSelector'));
-const QuoteCollection = lazy(() => import(/* webpackChunkName: "quotes" */ './components/QuoteCollection'));
-const MatrixUnlockNotification = lazy(() => import(/* webpackChunkName: "notifications" */ './components/MatrixUnlockNotification'));
-const EdgeUnlockNotification = lazy(() => import(/* webpackChunkName: "notifications" */ './components/EdgeUnlockNotification'));
-const FeedbackModal = lazy(() => import(/* webpackChunkName: "feedback" */ './components/FeedbackModal'));
-const BackToTop = lazy(() => import(/* webpackChunkName: "utilities" */ './components/BackToTop'));
+// Lazy load non-critical components
+const SettingsModal = lazy(() => import('./components/SettingsModal'));
+const ArtGallery = lazy(() => import('./components/ArtGallery'));
+const StyleSelector = lazy(() => import('./components/StyleSelector'));
+const QuoteCollection = lazy(() => import('./components/QuoteCollection'));
+const MatrixUnlockNotification = lazy(() => import('./components/MatrixUnlockNotification'));
+const EdgeUnlockNotification = lazy(() => import('./components/EdgeUnlockNotification'));
+const FeedbackModal = lazy(() => import('./components/FeedbackModal'));
+const BackToTop = lazy(() => import('./components/BackToTop'));
+const FolderFilter = lazy(() => import('./components/FolderFilter'));
 
-const AppContent = memo(() => {
+function AppContent() {
   const [activeTab, setActiveTab] = useState('active');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
@@ -40,36 +40,34 @@ const AppContent = memo(() => {
   const [showEdgeUnlock, setShowEdgeUnlock] = useState(false);
   const [activeFolder, setActiveFolder] = useState('all');
 
-  const cycleLogo = () => {
+  const cycleLogo = useCallback(() => {
     const styles = ['originalText', 'graffiti', 'raindrop'];
     const currentIndex = styles.indexOf(logoStyle);
     const nextStyle = styles[(currentIndex + 1) % styles.length];
     setLogoStyle(nextStyle);
     localStorage.setItem('stream-logo-style', nextStyle);
-  };
+  }, [logoStyle]);
 
-  const handleTransformToArt = (id, fromSaved = false) => {
+  const handleTransformToArt = useCallback((id, fromSaved = false) => {
     setPendingTransformId(id);
     setPendingFromSaved(fromSaved);
     setStyleSelectorOpen(true);
-  };
+  }, []);
 
-  const handleStyleSelect = (style) => {
-    transformToArt(pendingTransformId, pendingFromSaved, style);
-    setStyleSelectorOpen(false);
-    setPendingTransformId(null);
-    setPendingFromSaved(false);
-  };
+  const { theme } = useTheme();
+  const { settings } = useSettings();
+  const { getSyncStatus } = useStorage();
+  const { toasts, showToast, hideToast } = useToast();
 
-  const handleMatrixUnlock = () => {
+  const handleMatrixUnlock = useCallback(() => {
     setShowMatrixUnlock(true);
-  };
+  }, []);
 
-  const handleEdgeUnlock = () => {
+  const handleEdgeUnlock = useCallback(() => {
     setShowEdgeUnlock(true);
-  };
+  }, []);
 
-  const handleFeedbackSubmit = async (feedbackText) => {
+  const handleFeedbackSubmit = useCallback(async (feedbackText) => {
     try {
       await submitFeedback(feedbackText);
       showToast("Feedback sent! Thanks for helping stream grow");
@@ -77,11 +75,8 @@ const AppContent = memo(() => {
     } catch (error) {
       showToast(error.message || "Couldn't send feedback. Try again?");
     }
-  };
-  const { theme } = useTheme();
-  const { settings } = useSettings();
-  const { getSyncStatus } = useStorage();
-  const { toasts, showToast, hideToast } = useToast();
+  }, [showToast]);
+
   const {
     notes,
     savedNotes,
@@ -105,6 +100,13 @@ const AppContent = memo(() => {
     updateNoteFolder
   } = useNotes(settings.deleteTimer, showToast, settings.personalityEnabled, handleEdgeUnlock);
 
+  const handleStyleSelect = useCallback((style) => {
+    transformToArt(pendingTransformId, pendingFromSaved, style);
+    setStyleSelectorOpen(false);
+    setPendingTransformId(null);
+    setPendingFromSaved(false);
+  }, [transformToArt, pendingTransformId, pendingFromSaved]);
+
   // Track previous deleteTimer to detect changes
   const previousDeleteTimer = useRef(settings.deleteTimer);
   
@@ -123,13 +125,13 @@ const AppContent = memo(() => {
     }
   }, [settings.foldersEnabled, activeFolder]);
 
+
   const getFontSizeValue = useCallback((fontSize) => {
     const sizes = { sm: 14, base: 16, lg: 18, xl: 20 };
     return sizes[fontSize] || 16;
   }, []);
 
   const filteredNotes = useMemo(() => {
-    if (!notes.length) return [];
     return notes.filter(note => {
       if (activeFolder === 'all') return !note.folder; // Only show notes without folder in "All"
       return note.folder === activeFolder;
@@ -137,7 +139,6 @@ const AppContent = memo(() => {
   }, [notes, activeFolder]);
 
   const filteredSavedNotes = useMemo(() => {
-    if (!savedNotes.length) return [];
     return savedNotes.filter(note => {
       if (activeFolder === 'all') return !note.folder; // Only show notes without folder in "All"
       return note.folder === activeFolder;
@@ -232,7 +233,9 @@ const AppContent = memo(() => {
         </header>
 
         {(activeTab === 'active' || activeTab === 'saved') && (
-          <FolderFilter activeFolder={activeFolder} setActiveFolder={setActiveFolder} />
+          <Suspense fallback={null}>
+            <FolderFilter activeFolder={activeFolder} setActiveFolder={setActiveFolder} />
+          </Suspense>
         )}
 
         <nav className="mb-8 sm:mb-12">
@@ -396,9 +399,7 @@ const AppContent = memo(() => {
       </Suspense>
     </div>
   );
-});
-
-AppContent.displayName = 'AppContent';
+}
 
 function App() {
   return (

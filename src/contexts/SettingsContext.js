@@ -71,7 +71,7 @@ export const SettingsProvider = ({ children }) => {
         { ...DEFAULT_SETTINGS, ...JSON.parse(saved), onboardingCompleted } :
         { ...DEFAULT_SETTINGS, onboardingCompleted };
     } catch (error) {
-      console.error('Error loading settings:', error);
+      // Error loading settings, using defaults
       return DEFAULT_SETTINGS;
     }
   });
@@ -98,7 +98,7 @@ export const SettingsProvider = ({ children }) => {
       }));
       localStorage.setItem('stream-onboarding-completed', settings.onboardingCompleted.toString());
     } catch (error) {
-      console.error('Error saving settings:', error);
+      // Error saving settings
     }
   }, [settings]);
 

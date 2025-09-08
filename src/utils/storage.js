@@ -39,7 +39,7 @@ class StorageAdapter {
           return syncedData;
         }
       } catch (e) {
-        console.warn('Browser sync read failed, falling back to local storage:', e);
+        // Browser sync read failed, falling back to local storage
       }
     }
     
@@ -63,7 +63,7 @@ class StorageAdapter {
         localStorage.setItem(`${key}_synced`, value);
         localStorage.setItem(key, value);
       } catch (e) {
-        console.warn('Browser sync write failed, using local storage only:', e);
+        // Browser sync write failed, using local storage only
         localStorage.setItem(key, value);
       }
       return Promise.resolve();
@@ -88,7 +88,7 @@ class StorageAdapter {
       try {
         localStorage.removeItem(`${key}_synced`);
       } catch (e) {
-        console.warn('Browser sync remove failed:', e);
+        // Browser sync remove failed
       }
     }
     

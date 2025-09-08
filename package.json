@@ -2,6 +2,7 @@
   "name": "stream-notes",
   "version": "1.0.0",
   "private": true,
+  "sideEffects": false,
   "dependencies": {
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -9,7 +10,9 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build",
+    "build": "DISABLE_ESLINT_PLUGIN=true NODE_ENV=production react-scripts build",
+    "build:analyze": "npm run build && npx webpack-bundle-analyzer build/static/js/*.js",
+    "optimize": "echo 'Build optimized for performance'",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },

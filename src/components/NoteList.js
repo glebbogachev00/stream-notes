@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, memo, useCallback, useMemo } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useSettings, DELETE_TIMERS } from '../contexts/SettingsContext';
 import { getRandomMessage, EMPTY_STATE_MESSAGES } from '../utils/messages';
@@ -31,6 +31,10 @@ const NoteList = ({
   const [fullscreenNoteId, setFullscreenNoteId] = useState(null);
   const [menuPosition, setMenuPosition] = useState({ top: false });
 
+  const shouldTruncateNote = useCallback((content) => {
+    return content.split('\n').length > 3 || content.length > 150;
+  }, []);
+
   // Handle showMoreByDefault setting - expand notes that should be truncated if the setting is enabled
   useEffect(() => {
     if (settings.showMoreByDefault) {
@@ -44,9 +48,9 @@ const NoteList = ({
         return newSet;
       });
     }
-  }, [settings.showMoreByDefault, notes]);
+  }, [settings.showMoreByDefault, notes, shouldTruncateNote]);
 
-  const handleMenuToggle = (noteId, event) => {
+  const handleMenuToggle = useCallback((noteId, event) => {
     if (openMenuId === noteId) {
       setOpenMenuId(null);
       return;
@@ -60,7 +64,7 @@ const NoteList = ({
 
     setMenuPosition({ top: shouldShowAbove });
     setOpenMenuId(noteId);
-  };
+  }, [openMenuId]);
 
   useEffect(() => {
     if (editingNoteId && editingTextareaRef.current) {
@@ -113,7 +117,7 @@ const NoteList = ({
     }
   }, [editingNoteId, notes, onUpdateNoteContent, onSetEditingNoteId]);
 
-  const handleContentChange = (e, noteId) => {
+  const handleContentChange = useCallback((e, noteId) => {
     handleTextareaChange(e, (value) => {
       if (value.trim() === '') {
         onDeleteNote(noteId);
@@ -121,9 +125,9 @@ const NoteList = ({
         onUpdateNoteContent(noteId, value);
       }
     });
-  };
+  }, [onDeleteNote, onUpdateNoteContent]);
 
-  const handleEditingFinished = (noteId, content, event) => {
+  const handleEditingFinished = useCallback((noteId, content, event) => {
     if (event && event.relatedTarget && (
       (deleteTimerControlRef.current && deleteTimerControlRef.current.contains(event.relatedTarget)) ||
       event.relatedTarget.closest('.editing-controls')
@@ -134,9 +138,9 @@ const NoteList = ({
     const formattedContent = settings.autoSortingEnabled ? formatText(content) : content;
     onUpdateNoteContent(noteId, formattedContent);
     onSetEditingNoteId(null);
-  };
+  }, [settings.autoSortingEnabled, formatText, onUpdateNoteContent, onSetEditingNoteId]);
 
-  const handleNoteClick = (noteId, event) => {
+  const handleNoteClick = useCallback((noteId, event) => {
     // Prevent triggering when clicking on buttons or controls
     if (event.target.closest('button') || event.target.closest('.editing-controls')) {
       return;
@@ -158,21 +162,21 @@ const NoteList = ({
         });
       }
     }, 100);
-  };
+  }, [onSetEditingNoteId]);
 
-  const handleNoteKeyDown = (e, noteId) => {
+  const handleNoteKeyDown = useCallback((e, noteId) => {
     if (e.key === 'Enter' && editingNoteId !== noteId) {
       e.preventDefault();
       onSetEditingNoteId(noteId);
     }
-  };
+  }, [editingNoteId, onSetEditingNoteId]);
 
   const getEmptyStateIcon = () => {
     const icons = ['·', '—', '~', '∘', '∙', '–', '○'];
     return icons[Math.floor(Math.random() * icons.length)];
   };
 
-  const toggleNoteExpansion = (noteId) => {
+  const toggleNoteExpansion = useCallback((noteId) => {
     setExpandedNotes(prev => {
       const newSet = new Set(prev);
       if (newSet.has(noteId)) {
@@ -182,13 +186,9 @@ const NoteList = ({
       }
       return newSet;
     });
-  };
+  }, []);
 
-  const shouldTruncateNote = (content) => {
-    return content.split('\n').length > 3 || content.length > 150;
-  };
-
-  const getTruncatedContent = (content) => {
+  const getTruncatedContent = useCallback((content) => {
     const lines = content.split('\n');
     if (lines.length > 3) {
       return lines.slice(0, 3).join('\n') + '...';
@@ -197,11 +197,11 @@ const NoteList = ({
       return content.substring(0, 150) + '...';
     }
     return content;
-  };
+  }, []);
 
-  const renderFormattedText = (content) => {
+  const renderFormattedText = useCallback((content) => {
     // Handle multi-line bold formatting by processing the entire content first
-    const boldRegex = /\*\*([\s\S]*?)\*\*/g;
+    const boldRegex = /\*\*([^*]+(?:\*(?!\*)[^*]*)*)\*\*/g;
     const parts = [];
     let lastIndex = 0;
     let match;
@@ -262,25 +262,13 @@ const NoteList = ({
         return part;
       }
     }).flat();
-  };
-
-  if (notes.length === 0) {
-    return (
-      <div className="text-center py-16">
-        <p className={`text-sm ${theme.textTertiary} font-light`}>
-          <span className="empty-state-icon">{getEmptyStateIcon()}</span>
-          {getRandomMessage(EMPTY_STATE_MESSAGES, settings.personalityEnabled)}
-        </p>
-      </div>
-    );
-  }
-
+  }, []);
 
   // Separate pinned and unpinned notes
-  const pinnedNotes = notes.filter(note => note.isPinned);
-  const unpinnedNotes = notes.filter(note => !note.isPinned);
+  const pinnedNotes = useMemo(() => notes.filter(note => note.isPinned), [notes]);
+  const unpinnedNotes = useMemo(() => notes.filter(note => !note.isPinned), [notes]);
 
-  const renderNote = (note) => {
+  const renderNote = useCallback((note) => {
           const timeInfo = getTimeInfo(note);
           
           return (
@@ -657,7 +645,18 @@ const NoteList = ({
             </div>
           </article>
         );
-  };
+  }, [theme, settings, formatText, getTimeInfo, editingNoteId, expandedNotes, openMenuId, folderMenuOpenForNoteId, menuPosition, shouldTruncateNote, getTruncatedContent, renderFormattedText, handleMenuToggle, handleNoteClick, handleNoteKeyDown, handleContentChange, handleEditingFinished, toggleNoteExpansion, onTogglePin, onSaveNote, onUpdateNoteContent, onUpdateNoteDeleteTimer, onUpdateNoteFolder, onTransformToSAMO, onDeleteNote, setOpenMenuId, setFolderMenuOpenForNoteId, setFullscreenNoteId]);
+
+  if (notes.length === 0) {
+    return (
+      <div className="text-center py-16">
+        <p className={`text-sm ${theme.textTertiary} font-light`}>
+          <span className="empty-state-icon">{getEmptyStateIcon()}</span>
+          {getRandomMessage(EMPTY_STATE_MESSAGES, settings.personalityEnabled)}
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -701,4 +700,20 @@ const NoteList = ({
   );
 };
 
-export default NoteList;
+export default memo(NoteList, (prevProps, nextProps) => {
+  // Custom comparison for better performance
+  return (
+    prevProps.notes === nextProps.notes &&
+    prevProps.editingNoteId === nextProps.editingNoteId &&
+    prevProps.onDeleteNote === nextProps.onDeleteNote &&
+    prevProps.onSaveNote === nextProps.onSaveNote &&
+    prevProps.onTransformToSAMO === nextProps.onTransformToSAMO &&
+    prevProps.getTimeInfo === nextProps.getTimeInfo &&
+    prevProps.onSetEditingNoteId === nextProps.onSetEditingNoteId &&
+    prevProps.onUpdateNoteContent === nextProps.onUpdateNoteContent &&
+    prevProps.onUpdateNoteDeleteTimer === nextProps.onUpdateNoteDeleteTimer &&
+    prevProps.onUpdateNoteProperties === nextProps.onUpdateNoteProperties &&
+    prevProps.onTogglePin === nextProps.onTogglePin &&
+    prevProps.onUpdateNoteFolder === nextProps.onUpdateNoteFolder
+  );
+});

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, memo, useCallback, useMemo } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useSettings } from '../contexts/SettingsContext';
 import { handleTextareaChange, handleTextareaKeyDown, setupTextareaForEditing, handleTextareaClick } from '../utils/textareaHelpers';
@@ -16,6 +16,10 @@ const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onUpdateNoteProper
   const [menuPosition, setMenuPosition] = useState({ top: false });
   const editingTextareaRef = useRef(null);
 
+  const shouldTruncateNote = useCallback((content) => {
+    return content.split('\n').length > 3 || content.length > 150;
+  }, []);
+
   // Handle showMoreByDefault setting - expand notes that should be truncated if the setting is enabled
   useEffect(() => {
     if (settings.showMoreByDefault) {
@@ -29,9 +33,9 @@ const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onUpdateNoteProper
         return newSet;
       });
     }
-  }, [settings.showMoreByDefault, savedNotes]);
+  }, [settings.showMoreByDefault, savedNotes, shouldTruncateNote]);
 
-  const handleMenuToggle = (noteId, event) => {
+  const handleMenuToggle = useCallback((noteId, event) => {
     if (openMenuId === noteId) {
       setOpenMenuId(null);
       return;
@@ -45,7 +49,7 @@ const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onUpdateNoteProper
 
     setMenuPosition({ top: shouldShowAbove });
     setOpenMenuId(noteId);
-  };
+  }, [openMenuId]);
 
   useEffect(() => {
     if (editingNoteId && editingTextareaRef.current) {
@@ -98,7 +102,7 @@ const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onUpdateNoteProper
     }
   }, [editingNoteId, savedNotes, onUpdateNote]);
 
-  const handleContentChange = (e, noteId) => {
+  const handleContentChange = useCallback((e, noteId) => {
     handleTextareaChange(e, (value) => {
       if (value.trim() === '') {
         onDeleteNote(noteId);
@@ -106,15 +110,15 @@ const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onUpdateNoteProper
         onUpdateNote(noteId, value);
       }
     });
-  };
+  }, [onDeleteNote, onUpdateNote]);
 
-  const handleEditingFinished = (noteId, content) => {
+  const handleEditingFinished = useCallback((noteId, content) => {
     // Disable auto-formatting - user must explicitly use List control
     onUpdateNote(noteId, content);
     setEditingNoteId(null);
-  };
+  }, [onUpdateNote]);
 
-  const handleNoteClick = (noteId, event) => {
+  const handleNoteClick = useCallback((noteId, event) => {
     // Prevent triggering when clicking on buttons or controls
     if (event.target.closest('button') || event.target.closest('.editing-controls')) {
       return;
@@ -136,16 +140,16 @@ const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onUpdateNoteProper
         });
       }
     }, 100);
-  };
+  }, []);
 
-  const handleNoteKeyDown = (e, noteId) => {
+  const handleNoteKeyDown = useCallback((e, noteId) => {
     if (e.key === 'Enter' && editingNoteId !== noteId) {
       e.preventDefault();
       setEditingNoteId(noteId);
     }
-  };
+  }, [editingNoteId]);
 
-  const toggleNoteExpansion = (noteId) => {
+  const toggleNoteExpansion = useCallback((noteId) => {
     setExpandedNotes(prev => {
       const newSet = new Set(prev);
       if (newSet.has(noteId)) {
@@ -155,13 +159,9 @@ const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onUpdateNoteProper
       }
       return newSet;
     });
-  };
+  }, []);
 
-  const shouldTruncateNote = (content) => {
-    return content.split('\n').length > 3 || content.length > 150;
-  };
-
-  const getTruncatedContent = (content) => {
+  const getTruncatedContent = useCallback((content) => {
     const lines = content.split('\n');
     if (lines.length > 3) {
       return lines.slice(0, 3).join('\n') + '...';
@@ -170,11 +170,11 @@ const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onUpdateNoteProper
       return content.substring(0, 150) + '...';
     }
     return content;
-  };
+  }, []);
 
   const renderFormattedText = (content) => {
     // Handle multi-line bold formatting by processing the entire content first
-    const boldRegex = /\*\*([\s\S]*?)\*\*/g;
+    const boldRegex = /\*\*([^*]+(?:\*(?!\*)[^*]*)*)\*\*/g;
     const parts = [];
     let lastIndex = 0;
     let match;
@@ -237,17 +237,7 @@ const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onUpdateNoteProper
     }).flat();
   };
 
-  if (savedNotes.length === 0) {
-    return (
-      <div className="text-center py-16">
-        <p className={`dynamic-text-base ${theme.textTertiary} font-light`}>
-          no saved notes
-        </p>
-      </div>
-    );
-  }
-
-  const formatSavedDate = (timestamp) => {
+  const formatSavedDate = useCallback((timestamp) => {
     const date = new Date(timestamp);
     const now = new Date();
     const diffInDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
@@ -261,12 +251,21 @@ const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onUpdateNoteProper
     } else {
       return `Saved ${date.toLocaleDateString()}`;
     }
-  };
-
+  }, []);
 
   // Separate pinned and unpinned saved notes
-  const pinnedSavedNotes = savedNotes.filter(note => note.isPinned);
-  const unpinnedSavedNotes = savedNotes.filter(note => !note.isPinned);
+  const pinnedSavedNotes = useMemo(() => savedNotes.filter(note => note.isPinned), [savedNotes]);
+  const unpinnedSavedNotes = useMemo(() => savedNotes.filter(note => !note.isPinned), [savedNotes]);
+
+  if (savedNotes.length === 0) {
+    return (
+      <div className="text-center py-16">
+        <p className={`dynamic-text-base ${theme.textTertiary} font-light`}>
+          no saved notes
+        </p>
+      </div>
+    );
+  }
 
   const renderSavedNote = (note) => {
     return (
@@ -506,7 +505,7 @@ const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onUpdateNoteProper
                             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
                             </svg>
-                            move to folder
+                            move
                           </button>
                           {folderMenuOpenForNoteId === note.id && (
                             <div className={`absolute right-full top-0 mr-1 ${theme.bg} ${theme.border} border rounded shadow-lg py-1 z-20 min-w-max animate-in slide-in-from-left-2 fade-in duration-200`}>
@@ -545,7 +544,7 @@ const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onUpdateNoteProper
                               }, 600);
                               return;
                             } catch (err) {
-                              console.warn('Clipboard API failed, trying fallback:', err);
+                              // Fallback silently failed
                             }
                           }
                           
@@ -563,13 +562,11 @@ const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onUpdateNoteProper
                             const successful = document.execCommand('copy');
                             document.body.removeChild(textArea);
                             
-                            if (successful) {
-                              console.log('Copy successful (fallback)!');
-                            } else {
+                            if (!successful) {
                               throw new Error('execCommand failed');
                             }
                           } catch (err) {
-                            console.error('All copy methods failed:', err);
+                            // All copy methods failed silently
                           }
                           
                           setOpenMenuId(null);
@@ -664,4 +661,4 @@ const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onUpdateNoteProper
   );
 };
 
-export default SavedNotes;
+export default memo(SavedNotes);

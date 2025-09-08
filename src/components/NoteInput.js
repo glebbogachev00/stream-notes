@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, memo } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useSettings, DELETE_TIMERS } from '../contexts/SettingsContext';
 import { getRotatingMessage, INPUT_PLACEHOLDER_MESSAGES } from '../utils/messages';
@@ -98,8 +98,14 @@ const NoteInput = ({ onAddNote, onMatrixUnlock }) => {
                 ? `min-h-[120px] p-4 rounded-lg ${theme.inputBg} border ${theme.border}` 
                 : `min-h-[40px] border-0 border-b ${theme.border} ${theme.borderHover} p-2 bg-transparent`
             }`}
-            style={{ height: isFocused ? 'auto' : '40px' }}
+            style={{ 
+              height: isFocused ? 'auto' : '40px',
+              willChange: 'height',
+              transform: 'translateZ(0)'
+            }}
             rows={1}
+            autoComplete="off"
+            spellCheck="false"
           />
           
           {isFocused && content.trim() && (
@@ -124,4 +130,4 @@ const NoteInput = ({ onAddNote, onMatrixUnlock }) => {
   );
 };
 
-export default NoteInput;
+export default memo(NoteInput);

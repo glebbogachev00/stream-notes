@@ -17,7 +17,7 @@ export const submitFeedback = async (feedbackText) => {
 
     return { success: true };
   } catch (error) {
-    console.error('Feedback submission error:', error);
+    // Error handling for feedback submission
     throw new Error("Couldn't send feedback. Try again?");
   }
 };

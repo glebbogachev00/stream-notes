@@ -40,17 +40,15 @@ const QuoteCollection = () => {
         <button
           onClick={async () => {
             const textToCopy = `"${currentQuote.text}" — ${currentQuote.author}`;
-            console.log('Attempting to copy:', textToCopy);
             
             // Try modern clipboard API first
             if (navigator.clipboard && window.isSecureContext) {
               try {
                 await navigator.clipboard.writeText(textToCopy);
                 showToast('Quote copied to clipboard!', 'success');
-                console.log('Copy successful (clipboard API)!');
                 return;
               } catch (err) {
-                console.warn('Clipboard API failed, trying fallback:', err);
+                // Clipboard API failed, using fallback
               }
             }
             
