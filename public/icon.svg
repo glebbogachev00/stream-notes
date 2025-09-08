@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="64" fill="#000000"/>
+  <path d="M256 128c-32 0-64 48-64 80 0 35.2 28.8 64 64 64s64-28.8 64-64c0-32-32-80-64-80z" fill="#ffffff"/>
+  <text x="256" y="380" font-family="Inter, sans-serif" font-size="48" font-weight="300" text-anchor="middle" fill="#ffffff">[stream]</text>
+</svg>

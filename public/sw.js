@@ -1,10 +1,15 @@
 // Service Worker for [stream] app
-const CACHE_NAME = 'stream-v1';
+const CACHE_NAME = 'stream-v2';
 const STATIC_ASSETS = [
   '/',
   '/static/js/main.js',
   '/static/css/main.css',
-  '/manifest.json'
+  '/manifest.json',
+  '/icon-192.png',
+  '/icon-512.png',
+  '/apple-touch-icon.png',
+  '/favicon-32x32.png',
+  '/favicon-16x16.png'
 ];
 
 // Install event - cache static assets
@@ -93,11 +98,34 @@ self.addEventListener('sync', (event) => {
 self.addEventListener('push', (event) => {
   const options = {
     body: event.data ? event.data.text() : 'New update available',
-    icon: '/favicon.ico',
-    badge: '/favicon.ico'
+    icon: '/icon-192.png',
+    badge: '/favicon-32x32.png',
+    tag: 'stream-notification',
+    requireInteraction: true,
+    actions: [
+      {
+        action: 'open',
+        title: 'Open App'
+      },
+      {
+        action: 'close',
+        title: 'Close'
+      }
+    ]
   };
 
   event.waitUntil(
     self.registration.showNotification('[stream] Update', options)
   );
+});
+
+// Handle notification clicks
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+
+  if (event.action === 'open') {
+    event.waitUntil(
+      clients.openWindow('/')
+    );
+  }
 });

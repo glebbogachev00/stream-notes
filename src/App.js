@@ -39,6 +39,8 @@ const AppContent = memo(() => {
   const [showMatrixUnlock, setShowMatrixUnlock] = useState(false);
   const [showEdgeUnlock, setShowEdgeUnlock] = useState(false);
   const [activeFolder, setActiveFolder] = useState('all');
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [showInstallPrompt, setShowInstallPrompt] = useState(false);
 
   const cycleLogo = () => {
     const styles = ['originalText', 'graffiti', 'raindrop'];
@@ -123,6 +125,43 @@ const AppContent = memo(() => {
     }
   }, [settings.foldersEnabled, activeFolder]);
 
+  // PWA Install prompt handling
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setShowInstallPrompt(true);
+    };
+
+    const handleAppInstalled = () => {
+      setDeferredPrompt(null);
+      setShowInstallPrompt(false);
+      showToast('App installed successfully!');
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('appinstalled', handleAppInstalled);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', handleAppInstalled);
+    };
+  }, [showToast]);
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) return;
+
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    
+    if (outcome === 'accepted') {
+      showToast('Installing app...');
+    }
+    
+    setDeferredPrompt(null);
+    setShowInstallPrompt(false);
+  };
+
   const getFontSizeValue = useCallback((fontSize) => {
     const sizes = { sm: 14, base: 16, lg: 18, xl: 20 };
     return sizes[fontSize] || 16;
@@ -201,6 +240,17 @@ const AppContent = memo(() => {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            {showInstallPrompt && (
+              <button
+                onClick={handleInstallClick}
+                className={`p-2 ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} transition-colors dynamic-text-base`}
+                title="Install App"
+              >
+                <svg className="w-1em h-1em" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </button>
+            )}
             <button
               onClick={() => window.open('https://gleb-bogachev.notion.site/updates-stream?source=copy_link', '_blank')}
               className={`p-2 ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} transition-colors dynamic-text-base`}
