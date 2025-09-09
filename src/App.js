@@ -230,7 +230,7 @@ const AppContent = memo(() => {
             </div>
             <div className="flex items-center gap-2">
               <p className={`dynamic-text-base ${theme.textSecondary} font-light`}>
-                self-managing notes
+                notes
               </p>
               {getSyncStatus() === 'synced' && (
                 <span className={`dynamic-text-xs ${theme.textTertiary} font-light`}>

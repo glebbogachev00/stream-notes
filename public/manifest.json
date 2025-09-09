@@ -1,7 +1,7 @@
 {
-  "name": "[stream] - Self-Managing Notes",
+  "name": "[stream]",
   "short_name": "stream",
-  "description": "Elegant self-managing notes that expire automatically",
+  "description": "[stream]",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
