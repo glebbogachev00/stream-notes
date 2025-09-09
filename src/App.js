@@ -163,7 +163,7 @@ const AppContent = memo(() => {
   };
 
   const getFontSizeValue = useCallback((fontSize) => {
-    const sizes = { lg: 18, xl: 20, xxl: 22, xxxl: 24, xxxxl: 26, xxxxxl: 28 };
+    const sizes = { lg: 18, xl: 20, xxl: 22 };
     return sizes[fontSize] || 20;
   }, []);
 

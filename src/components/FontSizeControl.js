@@ -10,9 +10,6 @@ const FontSizeControl = ({ isAlwaysEditing = false }) => {
     lg: 18,
     xl: 20,
     xxl: 22,
-    xxxl: 24,
-    xxxxl: 26,
-    xxxxxl: 28,
   };
 
   const handleDecrease = () => {

@@ -174,7 +174,7 @@ const Onboarding = () => {
   );
 
   const renderFontSizeStep = () => {
-    const FONT_SIZES = { lg: 18, xl: 20, xxl: 22, xxxl: 24, xxxxl: 26, xxxxxl: 28 };
+    const FONT_SIZES = { lg: 18, xl: 20, xxl: 22 };
     
     const handleDecrease = () => {
       const sizes = Object.keys(FONT_SIZES);
@@ -463,7 +463,7 @@ const Onboarding = () => {
   };
 
   const getFontSizeValue = (fontSize) => {
-    const sizes = { lg: 18, xl: 20, xxl: 22, xxxl: 24, xxxxl: 26, xxxxxl: 28 };
+    const sizes = { lg: 18, xl: 20, xxl: 22 };
     return sizes[fontSize] || 20;
   };
 
