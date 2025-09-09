@@ -141,7 +141,7 @@ const Onboarding = () => {
             </>
           ) : (
             <>
-              <p>Notes for fast thinkers.</p>
+              <p>For fast thinkers.</p>
               <p>Quick setup ahead.</p>
             </>
           )}
