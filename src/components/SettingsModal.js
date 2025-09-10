@@ -495,7 +495,19 @@ const SettingsModal = ({ isOpen, onClose }) => {
             )}
           </CollapsibleSection>
 
-          
+          {/* Header Buttons */}
+          <CollapsibleSection title="header buttons">
+            <div>
+              <button
+                onClick={() => updateSettings({ showHeaderButtons: !settings.showHeaderButtons })}
+                className={`w-full text-left pb-3 border-b transition-all duration-200 ${theme.border} ${theme.text} hover:${theme.textSecondary.replace('text-', 'hover:text-')}`}
+              >
+                <div className="dynamic-text-xs font-light">
+                  {settings.showHeaderButtons ? 'hide support, feedback, and update buttons' : 'show support, feedback, and update buttons'}
+                </div>
+              </button>
+            </div>
+          </CollapsibleSection>
 
           {/* Onboarding */}
           <CollapsibleSection title="onboarding">
