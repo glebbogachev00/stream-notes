@@ -14,7 +14,6 @@ const Onboarding = () => {
     organizationStyle: 'bullets',
     autoSortingEnabled: false,
     deleteTimer: '24h',
-    syncEnabled: false,
     userTag: '',
     securityAcknowledged: false,
     enhancedEditingEnabled: false

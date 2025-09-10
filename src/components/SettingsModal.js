@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useSettings, ORGANIZATION_STYLES, DELETE_TIMERS } from '../contexts/SettingsContext';
-import { useStorage } from '../contexts/StorageContext';
 import CollapsibleSection from './CollapsibleSection';
 import FontSizeControl from './FontSizeControl';
 import { getUserTag, setUserTag, validateUserTag, formatUserTag, clearUserTag } from '../utils/tags';
@@ -10,7 +9,6 @@ import { sanitizeInput } from '../utils/security';
 const SettingsModal = ({ isOpen, onClose }) => {
   const { theme, switchTheme, themes } = useTheme();
   const { settings, updateSettings, resetSettings, togglePersonality } = useSettings();
-  const { isSyncSupported } = useStorage();
   const [newUserTag, setNewUserTag] = useState('');
   const [tagError, setTagError] = useState('');
   const [newFolder, setNewFolder] = useState('');
@@ -202,51 +200,6 @@ const SettingsModal = ({ isOpen, onClose }) => {
             </div>
           </CollapsibleSection>
 
-          {/* Data Storage */}
-          <CollapsibleSection title="data storage">
-            <div>
-              <div className={`dynamic-text-xs ${theme.textTertiary} font-light mb-2`}>Storage method</div>
-              <div className="space-y-3">
-                <button
-                  onClick={() => updateSettings({ syncEnabled: false })}
-                  className={`w-full text-left pb-3 border-b transition-all duration-200 ${
-                    !settings.syncEnabled
-                      ? `${theme.border} ${theme.text}`
-                      : `${theme.borderSecondary} ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')}`
-                  }`}
-                >
-                  <div className="dynamic-text-xs font-light mb-1">
-                    ○ local only (this device only)
-                  </div>
-                </button>
-                
-                {isSyncSupported() ? (
-                  <button
-                    onClick={() => updateSettings({ syncEnabled: true })}
-                    className={`w-full text-left pb-3 border-b transition-all duration-200 ${
-                      settings.syncEnabled
-                        ? `${theme.border} ${theme.text}`
-                        : `${theme.borderSecondary} ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')}`
-                    }`}
-                  >
-                    <div className="dynamic-text-xs font-light mb-1">
-                      ○ browser sync (sync across devices)
-                    </div>
-                  </button>
-                ) : (
-                  <div className={`pb-3 border-b ${theme.borderSecondary}`}>
-                    <div className={`dynamic-text-xs font-light mb-1 ${theme.textTertiary}`}>
-                      ○ browser sync (not available)
-                    </div>
-                  </div>
-                )}
-              </div>
-              
-              <div className={`dynamic-text-xs ${theme.textTertiary} font-light leading-relaxed pt-2`}>
-                browser sync uses your existing browser account. data never goes to stream servers.
-              </div>
-            </div>
-          </CollapsibleSection>
 
           {/* User Tag */}
           <CollapsibleSection title={settings.personalityEnabled ? "your signature" : "user tag"}>
