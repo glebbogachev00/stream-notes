@@ -91,7 +91,7 @@ const PreviewModal = ({
             <div className="p-4 md:p-6 flex-shrink-0 md:flex-1 md:flex-none">
               <div className="mb-3">
                 <h3 className={`dynamic-text-sm font-light ${theme.text}`}>
-                  {settings.personalityEnabled ? 'cleaned up' : 'ai formatted'} {isLoading && '...'}
+                  {settings.personalityEnabled ? 'cleaned up' : 'flow formatted'} {isLoading && '...'}
                 </h3>
               </div>
               
@@ -99,7 +99,7 @@ const PreviewModal = ({
                 {isLoading ? (
                   <div className={`flex items-center gap-2 ${theme.textTertiary}`}>
                     <div className={`animate-spin w-4 h-4 border-2 ${theme.borderSecondary} ${theme.text.replace('text-', 'border-t-')} rounded-full`}></div>
-                    Formatting your note...
+                    Making your note flow...
                   </div>
                 ) : error ? (
                   <div className="text-red-500">{error}</div>

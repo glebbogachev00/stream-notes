@@ -448,15 +448,15 @@ const SettingsModal = ({ isOpen, onClose }) => {
             )}
           </CollapsibleSection>
 
-          {/* AI Formatting */}
-          <CollapsibleSection title="ai formatting">
+          {/* Flow Formatting */}
+          <CollapsibleSection title="flow formatting">
             <div>
               <button
-                onClick={() => updateSettings({ aiFormattingEnabled: !settings.aiFormattingEnabled })}
+                onClick={() => updateSettings({ flowFormattingEnabled: !settings.flowFormattingEnabled })}
                 className={`w-full text-left pb-3 border-b transition-all duration-200 ${theme.border} ${theme.text} hover:${theme.textSecondary.replace('text-', 'hover:text-')}`}
               >
                 <div className="dynamic-text-xs font-light">
-                  {settings.aiFormattingEnabled ? 'disable ai note formatting' : 'enable ai note formatting'}
+                  {settings.flowFormattingEnabled ? 'disable flow formatting' : 'enable flow formatting'}
                 </div>
               </button>
             </div>

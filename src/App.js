@@ -24,7 +24,6 @@ const MatrixUnlockNotification = lazy(() => import(/* webpackChunkName: "notific
 const EdgeUnlockNotification = lazy(() => import(/* webpackChunkName: "notifications" */ './components/EdgeUnlockNotification'));
 const FeedbackModal = lazy(() => import(/* webpackChunkName: "feedback" */ './components/FeedbackModal'));
 const BackToTop = lazy(() => import(/* webpackChunkName: "utilities" */ './components/BackToTop'));
-const PreviewModal = lazy(() => import(/* webpackChunkName: "preview" */ './components/PreviewModal'));
 
 const AppContent = memo(() => {
   const [activeTab, setActiveTab] = useState('active');
@@ -44,11 +43,6 @@ const AppContent = memo(() => {
   const [activeFolder, setActiveFolder] = useState('all');
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [showInstallPrompt, setShowInstallPrompt] = useState(false);
-  const [previewModal, setPreviewModal] = useState({
-    isOpen: false,
-    noteId: null,
-    noteContent: ''
-  });
 
   const cycleLogo = () => {
     const styles = ['originalText', 'graffiti', 'raindrop'];
@@ -177,62 +171,7 @@ const AppContent = memo(() => {
     return sizes[fontSize] || 20;
   }, []);
 
-  // Preview modal handlers
-  const handleSaveWithPreview = (noteId, noteContent) => {
-    if (isAIConfigured()) {
-      setPreviewModal({
-        isOpen: true,
-        noteId,
-        noteContent
-      });
-    } else {
-      // Fallback to regular save if AI not configured
-      saveNote(noteId);
-    }
-  };
 
-  const handlePreviewSaveOriginal = () => {
-    if (previewModal.noteId) {
-      // Check if this is a new note (temporary ID) or existing note
-      const isNewNote = !filteredNotes.find(n => n.id === previewModal.noteId);
-      if (isNewNote) {
-        // Create new note with original content
-        addNote(previewModal.noteContent);
-      } else {
-        // Save existing note
-        saveNote(previewModal.noteId);
-      }
-    }
-  };
-
-  const handlePreviewSaveFormatted = (formattedContent) => {
-    if (previewModal.noteId) {
-      // Check if this is a new note (temporary ID) or existing note
-      const isNewNote = !filteredNotes.find(n => n.id === previewModal.noteId);
-      if (isNewNote) {
-        // Create new note with formatted content
-        addNote(formattedContent);
-      } else {
-        // Update existing note
-        saveNoteWithPreview(previewModal.noteId, formattedContent);
-      }
-    }
-  };
-
-  const handlePreviewSaveBoth = (formattedContent) => {
-    if (previewModal.noteId) {
-      // Check if this is a new note (temporary ID) or existing note
-      const isNewNote = !filteredNotes.find(n => n.id === previewModal.noteId);
-      if (isNewNote) {
-        // Create both notes
-        addNote(previewModal.noteContent); // Original
-        addNote(formattedContent);         // Formatted
-      } else {
-        // Save both versions for existing note
-        saveBothVersions(previewModal.noteId, formattedContent);
-      }
-    }
-  };
 
   const filteredNotes = useMemo(() => {
     if (!notes.length) return [];
@@ -387,28 +326,11 @@ const AppContent = memo(() => {
         <main>
           {activeTab === 'active' && (
             <div className="space-y-8">
-              <NoteInput 
-                onAddNote={addNote} 
-                onMatrixUnlock={handleMatrixUnlock}
-                onAddNoteWithPreview={(content) => {
-                  // Create a temporary note ID for the preview
-                  const tempNoteId = Date.now().toString();
-                  handleSaveWithPreview(tempNoteId, content);
-                }}
-              />
+              <NoteInput onAddNote={addNote} onMatrixUnlock={handleMatrixUnlock} />
               <NoteList
                 notes={filteredNotes}
                 onDeleteNote={deleteNote}
-                onSaveNote={(noteId) => {
-                  if (settings.aiFormattingEnabled && isAIConfigured()) {
-                    const note = filteredNotes.find(n => n.id === noteId);
-                    if (note) {
-                      handleSaveWithPreview(noteId, note.content);
-                    }
-                  } else {
-                    saveNote(noteId);
-                  }
-                }}
+                onSaveNote={saveNote}
                 onTransformToSAMO={handleTransformToArt}
                 getTimeInfo={getTimeInfo}
                 editingNoteId={editingNoteId}
@@ -511,16 +433,6 @@ const AppContent = memo(() => {
         <BackToTop />
       </Suspense>
 
-      <Suspense fallback={null}>
-        <PreviewModal
-          isOpen={previewModal.isOpen}
-          onClose={() => setPreviewModal({ isOpen: false, noteId: null, noteContent: '' })}
-          noteContent={previewModal.noteContent}
-          onSaveOriginal={handlePreviewSaveOriginal}
-          onSaveFormatted={handlePreviewSaveFormatted}
-          onSaveBoth={handlePreviewSaveBoth}
-        />
-      </Suspense>
     </div>
   );
 });

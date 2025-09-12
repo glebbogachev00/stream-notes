@@ -7,7 +7,7 @@ import FullscreenNoteModal from './FullscreenNoteModal';
 
 const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onUpdateNoteProperties, onToggleSavedNotePin, onTransformToSAMO, onUpdateNoteFolder }) => {
   const { theme } = useTheme();
-  const { settings, formatText } = useSettings();
+  const { settings, formatText, formatNote } = useSettings();
   const [editingNoteId, setEditingNoteId] = useState(null);
   const [openMenuId, setOpenMenuId] = useState(null);
   const [folderMenuOpenForNoteId, setFolderMenuOpenForNoteId] = useState(null);
@@ -582,6 +582,39 @@ const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onUpdateNoteProper
                         </svg>
                         copy
                       </button>
+
+                      {settings.flowFormattingEnabled && (
+                        <button
+                          onClick={async (e) => {
+                            try {
+                              const formattedContent = await formatNote(note.content);
+                              onUpdateNote(note.id, formattedContent);
+                              setOpenMenuId(null);
+                              
+                              // Enhanced format animation
+                              const button = e.target.closest('button');
+                              button.classList.add('animate-pulse', 'text-purple-500');
+                              setTimeout(() => {
+                                button?.classList.remove('animate-pulse');
+                              }, 600);
+                            } catch (error) {
+                              console.error('Failed to format note:', error);
+                              // Show error feedback
+                              const button = e.target.closest('button');
+                              button.classList.add('text-red-500');
+                              setTimeout(() => {
+                                button?.classList.remove('text-red-500');
+                              }, 1000);
+                            }
+                          }}
+                          className={`w-full px-3 py-2 dynamic-text-base font-light text-left ${theme.textTertiary} hover:text-purple-500 hover:${theme.bgSecondary} transition-all duration-200 flex items-center gap-2 hover:translate-x-1 active:scale-95`}
+                        >
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                          format
+                        </button>
+                      )}
 
                       {settings.samoModeEnabled && (
                         <button

@@ -5,7 +5,7 @@ import { getRotatingMessage, INPUT_PLACEHOLDER_MESSAGES } from '../utils/message
 import { detectQuotePattern, unlockMatrix, checkMatrixUnlock } from '../utils/quoteDetection';
 import { autoResize, handleTextareaChange, handleTextareaKeyDown } from '../utils/textareaHelpers';
 
-const NoteInput = ({ onAddNote, onMatrixUnlock, onAddNoteWithPreview }) => {
+const NoteInput = ({ onAddNote, onMatrixUnlock }) => {
   const [content, setContent] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const { theme, unlockMatrixTheme } = useTheme();
@@ -33,40 +33,24 @@ const NoteInput = ({ onAddNote, onMatrixUnlock, onAddNoteWithPreview }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (content.trim()) {
-      // If AI formatting is enabled, show preview modal instead of auto-formatting
-      if (settings.aiFormattingEnabled && onAddNoteWithPreview) {
-        // Add save animation
-        if (textareaRef.current) {
-          textareaRef.current.classList.add('save-animation');
-          setTimeout(() => {
-            textareaRef.current?.classList.remove('save-animation');
-          }, 600);
-        }
-        
-        onAddNoteWithPreview(content);
-        setContent('');
-        textareaRef.current?.blur();
-        setIsFocused(false);
-      } else {
-        // Apply auto-sorting if enabled, then save directly
-        let formattedContent = content;
-        if (settings.autoSortingEnabled) {
-          formattedContent = formatText(content);
-        }
-        
-        // Add save animation
-        if (textareaRef.current) {
-          textareaRef.current.classList.add('save-animation');
-          setTimeout(() => {
-            textareaRef.current?.classList.remove('save-animation');
-          }, 600);
-        }
-        
-        onAddNote(formattedContent);
-        setContent('');
-        textareaRef.current?.blur();
-        setIsFocused(false);
+      // Apply auto-sorting if enabled, then save directly
+      let formattedContent = content;
+      if (settings.autoSortingEnabled) {
+        formattedContent = formatText(content);
       }
+      
+      // Add save animation
+      if (textareaRef.current) {
+        textareaRef.current.classList.add('save-animation');
+        setTimeout(() => {
+          textareaRef.current?.classList.remove('save-animation');
+        }, 600);
+      }
+      
+      onAddNote(formattedContent);
+      setContent('');
+      textareaRef.current?.blur();
+      setIsFocused(false);
     }
   };
 

@@ -53,7 +53,7 @@ const DEFAULT_SETTINGS = {
   autoSortingEnabled: false,
   showMoreByDefault: false,
   showHeaderButtons: true,
-  aiFormattingEnabled: true
+  flowFormattingEnabled: true
 };
 
 export const useSettings = () => {
@@ -99,7 +99,7 @@ export const SettingsProvider = ({ children }) => {
         autoSortingEnabled: settings.autoSortingEnabled,
         showMoreByDefault: settings.showMoreByDefault,
         showHeaderButtons: settings.showHeaderButtons,
-        aiFormattingEnabled: settings.aiFormattingEnabled
+        flowFormattingEnabled: settings.flowFormattingEnabled
       }));
       localStorage.setItem('stream-onboarding-completed', settings.onboardingCompleted.toString());
     } catch (error) {
@@ -291,17 +291,17 @@ export const SettingsProvider = ({ children }) => {
   };
 
   const formatNote = useCallback(async (text) => {
-    if (!settings.aiFormattingEnabled || !isAIConfigured()) {
+    if (!settings.flowFormattingEnabled || !isAIConfigured()) {
       return text;
     }
     try {
       const formattedText = await formatNoteWithAI(text, settings);
       return formattedText;
     } catch (error) {
-      console.error("Failed to format text with AI:", error);
+      console.error("Failed to format text with flow formatting:", error);
       return text; // Fallback to original text on error
     }
-  }, [settings.aiFormattingEnabled]);
+  }, [settings.flowFormattingEnabled]);
 
   const removeListFormatting = (text) => {
     return text
