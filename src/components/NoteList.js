@@ -684,7 +684,7 @@ const NoteList = ({
             </div>
           </article>
         );
-  }, [theme, settings, formatText, getTimeInfo, editingNoteId, expandedNotes, openMenuId, folderMenuOpenForNoteId, menuPosition, shouldTruncateNote, getTruncatedContent, renderFormattedText, handleMenuToggle, handleNoteClick, handleNoteKeyDown, handleContentChange, handleEditingFinished, toggleNoteExpansion, onTogglePin, onSaveNote, onUpdateNoteContent, onUpdateNoteDeleteTimer, onUpdateNoteFolder, onTransformToSAMO, onDeleteNote, setOpenMenuId, setFolderMenuOpenForNoteId, setFullscreenNoteId]);
+  }, [theme, settings, formatText, formatNote, getTimeInfo, editingNoteId, expandedNotes, openMenuId, folderMenuOpenForNoteId, menuPosition, shouldTruncateNote, getTruncatedContent, renderFormattedText, handleMenuToggle, handleNoteClick, handleNoteKeyDown, handleContentChange, handleEditingFinished, toggleNoteExpansion, onTogglePin, onSaveNote, onUpdateNoteContent, onUpdateNoteDeleteTimer, onUpdateNoteFolder, onTransformToSAMO, onDeleteNote, setOpenMenuId, setFolderMenuOpenForNoteId, setFullscreenNoteId]);
 
   if (notes.length === 0) {
     return (

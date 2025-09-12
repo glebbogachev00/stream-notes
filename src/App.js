@@ -12,8 +12,8 @@ import Onboarding from './components/Onboarding';
 import Toast from './components/Toast';
 import FolderFilter from './components/FolderFilter';
 import HeaderActionsDropdown from './components/HeaderActionsDropdown';
+import StreamAssistant from './components/StreamAssistant';
 import { submitFeedback } from './utils/feedback';
-import { isAIConfigured } from './services/aiService';
 
 // Lazy load non-critical components with preloading hints
 const SettingsModal = lazy(() => import(/* webpackChunkName: "settings" */ './components/SettingsModal'));
@@ -82,8 +82,8 @@ const AppContent = memo(() => {
       showToast(error.message || "Couldn't send feedback. Try again?");
     }
   };
-  const { theme } = useTheme();
-  const { settings } = useSettings();
+  const { theme, switchTheme, themes } = useTheme();
+  const { settings, updateSettings } = useSettings();
   const { getSyncStatus } = useStorage();
   const { toasts, showToast, hideToast } = useToast();
   const {
@@ -106,9 +106,7 @@ const AppContent = memo(() => {
     updateNoteProperties,
     toggleNotePin,
     updateGlobalDeleteTimer,
-    updateNoteFolder,
-    saveNoteWithPreview,
-    saveBothVersions
+    updateNoteFolder
   } = useNotes(settings.deleteTimer, showToast, settings.personalityEnabled, handleEdgeUnlock);
 
   // Track previous deleteTimer to detect changes
@@ -432,6 +430,26 @@ const AppContent = memo(() => {
       <Suspense fallback={null}>
         <BackToTop />
       </Suspense>
+
+      {/* Stream AI Assistant */}
+      <StreamAssistant
+        noteActions={{
+          getNotes: () => notes,
+          getSavedNotes: () => savedNotes,
+          addNote,
+          saveNote,
+          deleteNote,
+          updateNoteContent,
+          updateNoteFolder
+        }}
+        settingsActions={{
+          getSettings: () => settings,
+          getAvailableThemes: () => themes,
+          switchTheme: switchTheme,
+          updateSettings: updateSettings
+        }}
+        showToast={showToast}
+      />
 
     </div>
   );

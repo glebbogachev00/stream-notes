@@ -9,7 +9,7 @@ const NoteInput = ({ onAddNote, onMatrixUnlock }) => {
   const [content, setContent] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const { theme, unlockMatrixTheme } = useTheme();
-  const { settings, formatText, formatNote } = useSettings();
+  const { settings, formatText } = useSettings();
   const [placeholder, setPlaceholder] = useState(() => 
     getRotatingMessage(INPUT_PLACEHOLDER_MESSAGES, settings?.personalityEnabled ?? true)
   );
