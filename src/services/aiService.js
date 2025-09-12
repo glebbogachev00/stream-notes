@@ -73,19 +73,30 @@ CRITICAL: Return ONLY the corrected/formatted text. NO comments, explanations, o
 
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(`Groq API error: ${errorData.error?.message || 'Unknown error'}`);
+      const errorMessage = errorData.error?.message || 'Unknown error';
+      
+      // Handle different error types with personality
+      if (response.status === 429 || errorMessage.includes('rate limit') || errorMessage.includes('quota')) {
+        throw new Error("stream's flow is running a bit dry right now - try again in a moment!");
+      } else if (response.status === 401 || errorMessage.includes('API key')) {
+        throw new Error("stream can't access the flow formatting service - check your settings");
+      } else if (response.status >= 500) {
+        throw new Error("stream's formatting service took a coffee break - try again soon");
+      } else {
+        throw new Error(`stream hit a snag while formatting: ${errorMessage}`);
+      }
     }
 
     const data = await response.json();
     const formattedContent = data.choices?.[0]?.message?.content;
     
     if (!formattedContent) {
-      throw new Error('No formatted content received from Groq');
+      throw new Error('stream got distracted and forgot to format your note - try again!');
     }
 
     return formattedContent.trim();
   } catch (error) {
-    console.error('Error formatting note with Groq:', error);
+    console.error('Error formatting note with flow formatting:', error);
     throw error;
   }
 };
