@@ -313,6 +313,63 @@ export const useNotes = (deleteTimer = '24h', onToast = null, personalityEnabled
     saveNotes(updatedNotes);
   }, [notes, saveNotes]);
 
+  // Preview functionality
+  const saveNoteWithPreview = useCallback((id, formattedContent = null) => {
+    const noteToSave = notes.find(note => note.id === id);
+    if (!noteToSave) return;
+
+    const contentToSave = formattedContent || noteToSave.content;
+    
+    const savedNote = {
+      ...noteToSave,
+      content: contentToSave,
+      savedAt: Date.now(),
+      isFormatted: !!formattedContent
+    };
+
+    const updatedSavedNotes = [savedNote, ...savedNotes];
+    const updatedNotes = notes.filter(note => note.id !== id);
+    
+    saveNotes(updatedNotes);
+    saveSavedNotes(updatedSavedNotes);
+    
+    if (onToast) {
+      const message = formattedContent ? "Saved formatted note!" : getRandomMessage(SAVE_NOTE_MESSAGES, personalityEnabled);
+      onToast(message);
+    }
+  }, [notes, savedNotes, saveNotes, saveSavedNotes, onToast, personalityEnabled]);
+
+  const saveBothVersions = useCallback((id, formattedContent) => {
+    const noteToSave = notes.find(note => note.id === id);
+    if (!noteToSave) return;
+
+    // Save original
+    const originalSaved = {
+      ...noteToSave,
+      savedAt: Date.now(),
+      isFormatted: false
+    };
+
+    // Save formatted
+    const formattedSaved = {
+      ...noteToSave,
+      id: `${noteToSave.id}-formatted`,
+      content: formattedContent,
+      savedAt: Date.now(),
+      isFormatted: true
+    };
+
+    const updatedSavedNotes = [formattedSaved, originalSaved, ...savedNotes];
+    const updatedNotes = notes.filter(note => note.id !== id);
+    
+    saveNotes(updatedNotes);
+    saveSavedNotes(updatedSavedNotes);
+    
+    if (onToast) {
+      onToast("Saved both versions!");
+    }
+  }, [notes, savedNotes, saveNotes, saveSavedNotes, onToast]);
+
   return {
     notes,
     savedNotes,
@@ -334,6 +391,8 @@ export const useNotes = (deleteTimer = '24h', onToast = null, personalityEnabled
     toggleNotePin,
     updateGlobalDeleteTimer,
     updateNoteFolder,
-    refreshNotes: loadNotes
+    refreshNotes: loadNotes,
+    saveNoteWithPreview,
+    saveBothVersions
   };
 };

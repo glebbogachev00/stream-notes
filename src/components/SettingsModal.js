@@ -448,6 +448,20 @@ const SettingsModal = ({ isOpen, onClose }) => {
             )}
           </CollapsibleSection>
 
+          {/* AI Formatting */}
+          <CollapsibleSection title="ai formatting">
+            <div>
+              <button
+                onClick={() => updateSettings({ aiFormattingEnabled: !settings.aiFormattingEnabled })}
+                className={`w-full text-left pb-3 border-b transition-all duration-200 ${theme.border} ${theme.text} hover:${theme.textSecondary.replace('text-', 'hover:text-')}`}
+              >
+                <div className="dynamic-text-xs font-light">
+                  {settings.aiFormattingEnabled ? 'disable ai note formatting' : 'enable ai note formatting'}
+                </div>
+              </button>
+            </div>
+          </CollapsibleSection>
+
           {/* Header Buttons */}
           <CollapsibleSection title="header buttons">
             <div>

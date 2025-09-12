@@ -13,6 +13,7 @@ import Toast from './components/Toast';
 import FolderFilter from './components/FolderFilter';
 import HeaderActionsDropdown from './components/HeaderActionsDropdown';
 import { submitFeedback } from './utils/feedback';
+import { isGeminiConfigured } from './services/geminiService';
 
 // Lazy load non-critical components with preloading hints
 const SettingsModal = lazy(() => import(/* webpackChunkName: "settings" */ './components/SettingsModal'));
@@ -23,6 +24,7 @@ const MatrixUnlockNotification = lazy(() => import(/* webpackChunkName: "notific
 const EdgeUnlockNotification = lazy(() => import(/* webpackChunkName: "notifications" */ './components/EdgeUnlockNotification'));
 const FeedbackModal = lazy(() => import(/* webpackChunkName: "feedback" */ './components/FeedbackModal'));
 const BackToTop = lazy(() => import(/* webpackChunkName: "utilities" */ './components/BackToTop'));
+const PreviewModal = lazy(() => import(/* webpackChunkName: "preview" */ './components/PreviewModal'));
 
 const AppContent = memo(() => {
   const [activeTab, setActiveTab] = useState('active');
@@ -42,6 +44,11 @@ const AppContent = memo(() => {
   const [activeFolder, setActiveFolder] = useState('all');
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [showInstallPrompt, setShowInstallPrompt] = useState(false);
+  const [previewModal, setPreviewModal] = useState({
+    isOpen: false,
+    noteId: null,
+    noteContent: ''
+  });
 
   const cycleLogo = () => {
     const styles = ['originalText', 'graffiti', 'raindrop'];
@@ -105,7 +112,9 @@ const AppContent = memo(() => {
     updateNoteProperties,
     toggleNotePin,
     updateGlobalDeleteTimer,
-    updateNoteFolder
+    updateNoteFolder,
+    saveNoteWithPreview,
+    saveBothVersions
   } = useNotes(settings.deleteTimer, showToast, settings.personalityEnabled, handleEdgeUnlock);
 
   // Track previous deleteTimer to detect changes
@@ -167,6 +176,38 @@ const AppContent = memo(() => {
     const sizes = { lg: 18, xl: 20, xxl: 22 };
     return sizes[fontSize] || 20;
   }, []);
+
+  // Preview modal handlers
+  const handleSaveWithPreview = (noteId, noteContent) => {
+    if (isGeminiConfigured()) {
+      setPreviewModal({
+        isOpen: true,
+        noteId,
+        noteContent
+      });
+    } else {
+      // Fallback to regular save if Gemini not configured
+      saveNote(noteId);
+    }
+  };
+
+  const handlePreviewSaveOriginal = () => {
+    if (previewModal.noteId) {
+      saveNote(previewModal.noteId);
+    }
+  };
+
+  const handlePreviewSaveFormatted = (formattedContent) => {
+    if (previewModal.noteId) {
+      saveNoteWithPreview(previewModal.noteId, formattedContent);
+    }
+  };
+
+  const handlePreviewSaveBoth = (formattedContent) => {
+    if (previewModal.noteId) {
+      saveBothVersions(previewModal.noteId, formattedContent);
+    }
+  };
 
   const filteredNotes = useMemo(() => {
     if (!notes.length) return [];
@@ -325,7 +366,15 @@ const AppContent = memo(() => {
               <NoteList
                 notes={filteredNotes}
                 onDeleteNote={deleteNote}
-                onSaveNote={saveNote}
+                onSaveNote={settings.aiFormattingEnabled && isGeminiConfigured() ? 
+                  (noteId) => {
+                    const note = filteredNotes.find(n => n.id === noteId);
+                    if (note) {
+                      handleSaveWithPreview(noteId, note.content);
+                    }
+                  } : 
+                  saveNote
+                }
                 onTransformToSAMO={handleTransformToArt}
                 getTimeInfo={getTimeInfo}
                 editingNoteId={editingNoteId}
@@ -426,6 +475,17 @@ const AppContent = memo(() => {
       
       <Suspense fallback={null}>
         <BackToTop />
+      </Suspense>
+
+      <Suspense fallback={null}>
+        <PreviewModal
+          isOpen={previewModal.isOpen}
+          onClose={() => setPreviewModal({ isOpen: false, noteId: null, noteContent: '' })}
+          noteContent={previewModal.noteContent}
+          onSaveOriginal={handlePreviewSaveOriginal}
+          onSaveFormatted={handlePreviewSaveFormatted}
+          onSaveBoth={handlePreviewSaveBoth}
+        />
       </Suspense>
     </div>
   );
