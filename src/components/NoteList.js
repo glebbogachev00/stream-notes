@@ -19,10 +19,11 @@ const NoteList = ({
   onUpdateNoteDeleteTimer,
   onUpdateNoteProperties,
   onTogglePin,
-  onUpdateNoteFolder
+  onUpdateNoteFolder,
+  onSaveWithPreview // Add this prop for the preview modal
 }) => {
   const { theme } = useTheme();
-  const { settings, formatText } = useSettings();
+  const { settings, formatText, formatNote } = useSettings();
   const editingTextareaRef = useRef(null);
   const deleteTimerControlRef = useRef(null);
   const [expandedNotes, setExpandedNotes] = useState(new Set());
@@ -127,16 +128,21 @@ const NoteList = ({
     });
   }, [onDeleteNote, onUpdateNoteContent]);
 
-  const handleEditingFinished = useCallback((noteId, content, event) => {
+  const handleEditingFinished = useCallback(async (noteId, content, event) => {
     if (event && event.relatedTarget && (
       (deleteTimerControlRef.current && deleteTimerControlRef.current.contains(event.relatedTarget)) ||
       event.relatedTarget.closest('.editing-controls')
     )) {
       return; // Don't close if focus moved to controls
     }
-    // Apply auto-formatting if enabled
-    const formattedContent = settings.autoSortingEnabled ? formatText(content) : content;
-    onUpdateNoteContent(noteId, formattedContent);
+    
+    // Apply auto-sorting if enabled (immediate formatting)
+    let processedContent = content;
+    if (settings.autoSortingEnabled) {
+      processedContent = formatText(content);
+    }
+    
+    onUpdateNoteContent(noteId, processedContent);
     onSetEditingNoteId(null);
   }, [settings.autoSortingEnabled, formatText, onUpdateNoteContent, onSetEditingNoteId]);
 

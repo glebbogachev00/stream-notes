@@ -13,7 +13,7 @@ import Toast from './components/Toast';
 import FolderFilter from './components/FolderFilter';
 import HeaderActionsDropdown from './components/HeaderActionsDropdown';
 import { submitFeedback } from './utils/feedback';
-import { isGeminiConfigured } from './services/geminiService';
+import { isAIConfigured } from './services/aiService';
 
 // Lazy load non-critical components with preloading hints
 const SettingsModal = lazy(() => import(/* webpackChunkName: "settings" */ './components/SettingsModal'));
@@ -179,33 +179,58 @@ const AppContent = memo(() => {
 
   // Preview modal handlers
   const handleSaveWithPreview = (noteId, noteContent) => {
-    if (isGeminiConfigured()) {
+    if (isAIConfigured()) {
       setPreviewModal({
         isOpen: true,
         noteId,
         noteContent
       });
     } else {
-      // Fallback to regular save if Gemini not configured
+      // Fallback to regular save if AI not configured
       saveNote(noteId);
     }
   };
 
   const handlePreviewSaveOriginal = () => {
     if (previewModal.noteId) {
-      saveNote(previewModal.noteId);
+      // Check if this is a new note (temporary ID) or existing note
+      const isNewNote = !filteredNotes.find(n => n.id === previewModal.noteId);
+      if (isNewNote) {
+        // Create new note with original content
+        addNote(previewModal.noteContent);
+      } else {
+        // Save existing note
+        saveNote(previewModal.noteId);
+      }
     }
   };
 
   const handlePreviewSaveFormatted = (formattedContent) => {
     if (previewModal.noteId) {
-      saveNoteWithPreview(previewModal.noteId, formattedContent);
+      // Check if this is a new note (temporary ID) or existing note
+      const isNewNote = !filteredNotes.find(n => n.id === previewModal.noteId);
+      if (isNewNote) {
+        // Create new note with formatted content
+        addNote(formattedContent);
+      } else {
+        // Update existing note
+        saveNoteWithPreview(previewModal.noteId, formattedContent);
+      }
     }
   };
 
   const handlePreviewSaveBoth = (formattedContent) => {
     if (previewModal.noteId) {
-      saveBothVersions(previewModal.noteId, formattedContent);
+      // Check if this is a new note (temporary ID) or existing note
+      const isNewNote = !filteredNotes.find(n => n.id === previewModal.noteId);
+      if (isNewNote) {
+        // Create both notes
+        addNote(previewModal.noteContent); // Original
+        addNote(formattedContent);         // Formatted
+      } else {
+        // Save both versions for existing note
+        saveBothVersions(previewModal.noteId, formattedContent);
+      }
     }
   };
 
@@ -362,19 +387,28 @@ const AppContent = memo(() => {
         <main>
           {activeTab === 'active' && (
             <div className="space-y-8">
-              <NoteInput onAddNote={addNote} onMatrixUnlock={handleMatrixUnlock} />
+              <NoteInput 
+                onAddNote={addNote} 
+                onMatrixUnlock={handleMatrixUnlock}
+                onAddNoteWithPreview={(content) => {
+                  // Create a temporary note ID for the preview
+                  const tempNoteId = Date.now().toString();
+                  handleSaveWithPreview(tempNoteId, content);
+                }}
+              />
               <NoteList
                 notes={filteredNotes}
                 onDeleteNote={deleteNote}
-                onSaveNote={settings.aiFormattingEnabled && isGeminiConfigured() ? 
-                  (noteId) => {
+                onSaveNote={(noteId) => {
+                  if (settings.aiFormattingEnabled && isAIConfigured()) {
                     const note = filteredNotes.find(n => n.id === noteId);
                     if (note) {
                       handleSaveWithPreview(noteId, note.content);
                     }
-                  } : 
-                  saveNote
-                }
+                  } else {
+                    saveNote(noteId);
+                  }
+                }}
                 onTransformToSAMO={handleTransformToArt}
                 getTimeInfo={getTimeInfo}
                 editingNoteId={editingNoteId}

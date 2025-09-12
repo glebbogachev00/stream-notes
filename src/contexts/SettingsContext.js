@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { formatNoteWithAI, isAIConfigured } from '../services/aiService';
 
 const SettingsContext = createContext();
 
@@ -289,6 +290,19 @@ export const SettingsProvider = ({ children }) => {
     return text;
   };
 
+  const formatNote = useCallback(async (text) => {
+    if (!settings.aiFormattingEnabled || !isAIConfigured()) {
+      return text;
+    }
+    try {
+      const formattedText = await formatNoteWithAI(text, settings);
+      return formattedText;
+    } catch (error) {
+      console.error("Failed to format text with AI:", error);
+      return text; // Fallback to original text on error
+    }
+  }, [settings.aiFormattingEnabled]);
+
   const removeListFormatting = (text) => {
     return text
       .split('\n')
@@ -333,6 +347,7 @@ export const SettingsProvider = ({ children }) => {
       resetSettings,
       togglePersonality,
       formatText,
+      formatNote,
       removeListFormatting,
       shouldOrganizeText,
       ORGANIZATION_STYLES,
