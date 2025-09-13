@@ -3,47 +3,39 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useSettings } from '../contexts/SettingsContext';
 import { parseCommand, CommandExecutor } from '../services/commandService';
 
-// Suggested Action Component - Notion-style mobile optimized
+// Suggested Action Component - Mobile optimized
 const SuggestedAction = ({ icon, title, description, onClick, theme, disabled = false }) => (
   <button
     onClick={onClick}
     disabled={disabled}
     className={`
-      w-full text-left p-5 sm:p-4 rounded-2xl transition-all duration-300 ease-out
-      touch-manipulation min-h-[72px] sm:min-h-[auto]
-      transform-gpu will-change-transform
+      w-full text-left p-4 sm:p-3 rounded-xl border transition-all duration-200 
+      touch-manipulation min-h-[60px] sm:min-h-[auto]
       ${disabled 
         ? `${theme.borderSecondary} ${theme.textTertiary} cursor-not-allowed opacity-50`
-        : `${theme.inputBg} hover:scale-[1.02] active:scale-[0.98] hover:shadow-xl shadow-lg border border-transparent hover:border-opacity-20 ${theme.border}`
+        : `${theme.border} ${theme.buttonHover} hover:border-opacity-60 active:scale-[0.98] hover:shadow-sm`
       }
     `}
-    style={{ 
-      backfaceVisibility: 'hidden',
-      WebkitBackfaceVisibility: 'hidden'
-    }}
   >
-    <div className="flex items-center gap-4 sm:gap-3">
+    <div className="flex items-center gap-3 sm:gap-3">
       <div className={`
-        flex-shrink-0 w-10 h-10 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center
-        transition-all duration-200
-        ${disabled 
-          ? `${theme.borderSecondary} ${theme.textTertiary}` 
-          : `bg-gradient-to-br from-blue-500 to-purple-600 text-white shadow-sm`
-        }
+        flex-shrink-0 w-8 h-8 sm:w-6 sm:h-6 rounded-lg flex items-center justify-center
+        ${theme.inputBg} ${theme.textTertiary}
+        ${disabled ? '' : 'group-hover:' + theme.text.replace('text-', '')}
       `}>
         {typeof icon === 'string' ? (
-          <span className="text-xl sm:text-lg font-medium">{icon}</span>
+          <span className="text-lg sm:text-base">{icon}</span>
         ) : (
-          <div className="w-5 h-5 sm:w-4 sm:h-4 flex items-center justify-center">
+          <div className="w-4 h-4 sm:w-4 sm:h-4 flex items-center justify-center">
             {icon}
           </div>
         )}
       </div>
       <div className="flex-1 min-w-0">
-        <h4 className={`text-lg sm:text-base font-semibold ${theme.text} mb-1 leading-tight`}>
+        <h4 className={`text-base sm:text-sm font-medium ${theme.text} mb-0.5 sm:mb-1`}>
           {title}
         </h4>
-        <p className={`text-base sm:text-sm ${theme.textSecondary} font-normal leading-relaxed opacity-80`}>
+        <p className={`text-sm sm:text-xs ${theme.textTertiary} font-light leading-relaxed`}>
           {description}
         </p>
       </div>
@@ -336,7 +328,15 @@ const StreamAssistant = ({
           {/* Modal - Full screen on mobile, centered on desktop */}
           <div 
             data-modal="stream-assistant"
-            className={`fixed inset-0 sm:relative sm:top-1/2 sm:left-1/2 sm:transform sm:-translate-x-1/2 sm:-translate-y-1/2 ${theme.bg} ${theme.border} w-full h-full sm:w-[32rem] sm:h-[36rem] sm:max-h-[85vh] sm:border sm:rounded-xl shadow-2xl flex flex-col`}>
+            className={`
+              fixed inset-0 sm:relative sm:top-1/2 sm:left-1/2 sm:transform sm:-translate-x-1/2 sm:-translate-y-1/2
+              ${theme.bg} ${theme.border} 
+              w-full h-full sm:w-[32rem] sm:h-[36rem] sm:max-h-[85vh]
+              sm:border sm:rounded-xl shadow-2xl
+              flex flex-col
+              animate-in duration-200 ease-out
+              slide-in-from-bottom-4 sm:slide-in-from-bottom-0 sm:fade-in sm:zoom-in-95
+            `}>
             
             {/* Header - Mobile optimized */}
             <div className={`
@@ -382,51 +382,52 @@ const StreamAssistant = ({
                   </button>
                 )}
                 <button
-                onClick={handleToggle}
-                className={`
-                  p-2 -m-2 rounded-lg 
-                  ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} 
-                  hover:${theme.inputBg} 
-                  transition-all duration-200
-                  touch-manipulation
-                  min-h-[44px] min-w-[44px] flex items-center justify-center
-                `}
-                aria-label="Close"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+                  onClick={handleToggle}
+                  className={`
+                    p-2 -m-2 rounded-lg 
+                    ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} 
+                    hover:${theme.inputBg} 
+                    transition-all duration-200
+                    touch-manipulation
+                    min-h-[44px] min-w-[44px] flex items-center justify-center
+                  `}
+                  aria-label="Close"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
             </div>
 
             {/* Content */}
             <div className="flex-1 overflow-y-auto">
               {conversation.length === 1 && conversation[0].type === 'assistant' ? (
-                /* Welcome State - Notion-style mobile optimized */
-                <div className="p-6 sm:p-8 space-y-8 sm:space-y-10">
+                /* Welcome State - Mobile optimized */
+                <div className="p-4 sm:p-6 space-y-6 sm:space-y-8">
                   {/* Avatar and Greeting */}
-                  <div className="text-center space-y-4">
-                    <div className={`w-16 h-16 mx-auto bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-xl`}>
+                  <div className="flex items-start gap-4">
+                    <div className={`w-12 h-12 ${theme.inputBg} rounded-full flex items-center justify-center flex-shrink-0 shadow-sm`}>
                       <svg 
-                        className="w-8 h-10 text-white"
+                        className={`w-6 h-7 ${theme.text}`}
                         fill="currentColor" 
                         viewBox="0 0 24 24"
                       >
                         <path d="M12 2c-4 0-8 6-8 10 0 4.4 3.6 8 8 8s8-3.6 8-8c0-4-4-10-8-10z"/>
                       </svg>
                     </div>
-                    <div className="space-y-2">
-                      <h3 className={`text-2xl sm:text-xl font-bold ${theme.text} leading-tight select-none`}>
+                    <div className="flex-1 mt-1">
+                      <h3 className={`text-xl sm:text-lg font-semibold ${theme.text} mb-2 leading-tight select-none`}>
                         How can I help you today?
                       </h3>
-                      <p className={`text-lg sm:text-base ${theme.textSecondary} font-normal leading-relaxed select-none max-w-sm mx-auto`}>
+                      <p className={`text-base sm:text-sm ${theme.textTertiary} font-normal leading-relaxed select-none`}>
                         I can help you create, format, save, and organize your notes.
                       </p>
                     </div>
                   </div>
 
                   {/* Suggested Actions */}
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     <SuggestedAction
                       icon={
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -436,6 +437,7 @@ const StreamAssistant = ({
                       title="Create a note"
                       description="Write something new"
                       onClick={() => {
+                        setInput("create a note about ");
                         inputRef.current?.focus();
                       }}
                       theme={theme}
@@ -467,7 +469,7 @@ const StreamAssistant = ({
                       description="Move active notes to saved"
                       onClick={() => {
                         setInput("save all my notes");
-                        handleSubmit({ preventDefault: () => {} });
+                        inputRef.current?.focus();
                       }}
                       theme={theme}
                       disabled={buildContext().activeNotes === 0}
@@ -482,6 +484,7 @@ const StreamAssistant = ({
                       title="Change theme"
                       description="Switch to a different theme"
                       onClick={() => {
+                        setInput("change theme to ");
                         inputRef.current?.focus();
                       }}
                       theme={theme}
