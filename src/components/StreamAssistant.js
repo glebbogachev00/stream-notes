@@ -403,29 +403,8 @@ const StreamAssistant = ({
             {/* Content */}
             <div className="flex-1 overflow-y-auto">
               {conversation.length === 1 && conversation[0].type === 'assistant' ? (
-                /* Welcome State - Mobile optimized */
-                <div className="p-4 sm:p-6 space-y-6 sm:space-y-8">
-                  {/* Avatar and Greeting */}
-                  <div className="flex items-start gap-4">
-                    <div className={`w-12 h-12 ${theme.inputBg} rounded-full flex items-center justify-center flex-shrink-0 shadow-sm`}>
-                      <svg 
-                        className={`w-6 h-7 ${theme.text}`}
-                        fill="currentColor" 
-                        viewBox="0 0 24 24"
-                      >
-                        <path d="M12 2c-4 0-8 6-8 10 0 4.4 3.6 8 8 8s8-3.6 8-8c0-4-4-10-8-10z"/>
-                      </svg>
-                    </div>
-                    <div className="flex-1 mt-1">
-                      <h3 className={`text-xl sm:text-lg font-semibold ${theme.text} mb-2 leading-tight select-none`}>
-                        How can I help you today?
-                      </h3>
-                      <p className={`text-base sm:text-sm ${theme.textTertiary} font-normal leading-relaxed select-none`}>
-                        I can help you create, format, save, and organize your notes.
-                      </p>
-                    </div>
-                  </div>
-
+                /* Welcome State - Minimal */
+                <div className="p-4 sm:p-6">
                   {/* Suggested Actions */}
                   <div className="space-y-3">
                     <SuggestedAction
