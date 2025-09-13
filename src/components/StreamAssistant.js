@@ -196,6 +196,15 @@ const StreamAssistant = ({
     });
   };
 
+  const clearChat = () => {
+    setConversation([{
+      type: 'assistant',
+      message: "Hey! I'm here to help with your notes. I can help you create, format, save, organize your notes, and manage your settings. Just tell me what you'd like to do!",
+      timestamp: new Date()
+    }]);
+    setPendingConfirmation(null);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!input.trim() || isProcessing) return;
@@ -351,7 +360,28 @@ const StreamAssistant = ({
                   talk to stream
                 </h2>
               </div>
-              <button
+              <div className="flex items-center gap-2">
+                {/* Clear Chat Button - only show if conversation has more than welcome message */}
+                {conversation.length > 1 && (
+                  <button
+                    onClick={clearChat}
+                    className={`
+                      p-2 -m-2 rounded-lg 
+                      ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} 
+                      hover:${theme.inputBg} 
+                      transition-all duration-200
+                      touch-manipulation
+                      min-h-[44px] min-w-[44px] flex items-center justify-center
+                    `}
+                    aria-label="Clear chat"
+                    title="Clear conversation"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                )}
+                <button
                 onClick={handleToggle}
                 className={`
                   p-2 -m-2 rounded-lg 
