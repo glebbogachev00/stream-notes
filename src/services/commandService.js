@@ -27,6 +27,9 @@ PERSONALITY & VOICE:
 - Be concise but warm - think minimalist helpfulness
 - Sometimes use the water droplet emoji (💧) as your signature
 - When things go well: "flowing nicely!" or "that's the stream way!"
+- Can engage in light conversation: jokes, greetings, casual chat
+- Keep conversations note-focused but be personable and fun
+- For jokes, use water/flow themes when possible
 
 AVAILABLE ACTIONS:
 - CREATE_NOTE: Create a new note (parameters: [content])
@@ -35,11 +38,13 @@ AVAILABLE ACTIONS:
 - DELETE_LATEST: Delete the most recent note
 - SAVE_ALL: Save all active notes to saved notes
 - SAVE_LATEST: Save the most recent note
+- CREATE_FOLDER: Create a new folder (parameters: [folderName])
 - MOVE_TO_FOLDER: Move latest note to folder (parameters: [folderName])
 - CHANGE_THEME: Switch app theme (parameters: [themeName])
 - ENABLE_SETTING: Enable a setting (parameters: [settingName])
 - DISABLE_SETTING: Disable a setting (parameters: [settingName])
 - TOGGLE_SETTING: Toggle a setting (parameters: [settingName])
+- MULTI_COMMAND: Execute multiple commands in sequence (commands: [array of command objects])
 - HELP: Show available commands
 - CHAT: General conversation/questions
 
@@ -68,11 +73,32 @@ RESPONSE GUIDELINES:
 - Be encouraging: "let's get your notes flowing!" 
 
 RESPONSE FORMAT - RETURN ONLY VALID JSON (no extra text):
+
+For SINGLE commands:
 {
   "type": "ACTION_TYPE",
   "parameters": ["param1", "param2"],
   "confidence": 0.9,
   "naturalResponse": "hey! I can help you with that. want me to go ahead?",
+  "needsConfirmation": false
+}
+
+For MULTIPLE commands (when user asks for several things):
+{
+  "type": "MULTI_COMMAND",
+  "commands": [
+    {
+      "type": "ENABLE_SETTING",
+      "parameters": ["foldersEnabled"],
+      "confidence": 0.9
+    },
+    {
+      "type": "CREATE_FOLDER", 
+      "parameters": ["test"],
+      "confidence": 0.9
+    }
+  ],
+  "naturalResponse": "got it! I'll enable folders and create that test folder for you. let's flow! 💧",
   "needsConfirmation": false
 }
 
@@ -82,14 +108,25 @@ CRITICAL RULES:
 1. Only use CREATE_NOTE when user explicitly says "create/write/add/make a note"
 2. For casual conversation, greetings, questions → use CHAT with stream personality
 3. For bulk operations (save all, format all, delete) → set needsConfirmation: true
-4. Always include naturalResponse in stream's voice - this is your main interaction!
+4. For folder creation → set needsConfirmation: false (quick action)
+5. For destructive actions (delete) → always set needsConfirmation: true
+6. Always include naturalResponse in stream's voice - this is your main interaction!
+7. If unsure about user intent, ask for clarification in naturalResponse
+8. For jokes/fun requests → use CHAT and be playful with water/stream themes
+9. Be conversational and personable while staying note-focused
 
 Examples:
 "create a note about coffee" → CREATE_NOTE, naturalResponse: "got it! creating a note about coffee 💧"
-"hey what's up" → CHAT, naturalResponse: "hey there! just here helping with your notes. what's flowing through your mind?"
-"can you help me" → CHAT, naturalResponse: "absolutely! I'm here to help with your notes. want to create something, format existing ones, or manage settings?"
-"save everything" → SAVE_ALL, naturalResponse: "this'll save all your active notes to your saved collection. want me to go ahead?", needsConfirmation: true
+"create a folder named work" → CREATE_FOLDER, naturalResponse: "got it! creating a 'work' folder for you 💧"
 "enable folders" → ENABLE_SETTING, naturalResponse: "nice! I'll enable folders so you can organize your notes. here we go!"
+"enable folders and add folder test" → MULTI_COMMAND with both commands, naturalResponse: "perfect! I'll enable folders and create that test folder for you 💧"
+"save all my notes and enable flow formatting" → MULTI_COMMAND, naturalResponse: "got it! I'll save everything and turn on flow formatting. want me to go ahead?", needsConfirmation: true
+"hey what's up" → CHAT, naturalResponse: "hey there! just here helping with your notes. what's flowing through your mind?"
+"how are you" → CHAT, naturalResponse: "flowing nicely! just here helping with your notes. how are your ideas streaming today? 💧"
+"tell me a joke" → CHAT, naturalResponse: "why did the note go to therapy? because it had too many issues to stream through! 💧 want to create something?"
+"want to tell you a joke" → CHAT, naturalResponse: "absolutely! I'm all ears. let it flow! 💧"
+"good morning" → CHAT, naturalResponse: "morning! hope your ideas are flowing fresh today. ready to capture some thoughts? 💧"
+"thanks" → CHAT, naturalResponse: "you're welcome! that's what I'm here for. keep those ideas flowing! 💧"
 "what can you do" → HELP, naturalResponse: "I can help you create notes, format them, save them, and manage your stream settings. what sounds good?"
 
 Remember: Your naturalResponse is the main user interaction - make it count with stream's personality!`;
@@ -127,6 +164,8 @@ Remember: Your naturalResponse is the main user interaction - make it count with
     try {
       // Clean the response to extract just the JSON part
       let cleanResponse = aiResponse.trim();
+      console.log('AI Raw Response:', aiResponse);
+      console.log('Cleaned Response:', cleanResponse);
       
       // If the response contains markdown code blocks, extract the JSON
       if (cleanResponse.includes('```json')) {
@@ -141,23 +180,57 @@ Remember: Your naturalResponse is the main user interaction - make it count with
         }
       }
       
-      // Try to find JSON object in the response
-      const jsonMatch = cleanResponse.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        cleanResponse = jsonMatch[0];
+      // Handle multiple JSON objects (take the first valid one)
+      const jsonObjects = cleanResponse.split('\n\n').filter(obj => obj.trim().startsWith('{'));
+      
+      let parsed = null;
+      for (const jsonObj of jsonObjects) {
+        try {
+          const trimmed = jsonObj.trim();
+          if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+            parsed = JSON.parse(trimmed);
+            break; // Use the first successfully parsed JSON
+          }
+        } catch (e) {
+          continue; // Try next JSON object
+        }
       }
       
-      const parsed = JSON.parse(cleanResponse);
-      return {
+      // If no valid JSON found from split, try original method
+      if (!parsed) {
+        const jsonMatch = cleanResponse.match(/\{[\s\S]*?\}/);
+        if (jsonMatch) {
+          parsed = JSON.parse(jsonMatch[0]);
+        } else {
+          throw new Error('No valid JSON found');
+        }
+      }
+      const result = {
         type: parsed.type || 'CHAT',
         originalInput: input,
         parameters: parsed.parameters || [],
+        commands: parsed.commands || [], // For MULTI_COMMAND
         confidence: parsed.confidence || 0.7,
         naturalResponse: parsed.naturalResponse || "I'll help you with that!",
         needsConfirmation: parsed.needsConfirmation || false
       };
+      console.log('Successfully parsed command:', result);
+      return result;
     } catch (jsonError) {
       console.warn('JSON parsing failed:', jsonError, 'Raw response:', aiResponse);
+      
+      // Check if the AI response itself looks like raw JSON that got returned
+      if (aiResponse.trim().startsWith('{') && aiResponse.trim().endsWith('}')) {
+        console.warn('AI returned raw JSON instead of executing command:', aiResponse);
+        return {
+          type: 'CHAT',
+          originalInput: input,
+          parameters: [],
+          confidence: 0.3,
+          naturalResponse: "hmm, I got a bit mixed up there! can you try asking me that again? I'm here to help your notes flow 💧",
+          needsConfirmation: false
+        };
+      }
       
       // Enhanced fallback - don't create notes from failed parsing
       return {
@@ -276,14 +349,85 @@ Remember: Your naturalResponse is the main user interaction - make it count with
     }
     
     // Conversational inputs (avoid saving as notes)
-    const conversationalKeywords = ['hi', 'hello', 'hey', 'thanks', 'thank you', 'good', 'great', 'awesome', 'cool', 'nice', 'how are', 'what\'s up', 'whats up'];
-    if (conversationalKeywords.some(keyword => lowerInput.includes(keyword))) {
+    const conversationalKeywords = [
+      'hi', 'hello', 'hey', 'thanks', 'thank you', 'good', 'great', 'awesome', 'cool', 'nice', 
+      'how are', 'what\'s up', 'whats up', 'morning', 'afternoon', 'evening', 'night',
+      'joke', 'funny', 'laugh', 'tell me', 'want to', 'lol', 'haha', 'hehe',
+      'bye', 'goodbye', 'see you', 'later', 'peace', 'ok', 'okay', 'alright'
+    ];
+    
+    // Special handling for jokes
+    if (lowerInput.includes('joke') || lowerInput.includes('funny')) {
+      const jokes = [
+        "why did the note cross the road? to get to the other side of the page! 💧",
+        "what do you call a note that won't stop talking? a chatter-note! 💧", 
+        "why don't notes ever get lost? because they always know their place in the stream! 💧",
+        "what's a note's favorite type of music? flow-sic! 💧",
+        "why did the note break up with the pencil? it said their relationship wasn't flowing! 💧"
+      ];
+      const randomJoke = jokes[Math.floor(Math.random() * jokes.length)];
+      
       return {
         type: 'CHAT',
         originalInput: input,
         parameters: [],
-        confidence: 0.6,
-        naturalResponse: "hey! just here helping with your notes. what's flowing through your mind?",
+        confidence: 0.9,
+        naturalResponse: randomJoke + " want to create something while you're smiling?",
+        needsConfirmation: false
+      };
+    }
+    
+    if (conversationalKeywords.some(keyword => lowerInput.includes(keyword))) {
+      const responses = [
+        "hey! just here helping with your notes. what's flowing through your mind?",
+        "hello there! ready to let some ideas flow? 💧",
+        "hi! hope your thoughts are streaming nicely today. what can I help with?",
+        "hey! I'm here to keep your ideas flowing. what would you like to work on? 💧"
+      ];
+      const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+      
+      return {
+        type: 'CHAT',
+        originalInput: input,
+        parameters: [],
+        confidence: 0.7,
+        naturalResponse: randomResponse,
+        needsConfirmation: false
+      };
+    }
+    
+    // Folder creation commands
+    const folderCreationKeywords = ['create', 'make', 'add', 'new'];
+    const hasFolderKeyword = folderCreationKeywords.some(keyword => 
+      lowerInput.includes(keyword + ' folder') || 
+      lowerInput.includes(keyword + ' a folder')
+    );
+    
+    if (hasFolderKeyword) {
+      // Extract the folder name
+      let folderName = input;
+      folderCreationKeywords.forEach(keyword => {
+        folderName = folderName.replace(new RegExp(`${keyword}\\s+(a\\s+)?folder\\s+(called\\s+|named\\s+|with\\s+the\\s+name\\s+)?`, 'gi'), '');
+      });
+      
+      const cleanName = folderName.trim();
+      if (!cleanName) {
+        return {
+          type: 'CHAT',
+          originalInput: input,
+          parameters: [],
+          confidence: 0.7,
+          naturalResponse: "I'd love to create a folder for you! what would you like to name it?",
+          needsConfirmation: false
+        };
+      }
+      
+      return {
+        type: 'CREATE_FOLDER',
+        originalInput: input,
+        parameters: [cleanName],
+        confidence: 0.8,
+        naturalResponse: `got it! creating a '${cleanName}' folder for you 💧`,
         needsConfirmation: false
       };
     }
@@ -369,6 +513,9 @@ export class CommandExecutor {
         case 'SAVE_LATEST':
           return await this.saveLatestNote();
           
+        case 'CREATE_FOLDER':
+          return await this.createFolder(command.parameters[0]);
+          
         case 'MOVE_TO_FOLDER':
           return await this.moveToFolder(command.parameters[0]);
           
@@ -392,11 +539,14 @@ export class CommandExecutor {
           
         case 'CHAT':
           return this.handleChat(command);
+
+        case 'MULTI_COMMAND':
+          return await this.executeMultipleCommands(command);
           
         default:
           return {
             success: false,
-            message: command.naturalResponse || "I didn't understand that command. Try 'help' to see what I can do.",
+            message: command.naturalResponse || "hmm, not sure about that one! try saying 'help' to see what's flowing 💧",
             isChat: command.type === 'CHAT'
           };
       }
@@ -573,6 +723,49 @@ export class CommandExecutor {
     }
   }
 
+  async createFolder(folderName) {
+    if (!folderName || !folderName.trim()) {
+      return {
+        success: false,
+        message: "I need a folder name to create!"
+      };
+    }
+
+    const settings = this.settingsActions.getSettings();
+    if (!settings.foldersEnabled) {
+      return {
+        success: false,
+        message: "Folders are not enabled. Enable them in settings first!"
+      };
+    }
+
+    const cleanFolderName = folderName.trim();
+    const existingFolders = settings.folders || [];
+    
+    if (existingFolders.includes(cleanFolderName)) {
+      return {
+        success: true,
+        message: `The '${cleanFolderName}' folder already exists! ready to flow 💧`
+      };
+    }
+
+    try {
+      const updatedFolders = [...existingFolders, cleanFolderName];
+      await this.settingsActions.updateSettings({ folders: updatedFolders });
+      
+      return {
+        success: true,
+        message: `nice! created the '${cleanFolderName}' folder. it's ready for your notes to flow in 💧\n\nYou can now move notes to this folder by saying "move my latest note to ${cleanFolderName}"`
+      };
+    } catch (error) {
+      console.error('Folder creation error:', error);
+      return {
+        success: false,
+        message: "Failed to create folder. Please try again."
+      };
+    }
+  }
+
   async moveToFolder(folderName) {
     const notes = this.noteActions.getNotes();
     if (notes.length === 0) {
@@ -606,7 +799,7 @@ export class CommandExecutor {
     }
   }
 
-  async searchNotes(query) {
+  async searchNotes() {
     // This would require implementing search functionality
     return {
       success: false,
@@ -660,6 +853,7 @@ export class CommandExecutor {
 • Switch themes: "change to dark theme"
 
 **Organization:**
+• Create folders: "create a folder called work" or "make a new folder named personal"
 • Move notes: "put my latest note in the work folder"
 • Manage folders and themes
 
@@ -688,6 +882,78 @@ Try me out! 💧`;
       message: command.naturalResponse || "I'm here to help with your notes! What would you like to do?",
       isChat: true
     };
+  }
+
+  async executeMultipleCommands(multiCommand) {
+    if (!multiCommand.commands || multiCommand.commands.length === 0) {
+      return {
+        success: false,
+        message: "No commands found to execute."
+      };
+    }
+
+    const results = [];
+    let overallSuccess = true;
+    let hasConfirmationNeeded = false;
+
+    // Check if any command needs confirmation
+    for (const cmd of multiCommand.commands) {
+      if (cmd.type === 'SAVE_ALL' || cmd.type === 'FORMAT_ALL' || cmd.type === 'DELETE_LATEST') {
+        hasConfirmationNeeded = true;
+        break;
+      }
+    }
+
+    // If confirmation needed, return early
+    if (hasConfirmationNeeded || multiCommand.needsConfirmation) {
+      return {
+        success: true,
+        message: multiCommand.naturalResponse || "I'll execute those commands. Want me to go ahead?",
+        needsConfirmation: true,
+        commands: multiCommand.commands // Store for later execution
+      };
+    }
+
+    // Execute commands in sequence
+    for (const cmd of multiCommand.commands) {
+      try {
+        const cmdWithInput = {
+          ...cmd,
+          originalInput: multiCommand.originalInput
+        };
+        const result = await this.execute(cmdWithInput);
+        results.push(result);
+        
+        if (!result.success) {
+          overallSuccess = false;
+        }
+      } catch (error) {
+        console.error('Error executing command in sequence:', error);
+        results.push({
+          success: false,
+          message: `Failed to execute ${cmd.type}`
+        });
+        overallSuccess = false;
+      }
+    }
+
+    // Combine results into a summary
+    const successCount = results.filter(r => r.success).length;
+    const totalCount = results.length;
+
+    if (overallSuccess) {
+      return {
+        success: true,
+        message: multiCommand.naturalResponse || `great! completed all ${totalCount} tasks successfully 💧`,
+        isMulti: true
+      };
+    } else {
+      return {
+        success: false,
+        message: `completed ${successCount} of ${totalCount} tasks. ${multiCommand.naturalResponse || "some commands had issues, but I did what I could!"}`,
+        isMulti: true
+      };
+    }
   }
 
   // Settings mapping for natural language to setting keys
