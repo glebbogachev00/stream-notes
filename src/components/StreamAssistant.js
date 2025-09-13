@@ -406,7 +406,6 @@ const StreamAssistant = ({
                       title="Create a note"
                       description="Write something new"
                       onClick={() => {
-                        setInput("create a note about ");
                         inputRef.current?.focus();
                       }}
                       theme={theme}
@@ -438,7 +437,7 @@ const StreamAssistant = ({
                       description="Move active notes to saved"
                       onClick={() => {
                         setInput("save all my notes");
-                        inputRef.current?.focus();
+                        handleSubmit({ preventDefault: () => {} });
                       }}
                       theme={theme}
                       disabled={buildContext().activeNotes === 0}
@@ -453,7 +452,6 @@ const StreamAssistant = ({
                       title="Change theme"
                       description="Switch to a different theme"
                       onClick={() => {
-                        setInput("change theme to ");
                         inputRef.current?.focus();
                       }}
                       theme={theme}
