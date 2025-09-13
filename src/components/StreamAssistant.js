@@ -57,6 +57,7 @@ const StreamAssistant = ({
   const [pendingConfirmation, setPendingConfirmation] = useState(null);
   const inputRef = useRef(null);
   const conversationRef = useRef(null);
+  const scrollAnchorRef = useRef(null);
 
   // Create command executor instance
   const commandExecutor = new CommandExecutor(noteActions, settingsActions, showToast);
@@ -67,27 +68,67 @@ const StreamAssistant = ({
     }
   }, [isOpen]);
 
-  // Scroll to bottom helper function - simplified approach
+  // Scroll to bottom with multiple approaches
   const scrollToBottom = () => {
-    // Use a more direct approach - find the actual scrollable container
-    const modal = document.querySelector('[data-modal="stream-assistant"]');
-    if (!modal) return;
+    // Approach 1: scrollIntoView on anchor element
+    if (scrollAnchorRef.current) {
+      try {
+        scrollAnchorRef.current.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'end',
+          inline: 'nearest'
+        });
+        return;
+      } catch (e) {
+        console.log('scrollIntoView failed:', e);
+      }
+    }
     
-    const scrollContainer = modal.querySelector('[data-scroll="conversation"]');
-    if (!scrollContainer) return;
+    // Approach 2: Direct scroll on conversation container
+    if (conversationRef.current) {
+      try {
+        const container = conversationRef.current;
+        container.scrollTop = container.scrollHeight;
+        return;
+      } catch (e) {
+        console.log('Direct scroll failed:', e);
+      }
+    }
     
-    // Force scroll to absolute bottom
-    scrollContainer.scrollTop = scrollContainer.scrollHeight;
+    // Approach 3: Query selector approach
+    try {
+      const scrollContainer = document.querySelector('[data-scroll="conversation"]');
+      if (scrollContainer) {
+        scrollContainer.scrollTop = scrollContainer.scrollHeight;
+      }
+    } catch (e) {
+      console.log('Query selector scroll failed:', e);
+    }
   };
 
   useEffect(() => {
-    // Scroll when conversation updates or processing changes
+    // Set up MutationObserver to watch for conversation changes
+    if (!conversationRef.current) return;
+    
+    const observer = new MutationObserver(() => {
+      // Scroll when DOM changes are detected
+      setTimeout(scrollToBottom, 50);
+    });
+    
+    observer.observe(conversationRef.current, {
+      childList: true,
+      subtree: true,
+      characterData: true
+    });
+    
+    // Also trigger scroll on state changes
     if (conversation.length > 0) {
-      // Use multiple timeouts to ensure scroll happens after DOM updates
       setTimeout(scrollToBottom, 0);
       setTimeout(scrollToBottom, 100);
       setTimeout(scrollToBottom, 300);
     }
+    
+    return () => observer.disconnect();
   }, [conversation, isProcessing]);
 
   // Handle mobile keyboard opening/closing
@@ -135,13 +176,24 @@ const StreamAssistant = ({
   };
 
   const addToConversation = (type, message, isHelp = false, isChat = false) => {
-    setConversation(prev => [...prev, {
-      type,
-      message,
-      timestamp: new Date(),
-      isHelp,
-      isChat
-    }]);
+    setConversation(prev => {
+      const newConversation = [...prev, {
+        type,
+        message,
+        timestamp: new Date(),
+        isHelp,
+        isChat
+      }];
+      
+      // Schedule scroll after React finishes updating DOM
+      Promise.resolve().then(() => {
+        requestAnimationFrame(() => {
+          scrollToBottom();
+        });
+      });
+      
+      return newConversation;
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -491,6 +543,9 @@ const StreamAssistant = ({
                   
                   {/* Bottom padding for mobile keyboard */}
                   <div className="h-4 sm:h-2"></div>
+                  
+                  {/* Scroll anchor - invisible element for scrollIntoView */}
+                  <div ref={scrollAnchorRef} className="h-1"></div>
                 </div>
               )}
             </div>
