@@ -301,7 +301,7 @@ export const SettingsProvider = ({ children }) => {
       console.error("Failed to format text with flow formatting:", error);
       return text; // Fallback to original text on error
     }
-  }, [settings.flowFormattingEnabled, settings]);
+  }, [settings]);
 
   const removeListFormatting = (text) => {
     return text
