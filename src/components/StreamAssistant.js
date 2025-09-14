@@ -247,13 +247,12 @@ const StreamAssistant = ({
       const command = await parseCommand(userInput, context);
       console.log('Parsed command:', command);
       
-      // Always add AI's natural response first if it exists
-      if (command.naturalResponse) {
-        addToConversation('assistant', command.naturalResponse, false, command.type === 'CHAT');
-      }
-
       // Handle confirmation if needed
       if (command.needsConfirmation) {
+        // Add natural response for confirmation
+        if (command.naturalResponse) {
+          addToConversation('assistant', command.naturalResponse, false, command.type === 'CHAT');
+        }
         setPendingConfirmation(command);
         setIsProcessing(false);
         return;
@@ -262,8 +261,10 @@ const StreamAssistant = ({
       // Execute command
       const result = await commandExecutor.execute(command);
       
-      // Add execution result if it's different from the natural response
-      if (result.message && result.message !== command.naturalResponse) {
+      // Add either the natural response or execution result (not both)
+      if (command.naturalResponse) {
+        addToConversation('assistant', command.naturalResponse, false, command.type === 'CHAT');
+      } else if (result.message) {
         addToConversation('assistant', result.message, result.isHelp, result.isChat);
       }
       
