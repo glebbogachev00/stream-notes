@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback, lazy, Suspense, memo } from 'react';
+import { Analytics } from '@vercel/analytics/react';
 import { useNotes } from './hooks/useNotes';
 import { useToast } from './hooks/useToast';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
@@ -463,6 +464,7 @@ function App() {
       <ThemeProvider>
         <StorageProvider>
           <AppContent />
+          <Analytics />
         </StorageProvider>
       </ThemeProvider>
     </SettingsProvider>
