@@ -132,6 +132,39 @@ export const StorageProvider = ({ children }) => {
     };
   }, [settings.syncEnabled, settings.syncEndpoint, settings.syncKey, supabase, user?.id]);
 
+  useEffect(() => {
+    if (!storageAdapter || !storageAdapter.isSyncEnabled()) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const triggerSync = () => {
+      if (cancelled) return;
+      storageAdapter.syncNow().catch(() => {
+        // Errors already surfaced through status state
+      });
+    };
+
+    const handleVisibility = () => {
+      if (typeof document === 'undefined') {
+        return;
+      }
+      if (document.visibilityState === 'visible') {
+        triggerSync();
+      }
+    };
+
+    window.addEventListener('focus', triggerSync);
+    window.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      cancelled = true;
+      window.removeEventListener('focus', triggerSync);
+      window.removeEventListener('visibilitychange', handleVisibility);
+    };
+  }, [storageAdapter]);
+
   const isSyncSupported = () => {
     return storageAdapter.isSyncSupported();
   };
