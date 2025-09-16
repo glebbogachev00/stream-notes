@@ -97,12 +97,15 @@ export const useNotes = (deleteTimer = '24h', onToast = null, personalityEnabled
       content: sanitizedContent,
       createdAt: now,
       expiresAt: expiresAt,
-      folder: null,
+      // Assign current folder if not 'all'
+      folder: activeFolder !== 'all' ? activeFolder : null,
     };
+    
+    console.log('[DEBUG] addNote created with folder:', newNote.folder, 'activeFolder:', activeFolder);
     
     const updatedNotes = [newNote, ...notes];
     saveNotes(updatedNotes);
-  }, [notes, saveNotes, deleteTimer]);
+  }, [notes, saveNotes, deleteTimer, activeFolder]);
 
   const updateNoteContent = useCallback((id, newContent) => {
     const sanitizedContent = sanitizeNoteContent(newContent);
@@ -146,12 +149,24 @@ export const useNotes = (deleteTimer = '24h', onToast = null, personalityEnabled
     const noteToSave = notes.find(note => note.id === id);
     if (!noteToSave) return;
 
+    console.log('[DEBUG] saveNote called with:', { 
+      noteId: id, 
+      activeFolder, 
+      noteToSave: noteToSave,
+      noteFolder: noteToSave.folder 
+    });
+
+    const assignedFolder = noteToSave.folder || (activeFolder !== 'all' ? activeFolder : undefined);
+    console.log('[DEBUG] Assigned folder:', assignedFolder);
+
     const savedNote = {
       ...noteToSave,
       savedAt: Date.now(),
       // Assign current folder if not 'all' and note doesn't already have a folder
-      folder: noteToSave.folder || (activeFolder !== 'all' ? activeFolder : undefined)
+      folder: assignedFolder
     };
+
+    console.log('[DEBUG] Final savedNote:', savedNote);
 
     const updatedSavedNotes = [savedNote, ...savedNotes];
     const updatedNotes = notes.filter(note => note.id !== id);
