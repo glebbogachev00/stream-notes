@@ -96,6 +96,7 @@ export const useNotes = (deleteTimer = '24h', onToast = null, personalityEnabled
       id: Date.now().toString(),
       content: sanitizedContent,
       createdAt: now,
+      updatedAt: now,
       expiresAt: expiresAt,
       // Assign current folder if not 'all'
       folder: activeFolder !== 'all' ? activeFolder : null,
@@ -107,22 +108,29 @@ export const useNotes = (deleteTimer = '24h', onToast = null, personalityEnabled
 
   const updateNoteContent = useCallback((id, newContent) => {
     const sanitizedContent = sanitizeNoteContent(newContent);
+    const timestamp = Date.now();
     const updatedNotes = notes.map(note => 
-      note.id === id ? { ...note, content: sanitizedContent } : note
+      note.id === id ? { ...note, content: sanitizedContent, updatedAt: timestamp } : note
     );
     saveNotes(updatedNotes);
   }, [notes, saveNotes]);
 
   const updateNoteProperties = useCallback((id, properties) => {
+    const timestamp = Date.now();
     const updatedNotes = notes.map(note => 
-      note.id === id ? { ...note, ...properties } : note
+      note.id === id ? {
+        ...note,
+        ...properties,
+        updatedAt: properties?.updatedAt ?? timestamp
+      } : note
     );
     saveNotes(updatedNotes);
   }, [notes, saveNotes]);
 
   const toggleNotePin = useCallback((id) => {
+    const timestamp = Date.now();
     const updatedNotes = notes.map(note => 
-      note.id === id ? { ...note, isPinned: !note.isPinned } : note
+      note.id === id ? { ...note, isPinned: !note.isPinned, updatedAt: timestamp } : note
     );
     saveNotes(updatedNotes);
   }, [notes, saveNotes]);
@@ -132,8 +140,14 @@ export const useNotes = (deleteTimer = '24h', onToast = null, personalityEnabled
     const maxAgeHours = DELETE_TIMERS[newDeleteTimerKey]?.hours || 24;
     const expiresAt = maxAgeHours === Infinity ? Infinity : now + (maxAgeHours * 60 * 60 * 1000);
 
+    const timestamp = Date.now();
     const updatedNotes = notes.map(note => 
-      note.id === id ? { ...note, expiresAt: expiresAt, hasCustomDeleteTimer: true } : note
+      note.id === id ? {
+        ...note,
+        expiresAt: expiresAt,
+        hasCustomDeleteTimer: true,
+        updatedAt: timestamp
+      } : note
     );
     saveNotes(updatedNotes);
   }, [notes, saveNotes]);
@@ -149,9 +163,12 @@ export const useNotes = (deleteTimer = '24h', onToast = null, personalityEnabled
 
     const assignedFolder = noteToSave.folder || (activeFolder !== 'all' ? activeFolder : undefined);
 
+    const savedTimestamp = Date.now();
+
     const savedNote = {
       ...noteToSave,
-      savedAt: Date.now(),
+      savedAt: savedTimestamp,
+      updatedAt: savedTimestamp,
       // Assign current folder if not 'all' and note doesn't already have a folder
       folder: assignedFolder
     };
@@ -174,36 +191,45 @@ export const useNotes = (deleteTimer = '24h', onToast = null, personalityEnabled
   }, [savedNotes, saveSavedNotes]);
 
   const updateSavedNoteProperties = useCallback((id, properties) => {
+    const timestamp = Date.now();
     const updatedSavedNotes = savedNotes.map(note => 
-      note.id === id ? { ...note, ...properties } : note
+      note.id === id ? {
+        ...note,
+        ...properties,
+        updatedAt: properties?.updatedAt ?? timestamp
+      } : note
     );
     saveSavedNotes(updatedSavedNotes);
   }, [savedNotes, saveSavedNotes]);
 
   const toggleSavedNotePin = useCallback((id) => {
+    const timestamp = Date.now();
     const updatedSavedNotes = savedNotes.map(note => 
-      note.id === id ? { ...note, isPinned: !note.isPinned } : note
+      note.id === id ? { ...note, isPinned: !note.isPinned, updatedAt: timestamp } : note
     );
     saveSavedNotes(updatedSavedNotes);
   }, [savedNotes, saveSavedNotes]);
 
   const updateSavedNoteContent = useCallback((id, newContent) => {
     const sanitizedContent = sanitizeNoteContent(newContent);
+    const timestamp = Date.now();
     const updatedSavedNotes = savedNotes.map(note => 
-      note.id === id ? { ...note, content: sanitizedContent } : note
+      note.id === id ? { ...note, content: sanitizedContent, updatedAt: timestamp } : note
     );
     saveSavedNotes(updatedSavedNotes);
   }, [savedNotes, saveSavedNotes]);
 
   const updateNoteFolder = useCallback((id, folder, isSaved) => {
     if (isSaved) {
+      const timestamp = Date.now();
       const updatedSavedNotes = savedNotes.map(note => 
-        note.id === id ? { ...note, folder: folder } : note
+        note.id === id ? { ...note, folder: folder, updatedAt: timestamp } : note
       );
       saveSavedNotes(updatedSavedNotes);
     } else {
+      const timestamp = Date.now();
       const updatedNotes = notes.map(note => 
-        note.id === id ? { ...note, folder: folder } : note
+        note.id === id ? { ...note, folder: folder, updatedAt: timestamp } : note
       );
       saveNotes(updatedNotes);
     }
@@ -214,11 +240,15 @@ export const useNotes = (deleteTimer = '24h', onToast = null, personalityEnabled
     const sourceNote = sourceNotes.find(note => note.id === id);
     if (!sourceNote) return;
 
+    const timestamp = Date.now();
+
     const artNote = {
       ...sourceNote,
-      id: `${sourceNote.id}-art-${Date.now()}`, // Create unique ID for art piece
+      id: `${sourceNote.id}-art-${timestamp}`, // Create unique ID for art piece
       artStyle: artStyle,
-      transformedAt: Date.now(),
+      transformedAt: timestamp,
+      createdAt: timestamp,
+      updatedAt: timestamp,
     };
 
     const updatedArtNotes = [artNote, ...artNotes];
@@ -247,7 +277,7 @@ export const useNotes = (deleteTimer = '24h', onToast = null, personalityEnabled
   const updateArtNoteContent = useCallback((id, newContent) => {
     const sanitizedContent = sanitizeNoteContent(newContent);
     const updatedArtNotes = artNotes.map(note => 
-      note.id === id ? { ...note, content: sanitizedContent } : note
+      note.id === id ? { ...note, content: sanitizedContent, updatedAt: Date.now() } : note
     );
     saveArtNotes(updatedArtNotes);
   }, [artNotes, saveArtNotes]);
@@ -319,6 +349,7 @@ export const useNotes = (deleteTimer = '24h', onToast = null, personalityEnabled
     const now = Date.now();
     const maxAgeHours = DELETE_TIMERS[newDeleteTimerKey]?.hours || 24;
     
+    const timestamp = Date.now();
     const updatedNotes = notes.map(note => {
       // Only update notes that haven't been manually customized
       if (note.hasCustomDeleteTimer) {
@@ -327,7 +358,7 @@ export const useNotes = (deleteTimer = '24h', onToast = null, personalityEnabled
       
       // Update with new global timer
       const expiresAt = maxAgeHours === Infinity ? Infinity : now + (maxAgeHours * 60 * 60 * 1000);
-      return { ...note, expiresAt: expiresAt };
+      return { ...note, expiresAt: expiresAt, updatedAt: timestamp };
     });
     
     saveNotes(updatedNotes);
@@ -340,10 +371,13 @@ export const useNotes = (deleteTimer = '24h', onToast = null, personalityEnabled
 
     const contentToSave = formattedContent || noteToSave.content;
     
+    const timestamp = Date.now();
+
     const savedNote = {
       ...noteToSave,
       content: contentToSave,
-      savedAt: Date.now(),
+      savedAt: timestamp,
+      updatedAt: timestamp,
       isFormatted: !!formattedContent
     };
 
@@ -364,9 +398,12 @@ export const useNotes = (deleteTimer = '24h', onToast = null, personalityEnabled
     if (!noteToSave) return;
 
     // Save original
+    const timestamp = Date.now();
+
     const originalSaved = {
       ...noteToSave,
-      savedAt: Date.now(),
+      savedAt: timestamp,
+      updatedAt: timestamp,
       isFormatted: false
     };
 
@@ -375,7 +412,8 @@ export const useNotes = (deleteTimer = '24h', onToast = null, personalityEnabled
       ...noteToSave,
       id: `${noteToSave.id}-formatted`,
       content: formattedContent,
-      savedAt: Date.now(),
+      savedAt: timestamp,
+      updatedAt: timestamp,
       isFormatted: true
     };
 

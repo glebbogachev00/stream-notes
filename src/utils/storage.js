@@ -451,81 +451,108 @@ class StorageAdapter {
       }
     };
 
+    const getTimestamp = (item) => {
+      if (!item || typeof item !== 'object') {
+        return 0;
+      }
+      return Number(item.updatedAt ?? item.createdAt ?? 0) || 0;
+    };
+
     const remoteItems = parseValue(remoteValue);
     const localValue = localStorage.getItem(key);
     const localItems = parseValue(localValue);
 
-    // Create maps for efficient lookup
     const remoteMap = new Map();
     const localMap = new Map();
-    
+
     remoteItems.forEach((item) => {
       if (item && typeof item === 'object' && item.id) {
         remoteMap.set(item.id, item);
       }
     });
-    
+
     localItems.forEach((item) => {
       if (item && typeof item === 'object' && item.id) {
         localMap.set(item.id, item);
       }
     });
 
-    // Smart merge: prefer local deletions and additions
-    const mergedItems = [];
-    let addedFromLocal = false;
-    let removedFromLocal = false;
-
-    // Add items that exist locally (keeps local additions and preserves local deletions)
     const lastSyncTime = this.metadata.lastSyncedAt || 0;
+    const mergedItems = [];
+    const seenIds = new Set();
+    let localChanged = false;
+    let shouldPush = false;
 
-    localItems.forEach((item) => {
-      if (!item || typeof item !== 'object' || !item.id) {
+    localItems.forEach((localItem) => {
+      if (!localItem || typeof localItem !== 'object' || !localItem.id) {
         return;
       }
 
-      const itemTimestamp = Number(item.updatedAt ?? item.createdAt ?? 0);
-      const isNewLocalItem = !itemTimestamp || itemTimestamp > lastSyncTime;
+      const remoteItem = remoteMap.get(localItem.id);
+      seenIds.add(localItem.id);
 
-      if (!remoteMap.has(item.id)) {
+      if (!remoteItem) {
+        const localTimestamp = getTimestamp(localItem);
+        const isNewLocalItem = !localTimestamp || localTimestamp > lastSyncTime;
+
         if (isNewLocalItem) {
-          mergedItems.push(item);
-          addedFromLocal = true;
+          mergedItems.push(localItem);
+          shouldPush = true;
+        } else {
+          // Remote deleted this item after the last sync; drop it locally
+          localChanged = true;
         }
         return;
       }
 
-      mergedItems.push(item);
-    });
+      const localTimestamp = getTimestamp(localItem);
+      const remoteTimestamp = getTimestamp(remoteItem);
 
-    // Add remote items that don't exist locally and aren't newer than the last sync
-    remoteItems.forEach((item) => {
-      if (item && typeof item === 'object' && item.id) {
-        if (!localMap.has(item.id)) {
-          // Only add remote items if we don't have them locally
-          // This respects local deletions
-          const lastSyncTime = this.metadata.lastSyncedAt || 0;
-          const itemTime = item.createdAt || item.updatedAt || 0;
-
-          // Add remote item if it's newer than our last sync
-          // This handles cases where items were added on another device
-          if (itemTime > lastSyncTime) {
-            mergedItems.push(item);
-          } else {
-            // Item was deleted locally after sync, don't restore it
-            removedFromLocal = true;
+      if (remoteTimestamp > localTimestamp) {
+        const remoteString = JSON.stringify(remoteItem);
+        const localString = JSON.stringify(localItem);
+        if (remoteString !== localString) {
+          localChanged = true;
+        }
+        mergedItems.push(remoteItem);
+      } else {
+        // Local copy is newer or equal - keep it and ensure remote catches up if needed
+        mergedItems.push(localItem);
+        if (localTimestamp > remoteTimestamp) {
+          shouldPush = true;
+        } else if (localTimestamp === remoteTimestamp) {
+          const remoteString = JSON.stringify(remoteItem);
+          const localString = JSON.stringify(localItem);
+          if (remoteString !== localString) {
+            shouldPush = true;
           }
         }
       }
     });
 
+    remoteItems.forEach((remoteItem) => {
+      if (!remoteItem || typeof remoteItem !== 'object' || !remoteItem.id) {
+        return;
+      }
+      if (seenIds.has(remoteItem.id)) {
+        return;
+      }
+
+      const remoteTimestamp = getTimestamp(remoteItem);
+      if (!remoteTimestamp || remoteTimestamp > lastSyncTime) {
+        mergedItems.push(remoteItem);
+        localChanged = true;
+      } else {
+        // Remote item predates our last sync; ensure remote receives the local state
+        shouldPush = true;
+      }
+    });
+
     const mergedValue = JSON.stringify(mergedItems);
-    const localChanged = localValue !== mergedValue;
-    if (localChanged) {
+    if (localValue !== mergedValue) {
+      localChanged = true;
       localStorage.setItem(key, mergedValue);
     }
-
-    const shouldPush = addedFromLocal || removedFromLocal || (!remoteValue && mergedItems.length > 0);
 
     return { mergedValue, localChanged, shouldPush };
   }
