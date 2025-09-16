@@ -11,14 +11,18 @@ const isExtensionContext = () => {
 
 const SYNC_META_KEY = 'stream-sync-meta';
 const SYNC_KEYS = ['stream_notes', 'stream_saved_notes', 'stream_art_notes', 'stream-settings'];
+const ARRAY_MERGE_KEYS = new Set(['stream_notes', 'stream_saved_notes', 'stream_art_notes']);
 
-const loadMeta = () => {
+const loadMeta = (syncKey = '') => {
   try {
     const raw = localStorage.getItem(SYNC_META_KEY);
     if (!raw) {
       return { lastSyncedAt: 0 };
     }
     const parsed = JSON.parse(raw);
+    if (!parsed || parsed.key !== syncKey) {
+      return { lastSyncedAt: 0 };
+    }
     return {
       lastSyncedAt: Number(parsed.lastSyncedAt) || 0
     };
@@ -27,9 +31,13 @@ const loadMeta = () => {
   }
 };
 
-const saveMeta = (meta) => {
+const saveMeta = (syncKey, meta) => {
+  if (!syncKey) return;
   try {
-    localStorage.setItem(SYNC_META_KEY, JSON.stringify(meta));
+    localStorage.setItem(
+      SYNC_META_KEY,
+      JSON.stringify({ key: syncKey, lastSyncedAt: Number(meta.lastSyncedAt) || 0 })
+    );
   } catch (error) {
     // Ignore persistence failures to avoid breaking main flow
   }
@@ -50,7 +58,7 @@ class StorageAdapter {
     this.syncKey = (syncKey || localStorage.getItem('stream-sync-key') || '').trim();
     this.onStatusChange = onStatusChange;
     this.onLastSyncedChange = onLastSyncedChange;
-    this.metadata = loadMeta();
+    this.metadata = loadMeta(this.syncKey);
 
     this.useExtensionSync = this.syncEnabled && isExtensionContext();
     this.useRemoteSync = this.syncEnabled && !this.useExtensionSync && !!this.endpoint && !!this.syncKey;
@@ -66,6 +74,10 @@ class StorageAdapter {
       this.syncEnabled = false;
       this.updateStatus('local');
     }
+
+    if (this.syncEnabled && this.useRemoteSync && (this.metadata.lastSyncedAt || 0) === 0) {
+      this.queueAllLocalData();
+    }
   }
 
   updateStatus(status) {
@@ -78,7 +90,7 @@ class StorageAdapter {
   updateLastSynced(timestamp) {
     if (!timestamp) return;
     this.metadata.lastSyncedAt = Math.max(this.metadata.lastSyncedAt || 0, timestamp);
-    saveMeta(this.metadata);
+    saveMeta(this.syncKey, this.metadata);
     if (this.onLastSyncedChange) {
       this.onLastSyncedChange(this.metadata.lastSyncedAt);
     }
@@ -108,6 +120,25 @@ class StorageAdapter {
       deletedAt
     };
     this.pendingChanges.set(key, change);
+  }
+
+  queueAllLocalData() {
+    if (!this.useRemoteSync) {
+      return;
+    }
+
+    const now = Date.now();
+    SYNC_KEYS.forEach((key) => {
+      const value = localStorage.getItem(key);
+      if (value !== null) {
+        this.pendingChanges.set(key, {
+          key,
+          value,
+          updatedAt: now,
+          deletedAt: null
+        });
+      }
+    });
   }
 
   async set(key, value) {
@@ -223,16 +254,64 @@ class StorageAdapter {
     const payload = await response.json();
     const { items = [], timestamp } = payload;
     const updatedKeys = [];
+    const remoteKeys = new Set();
 
     items.forEach((item) => {
+      remoteKeys.add(item.key);
+
       if (item.deletedAt) {
-        localStorage.removeItem(item.key);
-        updatedKeys.push(item.key);
-      } else if (typeof item.value === 'string') {
-        localStorage.setItem(item.key, item.value);
-        updatedKeys.push(item.key);
+        if (localStorage.getItem(item.key) !== null) {
+          localStorage.removeItem(item.key);
+          updatedKeys.push(item.key);
+        }
+        this.pendingChanges.delete(item.key);
+        return;
+      }
+
+      if (!item.value) {
+        return;
+      }
+
+      if (ARRAY_MERGE_KEYS.has(item.key)) {
+        const { mergedValue, localChanged, shouldPush } = this.mergeCollectionValue(item.key, item.value);
+        if (localChanged) {
+          updatedKeys.push(item.key);
+        }
+        if (shouldPush) {
+          this.pendingChanges.set(item.key, {
+            key: item.key,
+            value: mergedValue,
+            updatedAt: Date.now(),
+            deletedAt: null
+          });
+        }
+      } else {
+        const localValue = localStorage.getItem(item.key);
+        if (localValue !== item.value) {
+          localStorage.setItem(item.key, item.value);
+          updatedKeys.push(item.key);
+        }
       }
     });
+
+    // Ensure purely local data is queued for push if remote doesn't know about it yet
+    if (this.useRemoteSync) {
+      const now = Date.now();
+      SYNC_KEYS.forEach((key) => {
+        if (remoteKeys.has(key)) {
+          return;
+        }
+        const localValue = localStorage.getItem(key);
+        if (localValue !== null) {
+          this.pendingChanges.set(key, {
+            key,
+            value: localValue,
+            updatedAt: now,
+            deletedAt: null
+          });
+        }
+      });
+    }
 
     this.updateLastSynced(timestamp);
 
@@ -251,8 +330,8 @@ class StorageAdapter {
 
     this.updateStatus('syncing');
     try {
-      await this.pushPendingChanges();
       await this.pullRemoteChanges();
+      await this.pushPendingChanges();
       this.updateStatus('synced');
     } catch (error) {
       console.error('[storage] sync error', error);
@@ -312,6 +391,56 @@ class StorageAdapter {
       return true;
     }
     return typeof fetch === 'function';
+  }
+
+  mergeCollectionValue(key, remoteValue) {
+    const parseValue = (value) => {
+      if (!value) return [];
+      try {
+        const parsed = JSON.parse(value);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (error) {
+        return [];
+      }
+    };
+
+    const remoteItems = parseValue(remoteValue);
+    const localValue = localStorage.getItem(key);
+    const localItems = parseValue(localValue);
+
+    const remoteMap = new Map();
+    remoteItems.forEach((item) => {
+      if (item && typeof item === 'object' && item.id) {
+        remoteMap.set(item.id, item);
+      }
+    });
+
+    let addedFromLocal = false;
+    const mergedItems = [...remoteItems];
+
+    localItems.forEach((item) => {
+      if (!item || typeof item !== 'object') {
+        return;
+      }
+      const itemId = item.id;
+      if (!itemId) {
+        return;
+      }
+      if (!remoteMap.has(itemId)) {
+        mergedItems.push(item);
+        addedFromLocal = true;
+      }
+    });
+
+    const mergedValue = JSON.stringify(mergedItems);
+    const localChanged = localValue !== mergedValue;
+    if (localChanged) {
+      localStorage.setItem(key, mergedValue);
+    }
+
+    const shouldPush = addedFromLocal || (!remoteValue && mergedItems.length > 0);
+
+    return { mergedValue, localChanged, shouldPush };
   }
 }
 

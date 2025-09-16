@@ -22,8 +22,23 @@ export const StorageProvider = ({ children }) => {
   const [syncError, setSyncError] = useState(null);
 
   useEffect(() => {
-    if (user && settings.syncKey !== user.id) {
-      updateSettings({ syncKey: user.id, syncEnabled: true });
+    if (user) {
+      const updates = {};
+      const userId = user.id;
+      const hasDifferentKey = settings.syncKey !== userId;
+
+      if (hasDifferentKey) {
+        localStorage.removeItem('stream-sync-meta');
+        updates.syncKey = userId;
+      }
+
+      if (!settings.syncEnabled) {
+        updates.syncEnabled = true;
+      }
+
+      if (Object.keys(updates).length > 0) {
+        updateSettings(updates);
+      }
       return;
     }
 
