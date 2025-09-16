@@ -34,7 +34,7 @@ export const DELETE_TIMERS = {
   '7d': { name: '7 days', hours: 7 * 24 },
 };
 
-const DEFAULT_SYNC_ENDPOINT = process.env.REACT_APP_SYNC_URL || '';
+const DEFAULT_SYNC_ENDPOINT = '';
 
 const DEFAULT_SETTINGS = {
   theme: 'white',
@@ -69,6 +69,14 @@ export const useSettings = () => {
 };
 
 export const SettingsProvider = ({ children }) => {
+  // Clean up localhost endpoints from localStorage on component mount
+  React.useEffect(() => {
+    const storedEndpoint = localStorage.getItem('stream-sync-endpoint');
+    if (storedEndpoint && storedEndpoint.includes('localhost')) {
+      localStorage.removeItem('stream-sync-endpoint');
+    }
+  }, []);
+
   const [settings, setSettings] = useState(() => {
     try {
       // Try new split settings format first
@@ -77,6 +85,8 @@ export const SettingsProvider = ({ children }) => {
       const onboardingCompleted = localStorage.getItem('stream-onboarding-completed') === 'true';
       const storedSyncKey = localStorage.getItem('stream-sync-key') || '';
       const storedSyncEndpoint = localStorage.getItem('stream-sync-endpoint') || DEFAULT_SYNC_ENDPOINT;
+      // Clear localhost endpoints if they exist in localStorage
+      const cleanSyncEndpoint = storedSyncEndpoint.includes('localhost') ? '' : storedSyncEndpoint;
       
       let baseSettings = { ...DEFAULT_SETTINGS };
       
@@ -102,7 +112,7 @@ export const SettingsProvider = ({ children }) => {
       return {
         ...baseSettings,
         syncKey: baseSettings.syncKey || storedSyncKey,
-        syncEndpoint: baseSettings.syncEndpoint || storedSyncEndpoint
+        syncEndpoint: baseSettings.syncEndpoint || cleanSyncEndpoint
       };
     } catch (error) {
       // Error loading settings, using defaults

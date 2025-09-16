@@ -1,9 +1,11 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { useSettings } from './SettingsContext';
 import { useAuth } from './AuthContext';
 import StorageAdapter from '../utils/storage';
+import { getSupabaseClient } from '../services/supabaseClient';
 
 const StorageContext = createContext();
+const SUPABASE_TABLE = process.env.REACT_APP_SUPABASE_STORAGE_TABLE || 'storage_items';
 
 export const useStorage = () => {
   const context = useContext(StorageContext);
@@ -16,6 +18,7 @@ export const useStorage = () => {
 export const StorageProvider = ({ children }) => {
   const { settings, updateSettings } = useSettings();
   const { user } = useAuth();
+  const supabase = useMemo(() => getSupabaseClient(), []);
   const [storageAdapter, setStorageAdapter] = useState(() => new StorageAdapter());
   const [syncStatus, setSyncStatus] = useState(storageAdapter.getStatus());
   const [lastSyncedAt, setLastSyncedAt] = useState(storageAdapter.getLastSyncedAt());
@@ -51,18 +54,31 @@ export const StorageProvider = ({ children }) => {
       return;
     }
 
-    if (!settings.syncEndpoint && process.env.REACT_APP_SYNC_URL) {
-      updateSettings({ syncEndpoint: process.env.REACT_APP_SYNC_URL });
-    }
   }, [user, settings.syncEnabled, settings.syncKey, settings.syncEndpoint, updateSettings]);
+
+  useEffect(() => {
+    if (!supabase) {
+      return;
+    }
+
+    if (settings.syncEndpoint) {
+      // Clear endpoint to prioritize Supabase sync
+      updateSettings({ syncEndpoint: '' });
+      localStorage.removeItem('stream-sync-endpoint');
+    }
+  }, [supabase, settings.syncEndpoint, updateSettings]);
 
   useEffect(() => {
     let isMounted = true;
     const effectiveSyncKey = user?.id || settings.syncKey;
+    const canUseSupabase = !!supabase && !!user?.id;
+
     const adapter = new StorageAdapter({
-      syncEnabled: settings.syncEnabled && !!effectiveSyncKey,
+      syncEnabled: settings.syncEnabled && !!effectiveSyncKey && (canUseSupabase || !!settings.syncEndpoint),
       endpoint: settings.syncEndpoint,
       syncKey: effectiveSyncKey,
+      supabaseClient: canUseSupabase ? supabase : null,
+      supabaseTable: SUPABASE_TABLE,
       onStatusChange: (status) => {
         if (!isMounted) return;
         setSyncStatus(status);
@@ -83,8 +99,7 @@ export const StorageProvider = ({ children }) => {
     setSyncStatus(adapter.getStatus());
     setLastSyncedAt(adapter.getLastSyncedAt());
     setSyncError(null);
-    
-    // Expose storage adapter globally for settings sync
+
     window.streamStorage = adapter;
 
     let intervalId;
@@ -111,12 +126,11 @@ export const StorageProvider = ({ children }) => {
       if (adapter.syncTimeout) {
         clearTimeout(adapter.syncTimeout);
       }
-      // Clean up global reference
       if (window.streamStorage === adapter) {
         window.streamStorage = null;
       }
     };
-  }, [settings.syncEnabled, settings.syncEndpoint, settings.syncKey, user?.id]);
+  }, [settings.syncEnabled, settings.syncEndpoint, settings.syncKey, supabase, user?.id]);
 
   const isSyncSupported = () => {
     return storageAdapter.isSyncSupported();

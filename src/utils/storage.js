@@ -50,18 +50,24 @@ class StorageAdapter {
       endpoint = '',
       syncKey = '',
       onStatusChange = null,
-      onLastSyncedChange = null
+      onLastSyncedChange = null,
+      supabaseClient = null,
+      supabaseTable = process.env.REACT_APP_SUPABASE_STORAGE_TABLE || 'storage_items'
     } = options;
 
     this.syncEnabled = !!syncEnabled;
-    this.endpoint = (endpoint || process.env.REACT_APP_SYNC_URL || '').trim();
+    this.endpoint = (endpoint || '').trim();
     this.syncKey = (syncKey || localStorage.getItem('stream-sync-key') || '').trim();
     this.onStatusChange = onStatusChange;
     this.onLastSyncedChange = onLastSyncedChange;
     this.metadata = loadMeta(this.syncKey);
+    this.supabase = supabaseClient;
+    this.supabaseTable = supabaseTable;
 
     this.useExtensionSync = this.syncEnabled && isExtensionContext();
-    this.useRemoteSync = this.syncEnabled && !this.useExtensionSync && !!this.endpoint && !!this.syncKey;
+    this.useSupabase = this.syncEnabled && !this.useExtensionSync && !!this.supabase && !!this.syncKey;
+    this.useEndpointSync = this.syncEnabled && !this.useExtensionSync && !this.useSupabase && !!this.endpoint && !!this.syncKey;
+    this.useRemoteSync = this.useSupabase || this.useEndpointSync;
 
     this.pendingChanges = new Map();
     this.syncPromise = null;
@@ -211,16 +217,35 @@ class StorageAdapter {
       return;
     }
 
-    const response = await fetch(`${this.endpoint}/sync/push`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        userId: this.syncKey,
-        items
-      })
-    });
+    if (this.useSupabase) {
+      await this.pushWithSupabase(items);
+      return;
+    }
+
+    if (!this.endpoint) {
+      return;
+    }
+
+    let response;
+    try {
+      response = await fetch(`${this.endpoint}/sync/push`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          userId: this.syncKey,
+          items
+        })
+      });
+    } catch (error) {
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        // Server is not available - silently skip sync
+        console.warn('[storage] sync endpoint unavailable, skipping push');
+        return;
+      }
+      throw error;
+    }
 
     if (!response.ok) {
       throw new Error('Failed to push changes');
@@ -236,16 +261,35 @@ class StorageAdapter {
       return;
     }
 
-    const response = await fetch(`${this.endpoint}/sync/pull`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        userId: this.syncKey,
-        since: this.metadata.lastSyncedAt || 0
-      })
-    });
+    if (this.useSupabase) {
+      await this.pullFromSupabase();
+      return;
+    }
+
+    if (!this.endpoint) {
+      return;
+    }
+
+    let response;
+    try {
+      response = await fetch(`${this.endpoint}/sync/pull`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          userId: this.syncKey,
+          since: this.metadata.lastSyncedAt || 0
+        })
+      });
+    } catch (error) {
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        // Server is not available - silently skip sync
+        console.warn('[storage] sync endpoint unavailable, skipping pull');
+        return;
+      }
+      throw error;
+    }
 
     if (!response.ok) {
       throw new Error('Failed to pull changes');
@@ -390,6 +434,9 @@ class StorageAdapter {
     if (this.useExtensionSync) {
       return true;
     }
+    if (this.useSupabase) {
+      return true;
+    }
     return typeof fetch === 'function';
   }
 
@@ -408,27 +455,67 @@ class StorageAdapter {
     const localValue = localStorage.getItem(key);
     const localItems = parseValue(localValue);
 
+    // Create maps for efficient lookup
     const remoteMap = new Map();
+    const localMap = new Map();
+    
     remoteItems.forEach((item) => {
       if (item && typeof item === 'object' && item.id) {
         remoteMap.set(item.id, item);
       }
     });
+    
+    localItems.forEach((item) => {
+      if (item && typeof item === 'object' && item.id) {
+        localMap.set(item.id, item);
+      }
+    });
 
+    // Smart merge: prefer local deletions and additions
+    const mergedItems = [];
     let addedFromLocal = false;
-    const mergedItems = [...remoteItems];
+    let removedFromLocal = false;
+
+    // Add items that exist locally (keeps local additions and preserves local deletions)
+    const lastSyncTime = this.metadata.lastSyncedAt || 0;
 
     localItems.forEach((item) => {
-      if (!item || typeof item !== 'object') {
+      if (!item || typeof item !== 'object' || !item.id) {
         return;
       }
-      const itemId = item.id;
-      if (!itemId) {
+
+      const itemTimestamp = Number(item.updatedAt ?? item.createdAt ?? 0);
+      const isNewLocalItem = !itemTimestamp || itemTimestamp > lastSyncTime;
+
+      if (!remoteMap.has(item.id)) {
+        if (isNewLocalItem) {
+          mergedItems.push(item);
+          addedFromLocal = true;
+        }
         return;
       }
-      if (!remoteMap.has(itemId)) {
-        mergedItems.push(item);
-        addedFromLocal = true;
+
+      mergedItems.push(item);
+    });
+
+    // Add remote items that don't exist locally and aren't newer than the last sync
+    remoteItems.forEach((item) => {
+      if (item && typeof item === 'object' && item.id) {
+        if (!localMap.has(item.id)) {
+          // Only add remote items if we don't have them locally
+          // This respects local deletions
+          const lastSyncTime = this.metadata.lastSyncedAt || 0;
+          const itemTime = item.createdAt || item.updatedAt || 0;
+
+          // Add remote item if it's newer than our last sync
+          // This handles cases where items were added on another device
+          if (itemTime > lastSyncTime) {
+            mergedItems.push(item);
+          } else {
+            // Item was deleted locally after sync, don't restore it
+            removedFromLocal = true;
+          }
+        }
       }
     });
 
@@ -438,9 +525,134 @@ class StorageAdapter {
       localStorage.setItem(key, mergedValue);
     }
 
-    const shouldPush = addedFromLocal || (!remoteValue && mergedItems.length > 0);
+    const shouldPush = addedFromLocal || removedFromLocal || (!remoteValue && mergedItems.length > 0);
 
     return { mergedValue, localChanged, shouldPush };
+  }
+
+  async pushWithSupabase(items) {
+    if (!this.supabase || !this.supabaseTable) {
+      return;
+    }
+
+    const payload = items.map((change) => ({
+      user_id: this.syncKey,
+      key: change.key,
+      value: change.value,
+      updated_at: change.updatedAt,
+      deleted_at: change.deletedAt ?? null
+    }));
+
+    if (payload.length === 0) {
+      return;
+    }
+
+    const { error } = await this.supabase
+      .from(this.supabaseTable)
+      .upsert(payload, { onConflict: 'user_id,key' });
+
+    if (error) {
+      throw new Error(error.message || 'Failed to push changes');
+    }
+
+    this.pendingChanges.clear();
+    const maxTimestamp = payload.reduce((max, item) => {
+      return Math.max(max, Number(item.updated_at) || 0, Number(item.deleted_at) || 0);
+    }, this.metadata.lastSyncedAt || 0);
+    this.updateLastSynced(maxTimestamp || Date.now());
+  }
+
+  async pullFromSupabase() {
+    if (!this.supabase || !this.supabaseTable) {
+      return;
+    }
+
+    const lastSynced = this.metadata.lastSyncedAt || 0;
+    const { data, error } = await this.supabase
+      .from(this.supabaseTable)
+      .select('key,value,updated_at,deleted_at')
+      .eq('user_id', this.syncKey)
+      .gt('updated_at', lastSynced)
+      .order('updated_at', { ascending: true });
+
+    if (error) {
+      throw new Error(error.message || 'Failed to pull changes');
+    }
+
+    const items = Array.isArray(data) ? data : [];
+    const updatedKeys = [];
+    const remoteKeys = new Set();
+    let maxTimestamp = lastSynced;
+
+    items.forEach((item) => {
+      const key = item.key;
+      const deletedAt = item.deleted_at ?? null;
+      const value = item.value;
+      const updatedAt = Number(item.updated_at) || 0;
+
+      remoteKeys.add(key);
+      maxTimestamp = Math.max(maxTimestamp, updatedAt, deletedAt || 0);
+
+      if (deletedAt) {
+        if (localStorage.getItem(key) !== null) {
+          localStorage.removeItem(key);
+          updatedKeys.push(key);
+        }
+        this.pendingChanges.delete(key);
+        return;
+      }
+
+      if (!value) {
+        return;
+      }
+
+      if (ARRAY_MERGE_KEYS.has(key)) {
+        const { mergedValue, localChanged, shouldPush } = this.mergeCollectionValue(key, value);
+        if (localChanged) {
+          updatedKeys.push(key);
+        }
+        if (shouldPush) {
+          this.pendingChanges.set(key, {
+            key,
+            value: mergedValue,
+            updatedAt: Date.now(),
+            deletedAt: null
+          });
+        }
+      } else {
+        const localValue = localStorage.getItem(key);
+        if (localValue !== value) {
+          localStorage.setItem(key, value);
+          updatedKeys.push(key);
+        }
+      }
+    });
+
+    // Queue local-only keys for upload
+    const now = Date.now();
+    SYNC_KEYS.forEach((key) => {
+      if (remoteKeys.has(key)) {
+        return;
+      }
+      const localValue = localStorage.getItem(key);
+      if (localValue !== null) {
+        this.pendingChanges.set(key, {
+          key,
+          value: localValue,
+          updatedAt: now,
+          deletedAt: null
+        });
+      }
+    });
+
+    this.updateLastSynced(maxTimestamp || Date.now());
+
+    if (updatedKeys.length > 0 && typeof window !== 'undefined') {
+      const event = new CustomEvent('stream-sync-update', {
+        detail: { keys: updatedKeys }
+      });
+      window.dispatchEvent(event);
+    }
   }
 }
 
