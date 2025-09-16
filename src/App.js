@@ -113,7 +113,7 @@ const AppContent = memo(() => {
     toggleNotePin,
     updateGlobalDeleteTimer,
     updateNoteFolder
-  } = useNotes(settings.deleteTimer, showToast, settings.personalityEnabled, handleEdgeUnlock);
+  } = useNotes(settings.deleteTimer, showToast, settings.personalityEnabled, handleEdgeUnlock, activeFolder);
 
   // Track previous deleteTimer to detect changes
   const previousDeleteTimer = useRef(settings.deleteTimer);

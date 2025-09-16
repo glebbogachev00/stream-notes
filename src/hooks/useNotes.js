@@ -9,7 +9,7 @@ const NOTES_KEY = 'stream_notes';
 const SAVED_NOTES_KEY = 'stream_saved_notes';
 const ART_NOTES_KEY = 'stream_art_notes';
 
-export const useNotes = (deleteTimer = '24h', onToast = null, personalityEnabled = true, onEdgeUnlock = null) => {
+export const useNotes = (deleteTimer = '24h', onToast = null, personalityEnabled = true, onEdgeUnlock = null, activeFolder = 'all') => {
   const [notes, setNotes] = useState([]);
   const [savedNotes, setSavedNotes] = useState([]);
   const [artNotes, setArtNotes] = useState([]);
@@ -149,6 +149,8 @@ export const useNotes = (deleteTimer = '24h', onToast = null, personalityEnabled
     const savedNote = {
       ...noteToSave,
       savedAt: Date.now(),
+      // Assign current folder if not 'all' and note doesn't already have a folder
+      folder: noteToSave.folder || (activeFolder !== 'all' ? activeFolder : undefined)
     };
 
     const updatedSavedNotes = [savedNote, ...savedNotes];
@@ -161,7 +163,7 @@ export const useNotes = (deleteTimer = '24h', onToast = null, personalityEnabled
     if (onToast) {
       onToast(getRandomMessage(SAVE_NOTE_MESSAGES, personalityEnabled));
     }
-  }, [notes, savedNotes, saveNotes, saveSavedNotes, onToast, personalityEnabled]);
+  }, [notes, savedNotes, saveNotes, saveSavedNotes, onToast, personalityEnabled, activeFolder]);
 
   const deleteSavedNote = useCallback((id) => {
     const updatedSavedNotes = savedNotes.filter(note => note.id !== id);
@@ -288,6 +290,21 @@ export const useNotes = (deleteTimer = '24h', onToast = null, personalityEnabled
 
   useEffect(() => {
     loadNotes();
+  }, [loadNotes]);
+
+  useEffect(() => {
+    const handleSyncUpdate = (event) => {
+      const updatedKeys = event?.detail?.keys || [];
+      const relevantKeys = [NOTES_KEY, SAVED_NOTES_KEY, ART_NOTES_KEY];
+      if (updatedKeys.some(key => relevantKeys.includes(key))) {
+        loadNotes();
+      }
+    };
+
+    window.addEventListener('stream-sync-update', handleSyncUpdate);
+    return () => {
+      window.removeEventListener('stream-sync-update', handleSyncUpdate);
+    };
   }, [loadNotes]);
 
   useEffect(() => {
