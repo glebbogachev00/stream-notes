@@ -253,20 +253,6 @@ const SettingsModal = ({ isOpen, onClose, onOpenAuthModal }) => {
                     )}
                     </div>
 
-                    {/* Hide sync endpoint for regular users - only show for custom setups */}
-                    {syncEndpoint && syncEndpoint !== 'http://localhost:4000' && (
-                      <div>
-                        <div className={`dynamic-text-xs ${theme.textTertiary} font-light mb-1`}>sync endpoint</div>
-                        <input
-                        type="text"
-                        value={syncEndpoint}
-                        onChange={(e) => setSyncEndpoint(e.target.value)}
-                        onBlur={handleEndpointBlur}
-                        placeholder="https://your-sync-server"
-                        className={`w-full bg-transparent border-b ${theme.borderSecondary} pb-1 dynamic-text-xs font-light ${theme.text} focus:outline-none`}
-                      />
-                      </div>
-                    )}
 
                   <div>
                     <div className={`dynamic-text-xs ${theme.textTertiary} font-light mb-1`}>sync id</div>
