@@ -239,67 +239,14 @@ const SettingsModal = ({ isOpen, onClose, onOpenAuthModal }) => {
                 )}
 
                 {settings.syncEnabled && (
-                  <div className="space-y-4">
-                    <div>
-                      <div className={`dynamic-text-xs ${theme.textTertiary} font-light mb-1`}>status</div>
-                      <div className={`dynamic-text-xs font-light ${theme.text}`}>
-                        {syncStatusLabel()}
-                        {syncStatus !== 'local' ? ` • last sync ${formattedLastSync()}` : ''}
-                    </div>
+                  <div className={`dynamic-text-xs font-light ${theme.text}`}>
+                    {syncStatusLabel()} {syncStatus === 'synced' ? '✓' : syncStatus === 'syncing' ? '...' : ''}
                     {syncError && (
-                      <div className="dynamic-text-xs text-red-500 mt-1 font-light">
+                      <div className="text-red-500 mt-1">
                         {syncError}
                       </div>
                     )}
-                    </div>
-
-
-                  <div>
-                    <div className={`dynamic-text-xs ${theme.textTertiary} font-light mb-1`}>sync id</div>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="text"
-                        value={syncKeyValue}
-                        onChange={(e) => {
-                          const sanitized = e.target.value.replace(/[^a-zA-Z0-9-]/g, '').slice(0, 64);
-                          setSyncKeyValue(sanitized);
-                        }}
-                        onBlur={handleSyncKeyBlur}
-                        className={`flex-1 bg-transparent border-b ${theme.borderSecondary} pb-1 dynamic-text-xs font-light ${theme.text} focus:outline-none`}
-                        placeholder="shared id"
-                        disabled={!!user}
-                      />
-                      <button
-                        onClick={handleCopySyncKey}
-                        className={`dynamic-text-xs font-light px-2 py-1 ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} transition-colors`}
-                      >
-                        copy
-                      </button>
-                      {!user && (
-                        <button
-                          onClick={handleGenerateSyncKey}
-                          className={`dynamic-text-xs font-light px-2 py-1 ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} transition-colors`}
-                        >
-                          new id
-                        </button>
-                      )}
-                    </div>
-                    <div className={`dynamic-text-xs ${theme.textTertiary} font-light mt-1`}>
-                      {user
-                        ? 'We use your account ID automatically.'
-                        : 'Use the same sync id on every device to share notes securely.'}
-                    </div>
                   </div>
-
-                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={handleManualSync}
-                      className={`dynamic-text-xs font-light px-2 py-1 border ${theme.border} ${theme.text} hover:${theme.textSecondary.replace('text-', 'hover:text-')} transition-colors`}
-                    >
-                      sync now
-                    </button>
-                  </div>
-                </div>
                 )}
               </div>
             </div>
