@@ -122,6 +122,9 @@ Remember: Your naturalResponse is the main user interaction - make it count with
   try {
     const response = await fetch(GROQ_PROXY_URL, {
       method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
       body: JSON.stringify({
         model: 'llama-3.1-8b-instant',
         messages: [
