@@ -128,13 +128,24 @@ const mergeSyncableSettings = (localValue, remoteValue) => {
 
   const localFolders = Array.isArray(local.folders) ? local.folders : [];
   const remoteFolders = Array.isArray(remote.folders) ? remote.folders : [];
+  const localFoldersUpdatedAt = Number(local.foldersUpdatedAt) || 0;
+  const remoteFoldersUpdatedAt = Number(remote.foldersUpdatedAt) || 0;
 
-  if (localFolders.length && !remoteFolders.length) {
-    merged.folders = localFolders;
-  } else if (remoteFolders.length && !localFolders.length) {
+  if (remoteFoldersUpdatedAt > localFoldersUpdatedAt) {
     merged.folders = remoteFolders;
-  } else if (remoteFolders.length && localFolders.length) {
-    merged.folders = mergeFolders(localFolders, remoteFolders);
+    merged.foldersUpdatedAt = remoteFoldersUpdatedAt;
+  } else if (localFoldersUpdatedAt > remoteFoldersUpdatedAt) {
+    merged.folders = localFolders;
+    merged.foldersUpdatedAt = localFoldersUpdatedAt;
+  } else {
+    if (remoteFolders.length && !localFolders.length) {
+      merged.folders = remoteFolders;
+    } else if (localFolders.length && !remoteFolders.length) {
+      merged.folders = localFolders;
+    } else if (remoteFolders.length && localFolders.length) {
+      merged.folders = mergeFolders(localFolders, remoteFolders);
+    }
+    merged.foldersUpdatedAt = localFoldersUpdatedAt || remoteFoldersUpdatedAt || (merged.folders?.length ? Date.now() : 0);
   }
 
   return JSON.stringify(merged);

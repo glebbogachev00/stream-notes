@@ -53,6 +53,7 @@ const DEFAULT_SETTINGS = {
   enhancedEditingEnabled: false,
   foldersEnabled: true,
   folders: [],
+  foldersUpdatedAt: 0,
   availableThemes: ['white', 'beige', 'dark'], // All themes available by default
   autoSortingEnabled: false,
   showMoreByDefault: false,
@@ -135,6 +136,7 @@ export const SettingsProvider = ({ children }) => {
         enhancedEditingEnabled: settings.enhancedEditingEnabled,
         foldersEnabled: settings.foldersEnabled,
         folders: settings.folders,
+        foldersUpdatedAt: settings.foldersUpdatedAt,
         availableThemes: settings.availableThemes,
         autoSortingEnabled: settings.autoSortingEnabled,
         showMoreByDefault: settings.showMoreByDefault,
@@ -243,7 +245,13 @@ export const SettingsProvider = ({ children }) => {
   }, []);
 
   const updateSettings = (newSettings) => {
-    setSettings(prev => ({ ...prev, ...newSettings }));
+    setSettings(prev => {
+      const updates = { ...newSettings };
+      if (Object.prototype.hasOwnProperty.call(newSettings, 'folders')) {
+        updates.foldersUpdatedAt = Date.now();
+      }
+      return { ...prev, ...updates };
+    });
   };
 
   const completeOnboarding = (onboardingSettings) => {
