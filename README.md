@@ -76,7 +76,7 @@ Built with ❤️ by [@glebbogachev00](https://github.com/glebbogachev00)
 
 The Groq key must stay server-side. To enable Flow Formatting:
 
-1. In Vercel (or locally), set `GROQ_API_KEY` in the *Server* environment variables (no `REACT_APP_` prefix).
+1. In Vercel (or locally), set `GROQ_API_KEY` in the *Server* environment variables (no `REACT_APP_` prefix). Restart your dev server after adding it.
 2. The client now talks to `/api/groq-proxy`, a serverless function that attaches the key and forwards the request to Groq.
 3. No client changes are needed beyond rebuilding after updating env vars.
 
