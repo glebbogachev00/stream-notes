@@ -253,7 +253,18 @@ const StreamAssistant = ({
         if (command.naturalResponse) {
           addToConversation('assistant', command.naturalResponse, false, command.type === 'CHAT');
         }
-        setPendingConfirmation(command);
+        const confirmationCommand = {
+          ...command,
+          needsConfirmation: false,
+          skipConfirmation: true
+        };
+        if (Array.isArray(command.commands)) {
+          confirmationCommand.commands = command.commands.map((cmd) => ({
+            ...cmd,
+            needsConfirmation: false
+          }));
+        }
+        setPendingConfirmation(confirmationCommand);
         setIsProcessing(false);
         return;
       }

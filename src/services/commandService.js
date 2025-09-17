@@ -28,6 +28,7 @@ AVAILABLE ACTIONS:
 - SAVE_LATEST: Save the most recent note
 - CREATE_FOLDER: Create a new folder (parameters: [folderName])
 - MOVE_TO_FOLDER: Move latest note to folder (parameters: [folderName])
+- DELETE_FOLDER: Delete a folder (parameters: [folderName])
 - CHANGE_THEME: Switch app theme (parameters: [themeName])
 - ENABLE_SETTING: Enable a setting (parameters: [settingName])
 - DISABLE_SETTING: Disable a setting (parameters: [settingName])
@@ -95,17 +96,19 @@ CRITICAL: Your response must be ONLY the JSON object above. No markdown, no expl
 CRITICAL RULES:
 1. Only use CREATE_NOTE when user explicitly says "create/write/add/make a note"
 2. For casual conversation, greetings, questions → use CHAT with stream personality
-3. For bulk operations (save all, format all, delete) → set needsConfirmation: true
-4. For folder creation → set needsConfirmation: false (quick action)
-5. For destructive actions (delete) → always set needsConfirmation: true
-6. Always include naturalResponse in stream's voice - this is your main interaction!
-7. If unsure about user intent, ask for clarification in naturalResponse
-8. For jokes/fun requests → use CHAT and be playful with water/stream themes
-9. Be conversational and personable while staying note-focused
+3. For folder deletion → set needsConfirmation: true
+4. For bulk operations (save all, format all, delete notes) → set needsConfirmation: true
+5. For folder creation → set needsConfirmation: false (quick action)
+6. For destructive actions (delete) → always set needsConfirmation: true
+7. Always include naturalResponse in stream's voice - this is your main interaction!
+8. If unsure about user intent, ask for clarification in naturalResponse
+9. For jokes/fun requests → use CHAT and be playful with water/stream themes
+10. Be conversational and personable while staying note-focused
 
 Examples:
 "create a note about coffee" → CREATE_NOTE, naturalResponse: "got it! creating a note about coffee 💧"
 "create a folder named work" → CREATE_FOLDER, naturalResponse: "got it! creating a 'work' folder for you 💧"
+"delete the work folder" → DELETE_FOLDER, naturalResponse: "whoa, that's a big flow shift! want me to delete the 'work' folder?", needsConfirmation: true
 "enable folders" → ENABLE_SETTING, naturalResponse: "nice! I'll enable folders so you can organize your notes. here we go!"
 "enable folders and add folder test" → MULTI_COMMAND with both commands, naturalResponse: "perfect! I'll enable folders and create that test folder for you 💧"
 "save all my notes and enable flow formatting" → MULTI_COMMAND, naturalResponse: "got it! I'll save everything and turn on flow formatting. want me to go ahead?", needsConfirmation: true
@@ -272,6 +275,37 @@ Remember: Your naturalResponse is the main user interaction - make it count with
     }
     
     // Delete commands
+    if (lowerInput.includes('delete folder')) {
+      const folderName = input
+        .replace(/delete/gi, '')
+        .replace(/the/gi, '')
+        .replace(/folder/gi, '')
+        .replace(/named/gi, '')
+        .replace(/called/gi, '')
+        .replace(/please/gi, '')
+        .trim();
+
+      if (!folderName) {
+        return {
+          type: 'CHAT',
+          originalInput: input,
+          parameters: [],
+          confidence: 0.6,
+          naturalResponse: "Sure, which folder should I delete?",
+          needsConfirmation: false
+        };
+      }
+
+      return {
+        type: 'DELETE_FOLDER',
+        originalInput: input,
+        parameters: [folderName],
+        confidence: 0.85,
+        naturalResponse: `whoa, hold up! you want to delete the folder '${folderName}'? that's a pretty big stream to delete! want me to go ahead?`,
+        needsConfirmation: true
+      };
+    }
+
     if (lowerInput.includes('delete') && (lowerInput.includes('latest') || lowerInput.includes('last'))) {
       return {
         type: 'DELETE_LATEST',
@@ -505,6 +539,9 @@ export class CommandExecutor {
           
         case 'MOVE_TO_FOLDER':
           return await this.moveToFolder(command.parameters[0]);
+
+        case 'DELETE_FOLDER':
+          return await this.deleteFolder(command.parameters[0]);
           
         case 'SEARCH_NOTES':
           return await this.searchNotes(command.parameters[0]);
@@ -710,6 +747,60 @@ export class CommandExecutor {
     }
   }
 
+  async deleteFolder(folderName) {
+    const settings = this.settingsActions.getSettings();
+    if (!settings?.folders?.length) {
+      return {
+        success: false,
+        message: "You don't have any folders yet!"
+      };
+    }
+
+    const trimmedName = (folderName || '').trim();
+    if (!trimmedName) {
+      return {
+        success: false,
+        message: "I need the folder name to delete it!"
+      };
+    }
+
+    const folders = settings.folders || [];
+    const match = folders.find((folder) => folder.toLowerCase() === trimmedName.toLowerCase());
+    if (!match) {
+      return {
+        success: false,
+        message: `I couldn't find a folder named '${trimmedName}'.`
+      };
+    }
+
+    const remainingFolders = folders.filter((folder) => folder.toLowerCase() !== trimmedName.toLowerCase());
+    this.settingsActions.updateSettings({ folders: remainingFolders });
+
+    const notes = this.noteActions.getNotes();
+    const savedNotes = this.noteActions.getSavedNotes ? this.noteActions.getSavedNotes() : [];
+
+    const normalize = (value) => (value || '').toLowerCase();
+
+    for (const note of notes) {
+      if (normalize(note.folder) === normalize(match)) {
+        this.noteActions.updateNoteFolder(note.id, null, false);
+      }
+    }
+
+    if (this.noteActions.updateNoteFolder) {
+      for (const saved of savedNotes) {
+        if (normalize(saved.folder) === normalize(match)) {
+          this.noteActions.updateNoteFolder(saved.id, null, true);
+        }
+      }
+    }
+
+    return {
+      success: true,
+      message: `Folder '${match}' deleted and notes moved back to all.`
+    };
+  }
+
   async createFolder(folderName) {
     if (!folderName || !folderName.trim()) {
       return {
@@ -883,16 +974,16 @@ Try me out! 💧`;
     let overallSuccess = true;
     let hasConfirmationNeeded = false;
 
-    // Check if any command needs confirmation
-    for (const cmd of multiCommand.commands) {
-      if (cmd.type === 'SAVE_ALL' || cmd.type === 'FORMAT_ALL' || cmd.type === 'DELETE_LATEST') {
-        hasConfirmationNeeded = true;
-        break;
+    if (!multiCommand.skipConfirmation) {
+      for (const cmd of multiCommand.commands) {
+        if (['SAVE_ALL', 'FORMAT_ALL', 'DELETE_LATEST', 'DELETE_FOLDER'].includes(cmd.type)) {
+          hasConfirmationNeeded = true;
+          break;
+        }
       }
     }
 
-    // If confirmation needed, return early
-    if (hasConfirmationNeeded || multiCommand.needsConfirmation) {
+    if (!multiCommand.skipConfirmation && (hasConfirmationNeeded || multiCommand.needsConfirmation)) {
       return {
         success: true,
         message: multiCommand.naturalResponse || "I'll execute those commands. Want me to go ahead?",
