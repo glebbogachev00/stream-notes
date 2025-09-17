@@ -63,8 +63,9 @@ CRITICAL: Return ONLY the corrected/formatted text. NO comments, explanations, o
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      const errorMessage = errorData.error?.message || 'Unknown error';
+      const errorData = await response.json().catch(() => ({}));
+      const errorMessage = errorData?.error || errorData?.message || 'Unknown error';
+      console.error('[flow-format] proxy error', response.status, errorData);
       
       // Handle different error types with personality
       if (response.status === 429 || errorMessage.includes('rate limit') || errorMessage.includes('quota')) {
@@ -72,7 +73,7 @@ CRITICAL: Return ONLY the corrected/formatted text. NO comments, explanations, o
       } else if (response.status === 401 || errorMessage.includes('API key')) {
         throw new Error("stream can't access the flow formatting service - check your settings");
       } else if (response.status >= 500) {
-        throw new Error("stream's formatting service took a coffee break - try again soon");
+        throw new Error(errorMessage || "stream's formatting service took a coffee break - try again soon");
       } else {
         throw new Error(`stream hit a snag while formatting: ${errorMessage}`);
       }
