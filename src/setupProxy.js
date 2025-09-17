@@ -1,4 +1,43 @@
 const express = require('express');
+const https = require('https');
+
+const callGroq = (payload, apiKey) => {
+  const body = JSON.stringify(payload);
+
+  const options = {
+    hostname: 'api.groq.com',
+    path: '/openai/v1/chat/completions',
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Content-Length': Buffer.byteLength(body),
+      'Authorization': `Bearer ${apiKey}`
+    }
+  };
+
+  return new Promise((resolve, reject) => {
+    const req = https.request(options, (res) => {
+      let data = '';
+
+      res.on('data', (chunk) => {
+        data += chunk;
+      });
+
+      res.on('end', () => {
+        try {
+          const parsed = data ? JSON.parse(data) : {};
+          resolve({ status: res.statusCode, data: parsed });
+        } catch (error) {
+          reject(error);
+        }
+      });
+    });
+
+    req.on('error', reject);
+    req.write(body);
+    req.end();
+  });
+};
 
 module.exports = function(app) {
   app.use('/api/groq-proxy', express.json({ limit: '1mb' }), async (req, res) => {
@@ -16,19 +55,10 @@ module.exports = function(app) {
     }
 
     try {
-      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`
-        },
-        body: JSON.stringify(req.body)
-      });
+      const { status, data } = await callGroq(req.body, apiKey);
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        return res.status(response.status).json({
+      if (status < 200 || status >= 300) {
+        return res.status(status).json({
           error: data?.error?.message || 'Groq request failed'
         });
       }
