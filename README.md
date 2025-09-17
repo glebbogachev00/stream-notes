@@ -71,3 +71,13 @@ Let your thoughts flow like a stream - some will naturally drift away, others yo
 ---
 
 Built with ❤️ by [@glebbogachev00](https://github.com/glebbogachev00)
+
+## Secure Flow Formatting (Groq)
+
+The Groq key must stay server-side. To enable Flow Formatting:
+
+1. In Vercel (or locally), set `GROQ_API_KEY` in the *Server* environment variables (no `REACT_APP_` prefix).
+2. The client now talks to `/api/groq-proxy`, a serverless function that attaches the key and forwards the request to Groq.
+3. No client changes are needed beyond rebuilding after updating env vars.
+
+If `GROQ_API_KEY` is missing, the proxy responds with an error and Flow Formatting / Talk to Stream will fall back gracefully.

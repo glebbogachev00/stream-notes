@@ -1,11 +1,6 @@
-const GROQ_API_KEY = process.env.REACT_APP_GROQ_API_KEY;
-const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
+const GROQ_PROXY_URL = '/api/groq-proxy';
 
 export const formatNoteWithAI = async (noteContent, userSettings = {}) => {
-  if (!GROQ_API_KEY) {
-    throw new Error('Groq API key not configured');
-  }
-
   // Determine list format from user settings
   const listFormat = userSettings.organizationStyle || 'bullets';
   const listExample = listFormat === 'bullets' ? '• Item' : listFormat === 'numbers' ? '1. Item' : '- Item';
@@ -48,12 +43,8 @@ Note to process:
 CRITICAL: Return ONLY the corrected/formatted text. NO comments, explanations, or notes about changes made.`;
 
   try {
-    const response = await fetch(GROQ_API_URL, {
+    const response = await fetch(GROQ_PROXY_URL, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${GROQ_API_KEY}`,
-      },
       body: JSON.stringify({
         model: 'llama-3.1-8b-instant',
         messages: [

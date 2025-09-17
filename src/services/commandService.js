@@ -1,21 +1,9 @@
 import { formatNoteWithAI } from './aiService';
 
-const GROQ_API_KEY = process.env.REACT_APP_GROQ_API_KEY;
-const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
+const GROQ_PROXY_URL = '/api/groq-proxy';
 
 // Use AI to parse natural language commands
 export const parseCommand = async (input, context = {}) => {
-  if (!GROQ_API_KEY) {
-    // Fallback to simple parsing if no API key
-    return {
-      type: 'CREATE_NOTE',
-      originalInput: input,
-      parameters: [input],
-      confidence: 0.5,
-      naturalResponse: "I'll create a note with that content."
-    };
-  }
-
   const { activeNotes = 0, savedNotes = 0, folders = [], themes = [] } = context;
   
   const systemPrompt = `You are stream, a minimal note-taking app's AI assistant. You embody stream's personality: minimalist, helpful, slightly playful, and focused on flow.
@@ -132,12 +120,8 @@ Examples:
 Remember: Your naturalResponse is the main user interaction - make it count with stream's personality!`;
 
   try {
-    const response = await fetch(GROQ_API_URL, {
+    const response = await fetch(GROQ_PROXY_URL, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${GROQ_API_KEY}`,
-      },
       body: JSON.stringify({
         model: 'llama-3.1-8b-instant',
         messages: [
