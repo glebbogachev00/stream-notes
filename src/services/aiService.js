@@ -93,6 +93,4 @@ CRITICAL: Return ONLY the corrected/formatted text. NO comments, explanations, o
 };
 
 // Helper to check if API key is configured
-export const isAIConfigured = () => {
-  return !!GROQ_API_KEY;
-};
+export const isAIConfigured = () => true;
