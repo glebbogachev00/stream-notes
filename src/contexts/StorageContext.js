@@ -115,7 +115,7 @@ export const StorageProvider = ({ children }) => {
           if (!isMounted) return;
           setSyncError(error.message || 'Sync failed.');
         });
-      }, 60000);
+      }, 10000);
     }
 
     return () => {
