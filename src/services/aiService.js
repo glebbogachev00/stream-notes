@@ -45,6 +45,9 @@ CRITICAL: Return ONLY the corrected/formatted text. NO comments, explanations, o
   try {
     const response = await fetch(GROQ_PROXY_URL, {
       method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
       body: JSON.stringify({
         model: 'llama-3.1-8b-instant',
         messages: [
