@@ -40,21 +40,6 @@ const SettingsModal = ({ isOpen, onClose, onOpenAuthModal }) => {
     }
   };
 
-  const downloadFile = useCallback((filename, contents) => {
-    try {
-      const blob = new Blob([contents], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      URL.revokeObjectURL(url);
-    } catch (error) {
-      window.alert('Unable to download the backup file.');
-    }
-  }, []);
 
   const broadcastUpdates = useCallback((keys) => {
     if (typeof window === 'undefined') return;
@@ -62,10 +47,6 @@ const SettingsModal = ({ isOpen, onClose, onOpenAuthModal }) => {
     window.dispatchEvent(event);
   }, []);
 
-  const handleDownloadSavedNotes = useCallback(() => {
-    const saved = localStorage.getItem('stream_saved_notes') || '[]';
-    downloadFile(`stream-saved-notes-${new Date().toISOString()}.json`, saved);
-  }, [downloadFile]);
 
   const handleCreateSavedSnapshot = useCallback(() => {
     const saved = localStorage.getItem('stream_saved_notes');
@@ -271,29 +252,23 @@ const SettingsModal = ({ isOpen, onClose, onOpenAuthModal }) => {
 
                 <div className={`mt-4 pt-4 border-t ${theme.borderSecondary} space-y-3`}> 
                   <div className={`dynamic-text-xs uppercase tracking-wider ${theme.textTertiary}`}>backups</div>
-                  <div className={`dynamic-text-xs ${theme.text}`}>latest saved notes backup: {formatTimestamp(latestSavedBackup?.timestamp)}</div>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                    <button
-                      onClick={handleDownloadSavedNotes}
-                      className={`border ${theme.border} px-3 py-2 dynamic-text-xs font-light ${theme.text} hover:${theme.textSecondary.replace('text-', 'hover:text-')} transition-colors`}
-                    >
-                      download saved notes
-                    </button>
+                  <div className={`dynamic-text-xs ${theme.text}`}>latest backup: {formatTimestamp(latestSavedBackup?.timestamp)}</div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <button
                       onClick={handleCreateSavedSnapshot}
                       className={`border ${theme.border} px-3 py-2 dynamic-text-xs font-light ${theme.text} hover:${theme.textSecondary.replace('text-', 'hover:text-')} transition-colors`}
                     >
-                      create backup now
+                      create backup
                     </button>
                     <button
                       onClick={handleRestoreSavedNotes}
                       className={`border ${theme.border} px-3 py-2 dynamic-text-xs font-light ${theme.text} hover:${theme.textSecondary.replace('text-', 'hover:text-')} transition-colors`}
                     >
-                      restore latest backup
+                      restore backup
                     </button>
                   </div>
                   <div className={`dynamic-text-xs ${theme.textTertiary} opacity-70`}> 
-                    backups are stored locally and synced. restoring replaces only your saved notes.
+                    backups include saved notes and folders. sync automatically preserves your data.
                   </div>
                 </div>
               </div>

@@ -14,7 +14,18 @@ const PRIMARY_KEYS = ['stream_notes', 'stream_saved_notes'];
 const SYNC_KEYS = [...PRIMARY_KEYS, 'stream_art_notes', 'stream-settings'];
 const HISTORY_KEY = 'stream-sync-history';
 const HISTORY_LIMIT = 15;
+const BACKUP_INTERVAL = 20 * 60 * 1000; // 20 minutes in milliseconds
 const ARRAY_MERGE_KEYS = new Set(['stream_notes', 'stream_saved_notes', 'stream_art_notes']);
+
+const parseJSON = (value, fallback = {}) => {
+  if (!value) return fallback;
+  try {
+    return JSON.parse(value);
+  } catch (error) {
+    return fallback;
+  }
+};
+const BACKUP_KEYS = [...SYNC_KEYS, 'stream-syncable-settings', 'stream-local-settings'];
 
 const loadMeta = (syncKey = '') => {
   try {
@@ -75,8 +86,96 @@ const saveHistory = (entries) => {
   }
 };
 
+const getCurrentFolders = () => {
+  const syncableSettings = parseJSON(localStorage.getItem('stream-syncable-settings'));
+  if (Array.isArray(syncableSettings.folders) && syncableSettings.folders.length > 0) {
+    return syncableSettings.folders;
+  }
+
+  const legacySettings = parseJSON(localStorage.getItem('stream-settings'));
+  if (Array.isArray(legacySettings.folders)) {
+    return legacySettings.folders;
+  }
+
+  return [];
+};
+
+const mergeFolders = (localFolders = [], remoteFolders = []) => {
+  const normalize = (name) => (name || '').trim();
+  const seen = new Set();
+  const result = [];
+
+  [...localFolders, ...remoteFolders].forEach((folder) => {
+    const normalized = normalize(folder);
+    if (!normalized) {
+      return;
+    }
+    const key = normalized.toLowerCase();
+    if (!seen.has(key)) {
+      seen.add(key);
+      result.push(normalized);
+    }
+  });
+
+  return result;
+};
+
+const mergeSyncableSettings = (localValue, remoteValue) => {
+  const local = parseJSON(localValue, {});
+  const remote = parseJSON(remoteValue, {});
+
+  const merged = { ...local, ...remote };
+
+  const localFolders = Array.isArray(local.folders) ? local.folders : [];
+  const remoteFolders = Array.isArray(remote.folders) ? remote.folders : [];
+
+  if (localFolders.length && !remoteFolders.length) {
+    merged.folders = localFolders;
+  } else if (remoteFolders.length && !localFolders.length) {
+    merged.folders = remoteFolders;
+  } else if (remoteFolders.length && localFolders.length) {
+    merged.folders = mergeFolders(localFolders, remoteFolders);
+  }
+
+  return JSON.stringify(merged);
+};
+
+const shouldCreateBackup = (key) => {
+  if (!PRIMARY_KEYS.includes(key)) {
+    return false;
+  }
+  
+  try {
+    const lastBackupKey = `${key}_last_backup_time`;
+    const lastBackupTime = localStorage.getItem(lastBackupKey);
+    const now = Date.now();
+    
+    if (!lastBackupTime) {
+      // No previous backup, create one
+      localStorage.setItem(lastBackupKey, now.toString());
+      return true;
+    }
+    
+    const timeSinceLastBackup = now - parseInt(lastBackupTime);
+    if (timeSinceLastBackup >= BACKUP_INTERVAL) {
+      // Enough time has passed, create backup
+      localStorage.setItem(lastBackupKey, now.toString());
+      return true;
+    }
+    
+    return false;
+  } catch (error) {
+    return false;
+  }
+};
+
 const recordSnapshot = (key, value) => {
   if (!PRIMARY_KEYS.includes(key)) {
+    return;
+  }
+
+  // Only create backup snapshots every 20 minutes
+  if (!shouldCreateBackup(key)) {
     return;
   }
 
@@ -93,7 +192,11 @@ const recordSnapshot = (key, value) => {
 
   try {
     const history = loadHistory();
-    history.unshift({ key, value, timestamp: Date.now() });
+    const entry = { key, value, timestamp: Date.now() };
+    if (key === 'stream_saved_notes') {
+      entry.folders = getCurrentFolders();
+    }
+    history.unshift(entry);
     if (history.length > HISTORY_LIMIT) {
       history.length = HISTORY_LIMIT;
     }
@@ -418,9 +521,25 @@ class StorageAdapter {
             return;
           }
         }
-        if (localValue !== item.value) {
-          setLocalValue(item.key, item.value);
-          updatedKeys.push(item.key);
+        if (item.key === 'stream-syncable-settings') {
+          const merged = mergeSyncableSettings(localValue, item.value);
+          if (merged !== item.value) {
+            this.pendingChanges.set(item.key, {
+              key: item.key,
+              value: merged,
+              updatedAt: Date.now(),
+              deletedAt: null
+            });
+          }
+          if (localValue !== merged) {
+            setLocalValue(item.key, merged);
+            updatedKeys.push(item.key);
+          }
+        } else {
+          if (localValue !== item.value) {
+            setLocalValue(item.key, item.value);
+            updatedKeys.push(item.key);
+          }
         }
       }
     });
@@ -460,12 +579,54 @@ class StorageAdapter {
     }
 
     this.updateStatus('syncing');
+    
+    // Always backup folders before sync
+    const originalFolders = getCurrentFolders();
+    
     try {
       await this.pullRemoteChanges();
       await this.pushPendingChanges();
+      
+      // After sync, ensure folders are preserved
+      const currentFolders = getCurrentFolders();
+      if (originalFolders.length > 0 && currentFolders.length === 0) {
+        console.log('[storage] Restoring folders lost during sync:', originalFolders);
+        const syncableSettings = localStorage.getItem('stream-syncable-settings');
+        try {
+          const parsed = syncableSettings ? JSON.parse(syncableSettings) : {};
+          parsed.folders = originalFolders;
+          localStorage.setItem('stream-syncable-settings', JSON.stringify(parsed));
+          
+          // Trigger UI update
+          if (typeof window !== 'undefined') {
+            const event = new CustomEvent('stream-sync-update', {
+              detail: { keys: ['stream-syncable-settings'] }
+            });
+            window.dispatchEvent(event);
+          }
+        } catch (error) {
+          localStorage.setItem('stream-syncable-settings', JSON.stringify({ folders: originalFolders }));
+        }
+      }
+      
       this.updateStatus('synced');
     } catch (error) {
       console.error('[storage] sync error', error);
+      
+      // Even if sync fails, ensure folders are preserved
+      const currentFolders = getCurrentFolders();
+      if (originalFolders.length > 0 && currentFolders.length === 0) {
+        console.log('[storage] Restoring folders after sync error:', originalFolders);
+        try {
+          const syncableSettings = localStorage.getItem('stream-syncable-settings');
+          const parsed = syncableSettings ? JSON.parse(syncableSettings) : {};
+          parsed.folders = originalFolders;
+          localStorage.setItem('stream-syncable-settings', JSON.stringify(parsed));
+        } catch (restoreError) {
+          localStorage.setItem('stream-syncable-settings', JSON.stringify({ folders: originalFolders }));
+        }
+      }
+      
       this.updateStatus('error');
       throw error;
     }
@@ -760,7 +921,21 @@ class StorageAdapter {
             return;
           }
         }
-        if (localValue !== value) {
+        if (key === 'stream-syncable-settings') {
+          const merged = mergeSyncableSettings(localValue, value);
+          if (merged !== value) {
+            this.pendingChanges.set(key, {
+              key,
+              value: merged,
+              updatedAt: Date.now(),
+              deletedAt: null
+            });
+          }
+          if (localValue !== merged) {
+            setLocalValue(key, merged);
+            updatedKeys.push(key);
+          }
+        } else if (localValue !== value) {
           setLocalValue(key, value);
           updatedKeys.push(key);
         }
@@ -820,6 +995,31 @@ export const restoreSyncSnapshot = (key, timestamp) => {
   } else {
     setLocalValue(key, value);
   }
+  
+  // If restoring saved notes and we have folder data, restore folders too
+  if (key === 'stream_saved_notes' && match.folders && match.folders.length > 0) {
+    try {
+      const syncableSettings = localStorage.getItem('stream-syncable-settings');
+      if (syncableSettings) {
+        const parsed = JSON.parse(syncableSettings);
+        parsed.folders = match.folders;
+        localStorage.setItem('stream-syncable-settings', JSON.stringify(parsed));
+      } else {
+        localStorage.setItem('stream-syncable-settings', JSON.stringify({ folders: match.folders }));
+      }
+      
+      // Also update legacy settings for backward compatibility
+      const legacySettings = localStorage.getItem('stream-settings');
+      if (legacySettings) {
+        const parsed = JSON.parse(legacySettings);
+        parsed.folders = match.folders;
+        localStorage.setItem('stream-settings', JSON.stringify(parsed));
+      }
+    } catch (error) {
+      console.warn('Failed to restore folders during snapshot restore:', error);
+    }
+  }
+  
   return true;
 };
 
@@ -830,4 +1030,144 @@ export const createSnapshotForKey = (key) => {
   const value = localStorage.getItem(key);
   recordSnapshot(key, value);
   return true;
+};
+
+export const createFullBackup = () => {
+  try {
+    const backup = {
+      timestamp: Date.now(),
+      data: {}
+    };
+    
+    BACKUP_KEYS.forEach(key => {
+      const value = localStorage.getItem(key);
+      if (value !== null) {
+        backup.data[key] = value;
+      }
+    });
+    
+    // Also capture current folders state explicitly
+    backup.folders = getCurrentFolders();
+    
+    localStorage.setItem('stream-full-backup', JSON.stringify(backup));
+    return backup;
+  } catch (error) {
+    console.warn('Failed to create full backup:', error);
+    return null;
+  }
+};
+
+export const restoreFullBackup = () => {
+  try {
+    const backupData = localStorage.getItem('stream-full-backup');
+    if (!backupData) {
+      return false;
+    }
+    
+    const backup = JSON.parse(backupData);
+    if (!backup.data) {
+      return false;
+    }
+    
+    // Restore all backed up data
+    Object.entries(backup.data).forEach(([key, value]) => {
+      if (value !== null) {
+        setLocalValue(key, value);
+      }
+    });
+    
+    // If we have folder data, ensure it's properly restored
+    if (backup.folders && backup.folders.length > 0) {
+      // Update syncable settings to include folders
+      const syncableSettings = localStorage.getItem('stream-syncable-settings');
+      if (syncableSettings) {
+        try {
+          const parsed = JSON.parse(syncableSettings);
+          parsed.folders = backup.folders;
+          localStorage.setItem('stream-syncable-settings', JSON.stringify(parsed));
+        } catch (error) {
+          // If parsing fails, create new settings with folders
+          localStorage.setItem('stream-syncable-settings', JSON.stringify({ folders: backup.folders }));
+        }
+      } else {
+        localStorage.setItem('stream-syncable-settings', JSON.stringify({ folders: backup.folders }));
+      }
+    }
+    
+    return true;
+  } catch (error) {
+    console.warn('Failed to restore full backup:', error);
+    return false;
+  }
+};
+
+export const createPreSyncBackup = () => {
+  const backup = createFullBackup();
+  if (backup) {
+    localStorage.setItem('stream-pre-sync-backup', JSON.stringify(backup));
+  }
+  return backup;
+};
+
+export const restorePreSyncBackup = () => {
+  try {
+    const backupData = localStorage.getItem('stream-pre-sync-backup');
+    if (!backupData) {
+      return false;
+    }
+    
+    const backup = JSON.parse(backupData);
+    if (!backup.data) {
+      return false;
+    }
+    
+    // Only restore user data that wasn't synced, preserve synced content
+    const userDataKeys = ['stream-local-settings']; // Device-specific settings
+    const syncableKeys = ['stream-syncable-settings', 'stream_notes', 'stream_saved_notes', 'stream_art_notes'];
+    
+    // Restore local settings
+    userDataKeys.forEach(key => {
+      if (backup.data[key]) {
+        localStorage.setItem(key, backup.data[key]);
+      }
+    });
+    
+    // For syncable data, merge with what was synced
+    syncableKeys.forEach(key => {
+      if (backup.data[key]) {
+        const backupValue = backup.data[key];
+        const currentValue = localStorage.getItem(key);
+        
+        // If current value is empty but backup had data, restore it
+        if (!currentValue || currentValue === '[]' || currentValue === '{}') {
+          setLocalValue(key, backupValue);
+        }
+      }
+    });
+    
+    // Ensure folders are restored if they were lost
+    if (backup.folders && backup.folders.length > 0) {
+      const currentFolders = getCurrentFolders();
+      if (currentFolders.length === 0) {
+        // Folders were lost, restore them
+        const syncableSettings = localStorage.getItem('stream-syncable-settings');
+        if (syncableSettings) {
+          try {
+            const parsed = JSON.parse(syncableSettings);
+            parsed.folders = backup.folders;
+            localStorage.setItem('stream-syncable-settings', JSON.stringify(parsed));
+          } catch (error) {
+            localStorage.setItem('stream-syncable-settings', JSON.stringify({ folders: backup.folders }));
+          }
+        } else {
+          localStorage.setItem('stream-syncable-settings', JSON.stringify({ folders: backup.folders }));
+        }
+      }
+    }
+    
+    return true;
+  } catch (error) {
+    console.warn('Failed to restore pre-sync backup:', error);
+    return false;
+  }
 };
