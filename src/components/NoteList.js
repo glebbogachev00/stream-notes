@@ -59,13 +59,21 @@ const NoteList = ({
 
     const buttonRect = event.target.getBoundingClientRect();
     const viewportHeight = window.innerHeight;
-    const menuHeight = 200; // Approximate menu height
+    
+    // Calculate dynamic menu height based on enabled features
+    let menuItemCount = 4; // pin, copy, save, delete (always present)
+    if (settings.flowFormattingEnabled) menuItemCount += 1; // format
+    if (settings.foldersEnabled && settings.folders.length > 0) menuItemCount += 1; // move
+    if (settings.samoModeEnabled) menuItemCount += 1; // samo
+    
+    const menuHeight = (menuItemCount * 44) + 16; // ~44px per item + padding
     const spaceBelow = viewportHeight - buttonRect.bottom;
-    const shouldShowAbove = spaceBelow < menuHeight && buttonRect.top > menuHeight;
+    const spaceAbove = buttonRect.top;
+    const shouldShowAbove = spaceBelow < menuHeight && spaceAbove > menuHeight;
 
     setMenuPosition({ top: shouldShowAbove });
     setOpenMenuId(noteId);
-  }, [openMenuId]);
+  }, [openMenuId, settings.flowFormattingEnabled, settings.foldersEnabled, settings.folders.length, settings.samoModeEnabled]);
 
   useEffect(() => {
     if (editingNoteId && editingTextareaRef.current) {
