@@ -12,7 +12,6 @@ const isExtensionContext = () => {
 const SYNC_META_KEY = 'stream-sync-meta';
 const PRIMARY_KEYS = ['stream_notes', 'stream_saved_notes'];
 const SYNC_KEYS = [...PRIMARY_KEYS, 'stream_art_notes', 'stream-settings'];
-const BACKUP_KEYS = PRIMARY_KEYS.map((key) => `${key}_backup`);
 const HISTORY_KEY = 'stream-sync-history';
 const HISTORY_LIMIT = 15;
 const ARRAY_MERGE_KEYS = new Set(['stream_notes', 'stream_saved_notes', 'stream_art_notes']);
