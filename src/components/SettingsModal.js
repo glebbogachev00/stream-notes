@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useSettings, ORGANIZATION_STYLES, DELETE_TIMERS } from '../contexts/SettingsContext';
 import CollapsibleSection from './CollapsibleSection';
@@ -11,22 +11,12 @@ import { useAuth } from '../contexts/AuthContext';
 const SettingsModal = ({ isOpen, onClose, onOpenAuthModal }) => {
   const { theme, switchTheme, themes } = useTheme();
   const { settings, updateSettings, resetSettings, togglePersonality } = useSettings();
-  const { syncStatus, lastSyncedAt, syncError, syncNow } = useStorage();
+  const { syncStatus, syncError } = useStorage();
   const { user, signOut, loading: authLoading, isConfigured: authConfigured } = useAuth();
   const [newUserTag, setNewUserTag] = useState('');
   const [tagError, setTagError] = useState('');
   const [newFolder, setNewFolder] = useState('');
-  const [syncEndpoint, setSyncEndpoint] = useState(settings.syncEndpoint || '');
-  const [syncKeyValue, setSyncKeyValue] = useState(settings.syncKey || '');
   const userTag = getUserTag();
-
-  useEffect(() => {
-    setSyncEndpoint(settings.syncEndpoint || '');
-  }, [settings.syncEndpoint]);
-
-  useEffect(() => {
-    setSyncKeyValue(settings.syncKey || '');
-  }, [settings.syncKey]);
 
   const syncStatusLabel = () => {
     switch (syncStatus) {
@@ -43,17 +33,6 @@ const SettingsModal = ({ isOpen, onClose, onOpenAuthModal }) => {
     }
   };
 
-  const formattedLastSync = () => {
-    if (!lastSyncedAt) {
-      return 'never';
-    }
-    try {
-      return new Date(lastSyncedAt).toLocaleString();
-    } catch (error) {
-      return 'unknown';
-    }
-  };
-
   const handleSyncToggle = () => {
     if (!user) {
       if (onOpenAuthModal) {
@@ -64,46 +43,8 @@ const SettingsModal = ({ isOpen, onClose, onOpenAuthModal }) => {
     updateSettings({ syncEnabled: !settings.syncEnabled });
   };
 
-  const handleEndpointBlur = () => {
-    const trimmed = syncEndpoint.trim();
-    updateSettings({ syncEndpoint: trimmed });
-  };
-
-  const handleSyncKeyBlur = () => {
-    const trimmed = syncKeyValue.trim();
-    if (trimmed && trimmed !== settings.syncKey) {
-      updateSettings({ syncKey: trimmed });
-    }
-  };
-
-  const handleGenerateSyncKey = () => {
-    const newKey = typeof crypto !== 'undefined' && crypto.randomUUID
-      ? crypto.randomUUID()
-      : `stream-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-    setSyncKeyValue(newKey);
-    updateSettings({ syncKey: newKey });
-  };
-
-  const handleCopySyncKey = async () => {
-    if (!syncKeyValue) return;
-    try {
-      await navigator.clipboard.writeText(syncKeyValue);
-    } catch (error) {
-      // Clipboard may be unavailable depending on context
-    }
-  };
-
-  const handleManualSync = async () => {
-    try {
-      await syncNow();
-    } catch (error) {
-      // Errors are surfaced via syncError state
-    }
-  };
-
   const handleSignOut = async () => {
     await signOut();
-    setSyncKeyValue('');
     updateSettings({ syncEnabled: false, syncKey: '' });
   };
 
