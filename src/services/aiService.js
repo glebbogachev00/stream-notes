@@ -88,6 +88,14 @@ CRITICAL: Return ONLY the corrected/formatted text. NO comments, explanations, o
     return formattedContent.trim();
   } catch (error) {
     console.error('Error formatting note with flow formatting:', error);
+    if (error instanceof Response) {
+      try {
+        const data = await error.json();
+        throw new Error(data?.error || 'stream hit a snag while formatting');
+      } catch (parseError) {
+        throw new Error('stream hit a snag while formatting');
+      }
+    }
     throw error;
   }
 };
