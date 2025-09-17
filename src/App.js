@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback, lazy, Suspense, memo } from 'react';
-import { Analytics } from '@vercel/analytics/react';
 import { useNotes } from './hooks/useNotes';
 import { useToast } from './hooks/useToast';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import { SettingsProvider, useSettings } from './contexts/SettingsContext';
 import { StorageProvider, useStorage } from './contexts/StorageContext';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import NoteInput from './components/NoteInput';
 import NoteList from './components/NoteList';
 import SavedNotes from './components/SavedNotes';
@@ -13,6 +13,8 @@ import Onboarding from './components/Onboarding';
 import Toast from './components/Toast';
 import FolderFilter from './components/FolderFilter';
 import HeaderActionsDropdown from './components/HeaderActionsDropdown';
+import SyncIcon from './components/icons/SyncIcon';
+import CheckIcon from './components/icons/CheckIcon';
 import StreamAssistant from './components/StreamAssistant';
 import { submitFeedback } from './utils/feedback';
 
@@ -25,6 +27,7 @@ const MatrixUnlockNotification = lazy(() => import(/* webpackChunkName: "notific
 const EdgeUnlockNotification = lazy(() => import(/* webpackChunkName: "notifications" */ './components/EdgeUnlockNotification'));
 const FeedbackModal = lazy(() => import(/* webpackChunkName: "feedback" */ './components/FeedbackModal'));
 const BackToTop = lazy(() => import(/* webpackChunkName: "utilities" */ './components/BackToTop'));
+const SyncAuthModal = lazy(() => import(/* webpackChunkName: "sync-auth" */ './components/SyncAuthModal'));
 
 const AppContent = memo(() => {
   const [activeTab, setActiveTab] = useState('active');
@@ -44,6 +47,7 @@ const AppContent = memo(() => {
   const [activeFolder, setActiveFolder] = useState('all');
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [showInstallPrompt, setShowInstallPrompt] = useState(false);
+  const [isSyncAuthOpen, setIsSyncAuthOpen] = useState(false);
 
   const cycleLogo = () => {
     const styles = ['originalText', 'graffiti', 'raindrop'];
@@ -85,7 +89,8 @@ const AppContent = memo(() => {
   };
   const { theme, switchTheme, themes } = useTheme();
   const { settings, updateSettings } = useSettings();
-  const { getSyncStatus } = useStorage();
+  const { user, loading: authLoading } = useAuth();
+  const { getSyncStatus, syncStatus, syncNow } = useStorage();
   const { toasts, showToast, hideToast } = useToast();
   const {
     notes,
@@ -108,7 +113,7 @@ const AppContent = memo(() => {
     toggleNotePin,
     updateGlobalDeleteTimer,
     updateNoteFolder
-  } = useNotes(settings.deleteTimer, showToast, settings.personalityEnabled, handleEdgeUnlock);
+  } = useNotes(settings.deleteTimer, showToast, settings.personalityEnabled, handleEdgeUnlock, activeFolder);
 
   // Track previous deleteTimer to detect changes
   const previousDeleteTimer = useRef(settings.deleteTimer);
@@ -163,6 +168,24 @@ const AppContent = memo(() => {
     
     setDeferredPrompt(null);
     setShowInstallPrompt(false);
+  };
+
+  const handleSyncButtonClick = async () => {
+    if (!user) {
+      setIsSyncAuthOpen(true);
+      return;
+    }
+
+    if (!syncNow || syncStatus === 'syncing') {
+      return;
+    }
+
+    try {
+      await syncNow();
+      showToast('Sync complete');
+    } catch (error) {
+      showToast(error.message || 'Sync failed');
+    }
   };
 
   const getFontSizeValue = useCallback((fontSize) => {
@@ -234,11 +257,25 @@ const AppContent = memo(() => {
               )}
             </div>
             <div className="flex items-center gap-2">
-              {getSyncStatus() === 'synced' && (
-                <span className={`dynamic-text-xs ${theme.textTertiary} font-light`}>
-                  • synced
-                </span>
-              )}
+              {(() => {
+                const status = syncStatus || getSyncStatus();
+                if (status === 'local') {
+                  return null;
+                }
+                let label = 'synced';
+                if (status === 'syncing') {
+                  label = 'syncing…';
+                } else if (status === 'error') {
+                  label = 'sync error';
+                } else if (status === 'idle') {
+                  label = 'sync ready';
+                }
+                return (
+                  <span className={`dynamic-text-xs ${theme.textTertiary} font-light`}>
+                    • {label}
+                  </span>
+                );
+              })()}
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -253,6 +290,14 @@ const AppContent = memo(() => {
                 </svg>
               </button>
             )}
+            <button
+              onClick={handleSyncButtonClick}
+              disabled={syncStatus === 'syncing' || authLoading}
+              className={`p-2 ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} transition-colors dynamic-text-base disabled:opacity-60 disabled:cursor-not-allowed`}
+              title={user ? (syncStatus === 'syncing' ? 'Syncing…' : syncStatus === 'synced' ? 'Synced' : 'Sync now') : 'Sign in to sync'}
+            >
+              {syncStatus === 'synced' ? <CheckIcon /> : <SyncIcon />}
+            </button>
             <HeaderActionsDropdown onFeedback={() => setIsFeedbackOpen(true)} />
             <button
               onClick={() => setIsSettingsOpen(true)}
@@ -380,6 +425,7 @@ const AppContent = memo(() => {
         <SettingsModal 
           isOpen={isSettingsOpen} 
           onClose={() => setIsSettingsOpen(false)} 
+          onOpenAuthModal={() => setIsSyncAuthOpen(true)}
         />
       </Suspense>
 
@@ -432,6 +478,13 @@ const AppContent = memo(() => {
         <BackToTop />
       </Suspense>
 
+      <Suspense fallback={null}>
+        <SyncAuthModal
+          isOpen={isSyncAuthOpen}
+          onClose={() => setIsSyncAuthOpen(false)}
+        />
+      </Suspense>
+
       {/* Stream AI Assistant */}
       <StreamAssistant
         noteActions={{
@@ -460,14 +513,15 @@ AppContent.displayName = 'AppContent';
 
 function App() {
   return (
-    <SettingsProvider>
-      <ThemeProvider>
-        <StorageProvider>
-          <AppContent />
-          <Analytics />
-        </StorageProvider>
-      </ThemeProvider>
-    </SettingsProvider>
+    <AuthProvider>
+      <SettingsProvider>
+        <ThemeProvider>
+          <StorageProvider>
+            <AppContent />
+          </StorageProvider>
+        </ThemeProvider>
+      </SettingsProvider>
+    </AuthProvider>
   );
 }
 

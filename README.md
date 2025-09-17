@@ -46,7 +46,21 @@ npm start
 
 # Build for production
 npm run build
+
+# (optional) Run the sync backend
+cd server
+npm install
+npm run dev
 ```
+
+### Enabling sync across devices
+
+1. Start the sync backend (`cd server && npm run dev`). By default it listens on `http://localhost:4000` and stores data in `server/stream-sync.db`.
+2. Expose the backend URL to the client by creating a `.env` file in the project root with `REACT_APP_SYNC_URL=http://localhost:4000` (or your deployed URL).
+3. (Optional) Configure Supabase magic-link login for a friendlier sync flow: add `REACT_APP_SUPABASE_URL` and `REACT_APP_SUPABASE_ANON_KEY` to your `.env`/Vercel project. This makes the “sign in to sync” button email a one-time code and use the Supabase user ID as the sync identifier automatically.
+4. Open the app settings → “sync across devices” and either sign in with email (Supabase), or enable sync with the shared ID. Use the same ID on every device/browser you want to keep in sync.
+
+The backend stores simple key/value snapshots corresponding to the app’s `localStorage` keys. Sync traffic is opt-in and disabled by default.
 
 ## Philosophy
 

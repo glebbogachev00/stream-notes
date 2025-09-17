@@ -1,18 +1,111 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useSettings, ORGANIZATION_STYLES, DELETE_TIMERS } from '../contexts/SettingsContext';
 import CollapsibleSection from './CollapsibleSection';
 import FontSizeControl from './FontSizeControl';
 import { getUserTag, setUserTag, validateUserTag, formatUserTag, clearUserTag } from '../utils/tags';
 import { sanitizeInput } from '../utils/security';
+import { useStorage } from '../contexts/StorageContext';
+import { useAuth } from '../contexts/AuthContext';
 
-const SettingsModal = ({ isOpen, onClose }) => {
+const SettingsModal = ({ isOpen, onClose, onOpenAuthModal }) => {
   const { theme, switchTheme, themes } = useTheme();
   const { settings, updateSettings, resetSettings, togglePersonality } = useSettings();
+  const { syncStatus, lastSyncedAt, syncError, syncNow } = useStorage();
+  const { user, signOut, loading: authLoading, isConfigured: authConfigured } = useAuth();
   const [newUserTag, setNewUserTag] = useState('');
   const [tagError, setTagError] = useState('');
   const [newFolder, setNewFolder] = useState('');
+  const [syncEndpoint, setSyncEndpoint] = useState(settings.syncEndpoint || '');
+  const [syncKeyValue, setSyncKeyValue] = useState(settings.syncKey || '');
   const userTag = getUserTag();
+
+  useEffect(() => {
+    setSyncEndpoint(settings.syncEndpoint || '');
+  }, [settings.syncEndpoint]);
+
+  useEffect(() => {
+    setSyncKeyValue(settings.syncKey || '');
+  }, [settings.syncKey]);
+
+  const syncStatusLabel = () => {
+    switch (syncStatus) {
+      case 'syncing':
+        return 'syncing…';
+      case 'synced':
+        return 'up to date';
+      case 'error':
+        return 'error';
+      case 'idle':
+        return 'ready';
+      default:
+        return 'local only';
+    }
+  };
+
+  const formattedLastSync = () => {
+    if (!lastSyncedAt) {
+      return 'never';
+    }
+    try {
+      return new Date(lastSyncedAt).toLocaleString();
+    } catch (error) {
+      return 'unknown';
+    }
+  };
+
+  const handleSyncToggle = () => {
+    if (!user) {
+      if (onOpenAuthModal) {
+        onOpenAuthModal();
+      }
+      return;
+    }
+    updateSettings({ syncEnabled: !settings.syncEnabled });
+  };
+
+  const handleEndpointBlur = () => {
+    const trimmed = syncEndpoint.trim();
+    updateSettings({ syncEndpoint: trimmed });
+  };
+
+  const handleSyncKeyBlur = () => {
+    const trimmed = syncKeyValue.trim();
+    if (trimmed && trimmed !== settings.syncKey) {
+      updateSettings({ syncKey: trimmed });
+    }
+  };
+
+  const handleGenerateSyncKey = () => {
+    const newKey = typeof crypto !== 'undefined' && crypto.randomUUID
+      ? crypto.randomUUID()
+      : `stream-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    setSyncKeyValue(newKey);
+    updateSettings({ syncKey: newKey });
+  };
+
+  const handleCopySyncKey = async () => {
+    if (!syncKeyValue) return;
+    try {
+      await navigator.clipboard.writeText(syncKeyValue);
+    } catch (error) {
+      // Clipboard may be unavailable depending on context
+    }
+  };
+
+  const handleManualSync = async () => {
+    try {
+      await syncNow();
+    } catch (error) {
+      // Errors are surfaced via syncError state
+    }
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    setSyncKeyValue('');
+    updateSettings({ syncEnabled: false, syncKey: '' });
+  };
 
   if (!isOpen) return null;
 
@@ -98,6 +191,66 @@ const SettingsModal = ({ isOpen, onClose }) => {
           <div className={`${theme.textTertiary} dynamic-text-xs font-light uppercase tracking-wider mb-4`}>
             Core Settings
           </div>
+
+          {/* Sync */}
+          <CollapsibleSection title="sync across devices">
+            <div className="space-y-4">
+              <div className="space-y-4">
+                {!user && (
+                  <div className="space-y-3">
+                    <div className={`dynamic-text-xs ${theme.textTertiary}`}>
+                      Sign in with your email to sync notes across devices. We&apos;ll send a one-time code.
+                    </div>
+                    <button
+                      onClick={onOpenAuthModal}
+                      className={`w-full border ${theme.border} px-3 py-2 dynamic-text-xs font-light ${theme.text} hover:${theme.textSecondary.replace('text-', 'hover:text-')} transition-colors`}
+                    >
+                      sign in to sync
+                    </button>
+                    {!authConfigured && (
+                      <div className={`dynamic-text-xs ${theme.textTertiary}`}>
+                        (Set Supabase credentials to enable email login.)
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {user && (
+                  <div className="space-y-3">
+                    <div className={`dynamic-text-xs ${theme.textTertiary}`}>
+                      signed in as <span className={`${theme.text}`}>{user.email}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={handleSyncToggle}
+                        className={`border ${theme.border} px-3 py-2 dynamic-text-xs font-light ${theme.text} hover:${theme.textSecondary.replace('text-', 'hover:text-')} transition-colors`}
+                      >
+                        {settings.syncEnabled ? 'pause syncing' : 'resume syncing'}
+                      </button>
+                      <button
+                        onClick={handleSignOut}
+                        disabled={authLoading}
+                        className={`dynamic-text-xs font-light px-3 py-2 ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} transition-colors disabled:opacity-60 disabled:cursor-not-allowed`}
+                      >
+                        sign out
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {settings.syncEnabled && (
+                  <div className={`dynamic-text-xs font-light ${theme.text}`}>
+                    {syncStatusLabel()} {syncStatus === 'synced' ? '✓' : syncStatus === 'syncing' ? '...' : ''}
+                    {syncError && (
+                      <div className="text-red-500 mt-1">
+                        {syncError}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          </CollapsibleSection>
 
           {/* Typography */}
           <CollapsibleSection title="typography">
@@ -491,7 +644,9 @@ const SettingsModal = ({ isOpen, onClose }) => {
 
         <div className={`mt-6 pt-4 border-t ${theme.borderSecondary} space-y-3`}>
           <div className={`dynamic-text-xs ${theme.textTertiary} font-light text-center`}>
-            🔒 Your notes never leave your device
+            {settings.syncEnabled
+              ? 'Keep your sync id private — anyone with it can see your synced notes.'
+              : '🔒 Your notes stay on this device until you enable sync.'}
           </div>
           <button
             onClick={handleReset}

@@ -1,8 +1,11 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { useSettings } from './SettingsContext';
+import { useAuth } from './AuthContext';
 import StorageAdapter from '../utils/storage';
+import { getSupabaseClient } from '../services/supabaseClient';
 
 const StorageContext = createContext();
+const SUPABASE_TABLE = process.env.REACT_APP_SUPABASE_STORAGE_TABLE || 'storage_items';
 
 export const useStorage = () => {
   const context = useContext(StorageContext);
@@ -13,29 +16,182 @@ export const useStorage = () => {
 };
 
 export const StorageProvider = ({ children }) => {
-  const { settings } = useSettings();
-  const [storageAdapter, setStorageAdapter] = useState(() => new StorageAdapter(false));
-  const [syncStatus, setSyncStatus] = useState('local');
+  const { settings, updateSettings } = useSettings();
+  const { user } = useAuth();
+  const supabase = useMemo(() => getSupabaseClient(), []);
+  const [storageAdapter, setStorageAdapter] = useState(() => new StorageAdapter());
+  const [syncStatus, setSyncStatus] = useState(storageAdapter.getStatus());
+  const [lastSyncedAt, setLastSyncedAt] = useState(storageAdapter.getLastSyncedAt());
+  const [syncError, setSyncError] = useState(null);
 
   useEffect(() => {
-    const newAdapter = new StorageAdapter(settings.syncEnabled);
-    setStorageAdapter(newAdapter);
-    setSyncStatus(newAdapter.isSyncEnabled() ? 'synced' : 'local');
-  }, [settings.syncEnabled]);
+    if (user) {
+      const updates = {};
+      const userId = user.id;
+      const hasDifferentKey = settings.syncKey !== userId;
+
+      if (hasDifferentKey) {
+        localStorage.removeItem('stream-sync-meta');
+        updates.syncKey = userId;
+      }
+
+      if (!settings.syncEnabled) {
+        updates.syncEnabled = true;
+      }
+
+      if (Object.keys(updates).length > 0) {
+        updateSettings(updates);
+      }
+      return;
+    }
+
+    if (!user && settings.syncEnabled && !settings.syncKey) {
+      const newKey = typeof crypto !== 'undefined' && crypto.randomUUID
+        ? crypto.randomUUID()
+        : `stream-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+      localStorage.setItem('stream-sync-key', newKey);
+      updateSettings({ syncKey: newKey });
+      return;
+    }
+
+  }, [user, settings.syncEnabled, settings.syncKey, settings.syncEndpoint, updateSettings]);
+
+  useEffect(() => {
+    if (!supabase) {
+      return;
+    }
+
+    if (settings.syncEndpoint) {
+      // Clear endpoint to prioritize Supabase sync
+      updateSettings({ syncEndpoint: '' });
+      localStorage.removeItem('stream-sync-endpoint');
+    }
+  }, [supabase, settings.syncEndpoint, updateSettings]);
+
+  useEffect(() => {
+    let isMounted = true;
+    const effectiveSyncKey = user?.id || settings.syncKey;
+    const canUseSupabase = !!supabase && !!user?.id;
+
+    const adapter = new StorageAdapter({
+      syncEnabled: settings.syncEnabled && !!effectiveSyncKey && (canUseSupabase || !!settings.syncEndpoint),
+      endpoint: settings.syncEndpoint,
+      syncKey: effectiveSyncKey,
+      supabaseClient: canUseSupabase ? supabase : null,
+      supabaseTable: SUPABASE_TABLE,
+      onStatusChange: (status) => {
+        if (!isMounted) return;
+        setSyncStatus(status);
+        if (status !== 'error') {
+          setSyncError(null);
+        }
+        if (status === 'error') {
+          setSyncError('Sync failed. Check your connection and credentials.');
+        }
+      },
+      onLastSyncedChange: (timestamp) => {
+        if (!isMounted) return;
+        setLastSyncedAt(timestamp);
+      }
+    });
+
+    setStorageAdapter(adapter);
+    setSyncStatus(adapter.getStatus());
+    setLastSyncedAt(adapter.getLastSyncedAt());
+    setSyncError(null);
+
+    window.streamStorage = adapter;
+
+    let intervalId;
+
+    if (adapter.isSyncEnabled()) {
+      adapter.syncNow().catch((error) => {
+        if (!isMounted) return;
+        setSyncError(error.message || 'Sync failed.');
+      });
+
+      intervalId = setInterval(() => {
+        adapter.syncNow().catch((error) => {
+          if (!isMounted) return;
+          setSyncError(error.message || 'Sync failed.');
+        });
+      }, 10000);
+    }
+
+    return () => {
+      isMounted = false;
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+      if (adapter.syncTimeout) {
+        clearTimeout(adapter.syncTimeout);
+      }
+      if (window.streamStorage === adapter) {
+        window.streamStorage = null;
+      }
+    };
+  }, [settings.syncEnabled, settings.syncEndpoint, settings.syncKey, supabase, user?.id]);
+
+  useEffect(() => {
+    if (!storageAdapter || !storageAdapter.isSyncEnabled()) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const triggerSync = () => {
+      if (cancelled) return;
+      storageAdapter.syncNow().catch(() => {
+        // Errors already surfaced through status state
+      });
+    };
+
+    const handleVisibility = () => {
+      if (typeof document === 'undefined') {
+        return;
+      }
+      if (document.visibilityState === 'visible') {
+        triggerSync();
+      }
+    };
+
+    window.addEventListener('focus', triggerSync);
+    window.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      cancelled = true;
+      window.removeEventListener('focus', triggerSync);
+      window.removeEventListener('visibilitychange', handleVisibility);
+    };
+  }, [storageAdapter]);
 
   const isSyncSupported = () => {
     return storageAdapter.isSyncSupported();
   };
 
-  const getSyncStatus = () => {
-    return syncStatus;
+  const syncNow = async () => {
+    if (!storageAdapter || !storageAdapter.isSyncEnabled()) {
+      return;
+    }
+
+    try {
+      await storageAdapter.syncNow();
+      setSyncError(null);
+    } catch (error) {
+      setSyncError(error.message || 'Sync failed.');
+      throw error;
+    }
   };
 
   return (
     <StorageContext.Provider value={{
       storage: storageAdapter,
       isSyncSupported,
-      getSyncStatus
+      getSyncStatus: () => syncStatus,
+      syncStatus,
+      lastSyncedAt,
+      syncError,
+      syncNow
     }}>
       {children}
     </StorageContext.Provider>

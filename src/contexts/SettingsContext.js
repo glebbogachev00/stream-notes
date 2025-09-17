@@ -34,6 +34,8 @@ export const DELETE_TIMERS = {
   '7d': { name: '7 days', hours: 7 * 24 },
 };
 
+const DEFAULT_SYNC_ENDPOINT = '';
+
 const DEFAULT_SETTINGS = {
   theme: 'white',
   fontSize: 'xl',
@@ -46,6 +48,8 @@ const DEFAULT_SETTINGS = {
   stealThisQuoteEnabled: false,
   stencilModeEnabled: false,
   syncEnabled: false,
+  syncEndpoint: DEFAULT_SYNC_ENDPOINT,
+  syncKey: '',
   enhancedEditingEnabled: false,
   foldersEnabled: true,
   folders: [],
@@ -65,14 +69,51 @@ export const useSettings = () => {
 };
 
 export const SettingsProvider = ({ children }) => {
+  // Clean up localhost endpoints from localStorage on component mount
+  React.useEffect(() => {
+    const storedEndpoint = localStorage.getItem('stream-sync-endpoint');
+    if (storedEndpoint && storedEndpoint.includes('localhost')) {
+      localStorage.removeItem('stream-sync-endpoint');
+    }
+  }, []);
+
   const [settings, setSettings] = useState(() => {
     try {
-      const saved = localStorage.getItem('stream-settings');
+      // Try new split settings format first
+      const syncableSaved = localStorage.getItem('stream-syncable-settings');
+      const localSaved = localStorage.getItem('stream-local-settings');
       const onboardingCompleted = localStorage.getItem('stream-onboarding-completed') === 'true';
+      const storedSyncKey = localStorage.getItem('stream-sync-key') || '';
+      const storedSyncEndpoint = localStorage.getItem('stream-sync-endpoint') || DEFAULT_SYNC_ENDPOINT;
+      // Clear localhost endpoints if they exist in localStorage
+      const cleanSyncEndpoint = storedSyncEndpoint.includes('localhost') ? '' : storedSyncEndpoint;
       
-      return saved ? 
-        { ...DEFAULT_SETTINGS, ...JSON.parse(saved), onboardingCompleted } :
-        { ...DEFAULT_SETTINGS, onboardingCompleted };
+      let baseSettings = { ...DEFAULT_SETTINGS };
+      
+      if (syncableSaved || localSaved) {
+        // New format - merge syncable and local settings
+        const syncableParsed = syncableSaved ? JSON.parse(syncableSaved) : {};
+        const localParsed = localSaved ? JSON.parse(localSaved) : {};
+        
+        baseSettings = {
+          ...baseSettings,
+          ...syncableParsed,
+          ...localParsed,
+          onboardingCompleted: syncableParsed.onboardingCompleted !== undefined ? syncableParsed.onboardingCompleted : onboardingCompleted
+        };
+      } else {
+        // Fallback to legacy format
+        const saved = localStorage.getItem('stream-settings');
+        baseSettings = saved ?
+          { ...DEFAULT_SETTINGS, ...JSON.parse(saved), onboardingCompleted } :
+          { ...DEFAULT_SETTINGS, onboardingCompleted };
+      }
+
+      return {
+        ...baseSettings,
+        syncKey: baseSettings.syncKey || storedSyncKey,
+        syncEndpoint: baseSettings.syncEndpoint || cleanSyncEndpoint
+      };
     } catch (error) {
       // Error loading settings, using defaults
       return DEFAULT_SETTINGS;
@@ -81,6 +122,49 @@ export const SettingsProvider = ({ children }) => {
 
   useEffect(() => {
     try {
+      const storage = window.streamStorage;
+      
+      // Syncable settings - stored via storage adapter to sync across devices
+      const syncableSettings = {
+        organizationStyle: settings.organizationStyle,
+        deleteTimer: settings.deleteTimer,
+        personalityEnabled: settings.personalityEnabled,
+        samoModeEnabled: settings.samoModeEnabled,
+        stealThisQuoteEnabled: settings.stealThisQuoteEnabled,
+        stencilModeEnabled: settings.stencilModeEnabled,
+        enhancedEditingEnabled: settings.enhancedEditingEnabled,
+        foldersEnabled: settings.foldersEnabled,
+        folders: settings.folders,
+        availableThemes: settings.availableThemes,
+        autoSortingEnabled: settings.autoSortingEnabled,
+        showMoreByDefault: settings.showMoreByDefault,
+        showHeaderButtons: settings.showHeaderButtons,
+        flowFormattingEnabled: settings.flowFormattingEnabled,
+        onboardingCompleted: settings.onboardingCompleted
+      };
+
+      // Local-only settings - device-specific preferences
+      const localSettings = {
+        theme: settings.theme,
+        fontSize: settings.fontSize,
+        letterSpacing: settings.letterSpacing,
+        syncEnabled: settings.syncEnabled,
+        syncEndpoint: settings.syncEndpoint,
+        syncKey: settings.syncKey
+      };
+
+      if (storage) {
+        // Use storage adapter for syncable settings
+        storage.set('stream-syncable-settings', JSON.stringify(syncableSettings));
+      } else {
+        // Fallback to localStorage
+        localStorage.setItem('stream-syncable-settings', JSON.stringify(syncableSettings));
+      }
+
+      // Always use localStorage for local-only settings
+      localStorage.setItem('stream-local-settings', JSON.stringify(localSettings));
+      
+      // Legacy support - keep old keys for backward compatibility
       localStorage.setItem('stream-settings', JSON.stringify({
         theme: settings.theme,
         fontSize: settings.fontSize,
@@ -92,6 +176,8 @@ export const SettingsProvider = ({ children }) => {
         stealThisQuoteEnabled: settings.stealThisQuoteEnabled,
         stencilModeEnabled: settings.stencilModeEnabled,
         syncEnabled: settings.syncEnabled,
+        syncEndpoint: settings.syncEndpoint,
+        syncKey: settings.syncKey,
         enhancedEditingEnabled: settings.enhancedEditingEnabled,
         foldersEnabled: settings.foldersEnabled,
         folders: settings.folders,
@@ -102,10 +188,59 @@ export const SettingsProvider = ({ children }) => {
         flowFormattingEnabled: settings.flowFormattingEnabled
       }));
       localStorage.setItem('stream-onboarding-completed', settings.onboardingCompleted.toString());
+      if (settings.syncKey) {
+        localStorage.setItem('stream-sync-key', settings.syncKey);
+      }
+      if (settings.syncEndpoint) {
+        localStorage.setItem('stream-sync-endpoint', settings.syncEndpoint);
+      }
     } catch (error) {
       // Error saving settings
     }
   }, [settings]);
+
+  useEffect(() => {
+    const handleSyncUpdate = (event) => {
+      const updatedKeys = event?.detail?.keys || [];
+      if (!updatedKeys.includes('stream-syncable-settings') && !updatedKeys.includes('stream-settings')) {
+        return;
+      }
+
+      try {
+        // Try new syncable settings first
+        const syncableSaved = localStorage.getItem('stream-syncable-settings');
+        const localSaved = localStorage.getItem('stream-local-settings');
+        
+        if (syncableSaved) {
+          const syncableParsed = JSON.parse(syncableSaved);
+          const localParsed = localSaved ? JSON.parse(localSaved) : {};
+          
+          setSettings((prev) => ({
+            ...prev,
+            ...syncableParsed,
+            ...localParsed // Local settings override syncable ones
+          }));
+        } else {
+          // Fallback to legacy stream-settings
+          const saved = localStorage.getItem('stream-settings');
+          if (saved) {
+            const parsed = JSON.parse(saved);
+            setSettings((prev) => ({
+              ...prev,
+              ...parsed
+            }));
+          }
+        }
+      } catch (error) {
+        // Ignore sync parse errors to avoid breaking settings
+      }
+    };
+
+    window.addEventListener('stream-sync-update', handleSyncUpdate);
+    return () => {
+      window.removeEventListener('stream-sync-update', handleSyncUpdate);
+    };
+  }, []);
 
   const updateSettings = (newSettings) => {
     setSettings(prev => ({ ...prev, ...newSettings }));
@@ -123,6 +258,9 @@ export const SettingsProvider = ({ children }) => {
     setSettings(DEFAULT_SETTINGS);
     localStorage.removeItem('stream-settings');
     localStorage.removeItem('stream-onboarding-completed');
+    localStorage.removeItem('stream-sync-key');
+    localStorage.removeItem('stream-sync-endpoint');
+    localStorage.removeItem('stream-sync-meta');
   };
 
   const togglePersonality = () => {
