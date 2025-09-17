@@ -10,7 +10,11 @@ const isExtensionContext = () => {
 };
 
 const SYNC_META_KEY = 'stream-sync-meta';
-const SYNC_KEYS = ['stream_notes', 'stream_saved_notes', 'stream_art_notes', 'stream-settings'];
+const PRIMARY_KEYS = ['stream_notes', 'stream_saved_notes'];
+const SYNC_KEYS = [...PRIMARY_KEYS, 'stream_art_notes', 'stream-settings'];
+const BACKUP_KEYS = PRIMARY_KEYS.map((key) => `${key}_backup`);
+const HISTORY_KEY = 'stream-sync-history';
+const HISTORY_LIMIT = 15;
 const ARRAY_MERGE_KEYS = new Set(['stream_notes', 'stream_saved_notes', 'stream_art_notes']);
 
 const loadMeta = (syncKey = '') => {
@@ -41,6 +45,77 @@ const saveMeta = (syncKey, meta) => {
   } catch (error) {
     // Ignore persistence failures to avoid breaking main flow
   }
+};
+
+const parseCollection = (value) => {
+  if (!value) return [];
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    return [];
+  }
+};
+
+const loadHistory = () => {
+  try {
+    const raw = localStorage.getItem(HISTORY_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    return [];
+  }
+};
+
+const saveHistory = (entries) => {
+  try {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(entries));
+  } catch (error) {
+    // best effort
+  }
+};
+
+const recordSnapshot = (key, value) => {
+  if (!PRIMARY_KEYS.includes(key)) {
+    return;
+  }
+
+  try {
+    const backupKey = `${key}_backup`;
+    if (value === null || value === undefined) {
+      localStorage.removeItem(backupKey);
+    } else {
+      localStorage.setItem(backupKey, value);
+    }
+  } catch (error) {
+    // ignore backup failures
+  }
+
+  try {
+    const history = loadHistory();
+    history.unshift({ key, value, timestamp: Date.now() });
+    if (history.length > HISTORY_LIMIT) {
+      history.length = HISTORY_LIMIT;
+    }
+    saveHistory(history);
+  } catch (error) {
+    // ignore history failures
+  }
+};
+
+const setLocalValue = (key, value) => {
+  if (PRIMARY_KEYS.includes(key)) {
+    recordSnapshot(key, value);
+  }
+  localStorage.setItem(key, value);
+};
+
+const removeLocalValue = (key) => {
+  if (PRIMARY_KEYS.includes(key)) {
+    recordSnapshot(key, null);
+  }
+  localStorage.removeItem(key);
 };
 
 class StorageAdapter {
@@ -161,7 +236,7 @@ class StorageAdapter {
       });
     }
 
-    localStorage.setItem(key, value);
+    setLocalValue(key, value);
     this.enqueueChange(key, value, null);
     this.scheduleSync();
     return Promise.resolve();
@@ -180,7 +255,7 @@ class StorageAdapter {
       });
     }
 
-    localStorage.removeItem(key);
+    removeLocalValue(key);
     this.enqueueChange(key, null, Date.now());
     this.scheduleSync();
     return Promise.resolve();
@@ -331,8 +406,21 @@ class StorageAdapter {
         }
       } else {
         const localValue = localStorage.getItem(item.key);
+        if (PRIMARY_KEYS.includes(item.key)) {
+          const localItems = parseCollection(localValue);
+          const remoteItems = parseCollection(item.value);
+          if (localItems.length > 0 && remoteItems.length === 0) {
+            this.pendingChanges.set(item.key, {
+              key: item.key,
+              value: localValue,
+              updatedAt: Date.now(),
+              deletedAt: null
+            });
+            return;
+          }
+        }
         if (localValue !== item.value) {
-          localStorage.setItem(item.key, item.value);
+          setLocalValue(item.key, item.value);
           updatedKeys.push(item.key);
         }
       }
@@ -462,6 +550,18 @@ class StorageAdapter {
     const localValue = localStorage.getItem(key);
     const localItems = parseValue(localValue);
 
+    if (PRIMARY_KEYS.includes(key)) {
+      const hasLocalData = localItems.length > 0;
+      const remoteCleared = remoteItems.length === 0;
+      if (hasLocalData && remoteCleared) {
+        return {
+          mergedValue: localValue || '[]',
+          localChanged: false,
+          shouldPush: true
+        };
+      }
+    }
+
     const remoteMap = new Map();
     const localMap = new Map();
 
@@ -551,7 +651,7 @@ class StorageAdapter {
     const mergedValue = JSON.stringify(mergedItems);
     if (localValue !== mergedValue) {
       localChanged = true;
-      localStorage.setItem(key, mergedValue);
+      setLocalValue(key, mergedValue);
     }
 
     return { mergedValue, localChanged, shouldPush };
@@ -622,7 +722,7 @@ class StorageAdapter {
 
       if (deletedAt) {
         if (localStorage.getItem(key) !== null) {
-          localStorage.removeItem(key);
+          removeLocalValue(key);
           updatedKeys.push(key);
         }
         this.pendingChanges.delete(key);
@@ -648,8 +748,21 @@ class StorageAdapter {
         }
       } else {
         const localValue = localStorage.getItem(key);
+        if (PRIMARY_KEYS.includes(key)) {
+          const localItems = parseCollection(localValue);
+          const remoteItems = parseCollection(value);
+          if (localItems.length > 0 && remoteItems.length === 0) {
+            this.pendingChanges.set(key, {
+              key,
+              value: localValue,
+              updatedAt: Date.now(),
+              deletedAt: null
+            });
+            return;
+          }
+        }
         if (localValue !== value) {
-          localStorage.setItem(key, value);
+          setLocalValue(key, value);
           updatedKeys.push(key);
         }
       }
@@ -684,3 +797,38 @@ class StorageAdapter {
 }
 
 export default StorageAdapter;
+
+export const getSyncHistory = (key = null) => {
+  const entries = loadHistory();
+  if (!key) {
+    return entries;
+  }
+  return entries.filter((entry) => entry.key === key);
+};
+
+export const restoreSyncSnapshot = (key, timestamp) => {
+  if (!PRIMARY_KEYS.includes(key)) {
+    throw new Error(`Cannot restore snapshot for unsupported key: ${key}`);
+  }
+  const entries = loadHistory();
+  const match = entries.find((entry) => entry.key === key && entry.timestamp === timestamp);
+  if (!match) {
+    return false;
+  }
+  const value = match.value;
+  if (value === null || value === undefined) {
+    removeLocalValue(key);
+  } else {
+    setLocalValue(key, value);
+  }
+  return true;
+};
+
+export const createSnapshotForKey = (key) => {
+  if (!PRIMARY_KEYS.includes(key)) {
+    return false;
+  }
+  const value = localStorage.getItem(key);
+  recordSnapshot(key, value);
+  return true;
+};

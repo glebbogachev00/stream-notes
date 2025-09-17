@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useSettings, ORGANIZATION_STYLES, DELETE_TIMERS } from '../contexts/SettingsContext';
 import CollapsibleSection from './CollapsibleSection';
@@ -7,6 +7,7 @@ import { getUserTag, setUserTag, validateUserTag, formatUserTag, clearUserTag } 
 import { sanitizeInput } from '../utils/security';
 import { useStorage } from '../contexts/StorageContext';
 import { useAuth } from '../contexts/AuthContext';
+import { getSyncHistory, restoreSyncSnapshot, createSnapshotForKey } from '../utils/storage';
 
 const SettingsModal = ({ isOpen, onClose, onOpenAuthModal }) => {
   const { theme, switchTheme, themes } = useTheme();
@@ -16,7 +17,85 @@ const SettingsModal = ({ isOpen, onClose, onOpenAuthModal }) => {
   const [newUserTag, setNewUserTag] = useState('');
   const [tagError, setTagError] = useState('');
   const [newFolder, setNewFolder] = useState('');
+  const [latestSavedBackup, setLatestSavedBackup] = useState(null);
   const userTag = getUserTag();
+
+  const refreshBackupMetadata = useCallback(() => {
+    const history = getSyncHistory('stream_saved_notes');
+    setLatestSavedBackup(history && history.length ? history[0] : null);
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      refreshBackupMetadata();
+    }
+  }, [isOpen, refreshBackupMetadata]);
+
+  const formatTimestamp = (timestamp) => {
+    if (!timestamp) return 'never';
+    try {
+      return new Date(timestamp).toLocaleString();
+    } catch (error) {
+      return 'unknown';
+    }
+  };
+
+  const downloadFile = useCallback((filename, contents) => {
+    try {
+      const blob = new Blob([contents], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      window.alert('Unable to download the backup file.');
+    }
+  }, []);
+
+  const broadcastUpdates = useCallback((keys) => {
+    if (typeof window === 'undefined') return;
+    const event = new CustomEvent('stream-sync-update', { detail: { keys } });
+    window.dispatchEvent(event);
+  }, []);
+
+  const handleDownloadSavedNotes = useCallback(() => {
+    const saved = localStorage.getItem('stream_saved_notes') || '[]';
+    downloadFile(`stream-saved-notes-${new Date().toISOString()}.json`, saved);
+  }, [downloadFile]);
+
+  const handleCreateSavedSnapshot = useCallback(() => {
+    const saved = localStorage.getItem('stream_saved_notes');
+    if (!saved || saved === '[]') {
+      window.alert('You have no saved notes to back up yet.');
+      return;
+    }
+    createSnapshotForKey('stream_saved_notes');
+    refreshBackupMetadata();
+    window.alert('Saved notes backup created.');
+  }, [refreshBackupMetadata]);
+
+  const handleRestoreSavedNotes = useCallback(() => {
+    if (!latestSavedBackup) {
+      window.alert('No backup available yet.');
+      return;
+    }
+    const confirmed = window.confirm(`Restore saved notes from ${formatTimestamp(latestSavedBackup.timestamp)}? This will replace your current saved notes.`);
+    if (!confirmed) {
+      return;
+    }
+    const restored = restoreSyncSnapshot('stream_saved_notes', latestSavedBackup.timestamp);
+    if (restored) {
+      broadcastUpdates(['stream_saved_notes']);
+      refreshBackupMetadata();
+      window.alert('Saved notes restored successfully.');
+    } else {
+      window.alert('Unable to restore the backup.');
+    }
+  }, [latestSavedBackup, broadcastUpdates, refreshBackupMetadata]);
 
   const syncStatusLabel = () => {
     switch (syncStatus) {
@@ -189,6 +268,34 @@ const SettingsModal = ({ isOpen, onClose, onOpenAuthModal }) => {
                     )}
                   </div>
                 )}
+
+                <div className={`mt-4 pt-4 border-t ${theme.borderSecondary} space-y-3`}> 
+                  <div className={`dynamic-text-xs uppercase tracking-wider ${theme.textTertiary}`}>backups</div>
+                  <div className={`dynamic-text-xs ${theme.text}`}>latest saved notes backup: {formatTimestamp(latestSavedBackup?.timestamp)}</div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <button
+                      onClick={handleDownloadSavedNotes}
+                      className={`border ${theme.border} px-3 py-2 dynamic-text-xs font-light ${theme.text} hover:${theme.textSecondary.replace('text-', 'hover:text-')} transition-colors`}
+                    >
+                      download saved notes
+                    </button>
+                    <button
+                      onClick={handleCreateSavedSnapshot}
+                      className={`border ${theme.border} px-3 py-2 dynamic-text-xs font-light ${theme.text} hover:${theme.textSecondary.replace('text-', 'hover:text-')} transition-colors`}
+                    >
+                      create backup now
+                    </button>
+                    <button
+                      onClick={handleRestoreSavedNotes}
+                      className={`border ${theme.border} px-3 py-2 dynamic-text-xs font-light ${theme.text} hover:${theme.textSecondary.replace('text-', 'hover:text-')} transition-colors`}
+                    >
+                      restore latest backup
+                    </button>
+                  </div>
+                  <div className={`dynamic-text-xs ${theme.textTertiary} opacity-70`}> 
+                    backups are stored locally and synced. restoring replaces only your saved notes.
+                  </div>
+                </div>
               </div>
             </div>
           </CollapsibleSection>
