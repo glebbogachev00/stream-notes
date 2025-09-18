@@ -9,7 +9,14 @@ const NOTES_KEY = 'stream_notes';
 const SAVED_NOTES_KEY = 'stream_saved_notes';
 const ART_NOTES_KEY = 'stream_art_notes';
 
-export const useNotes = (deleteTimer = '24h', onToast = null, personalityEnabled = true, onEdgeUnlock = null, activeFolder = 'all') => {
+export const useNotes = (
+  deleteTimer = '24h',
+  onToast = null,
+  personalityEnabled = true,
+  onEdgeUnlock = null,
+  activeFolder = 'all',
+  knownFolders = []
+) => {
   const [notes, setNotes] = useState([]);
   const [savedNotes, setSavedNotes] = useState([]);
   const [artNotes, setArtNotes] = useState([]);
@@ -98,6 +105,9 @@ export const useNotes = (deleteTimer = '24h', onToast = null, personalityEnabled
       createdAt: now,
       updatedAt: now,
       expiresAt: expiresAt,
+      isTodo: false,
+      isTodoCompleted: false,
+      pinnedBecauseTodo: false,
       // Assign current folder if not 'all'
       folder: activeFolder !== 'all' ? activeFolder : null,
     };
@@ -129,9 +139,72 @@ export const useNotes = (deleteTimer = '24h', onToast = null, personalityEnabled
 
   const toggleNotePin = useCallback((id) => {
     const timestamp = Date.now();
-    const updatedNotes = notes.map(note => 
-      note.id === id ? { ...note, isPinned: !note.isPinned, updatedAt: timestamp } : note
-    );
+    const updatedNotes = notes.map(note => {
+      if (note.id !== id) {
+        return note;
+      }
+
+      const nextPinned = !note.isPinned;
+      return {
+        ...note,
+        isPinned: nextPinned,
+        pinnedBecauseTodo: note.isTodo ? (nextPinned ? note.pinnedBecauseTodo : false) : false,
+        updatedAt: timestamp
+      };
+    });
+    saveNotes(updatedNotes);
+  }, [notes, saveNotes]);
+
+  const toggleNoteTodo = useCallback((id) => {
+    const timestamp = Date.now();
+    const updatedNotes = notes.map(note => {
+      if (note.id !== id) {
+        return note;
+      }
+
+      if (note.isTodo) {
+        const shouldUnpin = !!note.pinnedBecauseTodo;
+        return {
+          ...note,
+          isTodo: false,
+          isTodoCompleted: false,
+          pinnedBecauseTodo: false,
+          isPinned: shouldUnpin ? false : note.isPinned,
+          updatedAt: timestamp
+        };
+      }
+
+      const wasPinned = !!note.isPinned;
+      return {
+        ...note,
+        isTodo: true,
+        isTodoCompleted: false,
+        pinnedBecauseTodo: wasPinned ? false : true,
+        isPinned: true,
+        updatedAt: timestamp
+      };
+    });
+
+    saveNotes(updatedNotes);
+  }, [notes, saveNotes]);
+
+  const toggleTodoCompletion = useCallback((id) => {
+    const timestamp = Date.now();
+    const updatedNotes = notes.map(note => {
+      if (note.id !== id || !note.isTodo) {
+        return note;
+      }
+
+      const nextCompleted = !note.isTodoCompleted;
+
+      return {
+        ...note,
+        isTodoCompleted: nextCompleted,
+        completedAt: nextCompleted ? timestamp : null,
+        updatedAt: timestamp
+      };
+    });
+
     saveNotes(updatedNotes);
   }, [notes, saveNotes]);
 
@@ -234,6 +307,42 @@ export const useNotes = (deleteTimer = '24h', onToast = null, personalityEnabled
       saveNotes(updatedNotes);
     }
   }, [notes, savedNotes, saveNotes, saveSavedNotes]);
+
+  useEffect(() => {
+    if (!Array.isArray(knownFolders)) {
+      return;
+    }
+
+    const normalizedFolders = new Set(knownFolders.map((folder) => (folder || '').toLowerCase()));
+
+    const normalize = (value) => (value || '').toLowerCase();
+
+    let notesChanged = false;
+    const sanitizedNotes = notes.map((note) => {
+      if (note.folder && !normalizedFolders.has(normalize(note.folder))) {
+        notesChanged = true;
+        return { ...note, folder: null, updatedAt: Date.now() };
+      }
+      return note;
+    });
+
+    if (notesChanged) {
+      saveNotes(sanitizedNotes);
+    }
+
+    let savedChanged = false;
+    const sanitizedSavedNotes = savedNotes.map((note) => {
+      if (note.folder && !normalizedFolders.has(normalize(note.folder))) {
+        savedChanged = true;
+        return { ...note, folder: null, updatedAt: Date.now() };
+      }
+      return note;
+    });
+
+    if (savedChanged) {
+      saveSavedNotes(sanitizedSavedNotes);
+    }
+  }, [knownFolders, notes, savedNotes, saveNotes, saveSavedNotes]);
 
   const transformToArt = useCallback((id, fromSaved = false, artStyle = 'samo') => {
     const sourceNotes = fromSaved ? savedNotes : notes;
@@ -447,6 +556,8 @@ export const useNotes = (deleteTimer = '24h', onToast = null, personalityEnabled
     updateNoteContent,
     updateNoteProperties,
     toggleNotePin,
+    toggleNoteTodo,
+    toggleTodoCompletion,
     updateGlobalDeleteTimer,
     updateNoteFolder,
     refreshNotes: loadNotes,

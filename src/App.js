@@ -111,9 +111,18 @@ const AppContent = memo(() => {
     updateNoteDeleteTimer,
     updateNoteProperties,
     toggleNotePin,
+    toggleNoteTodo,
+    toggleTodoCompletion,
     updateGlobalDeleteTimer,
     updateNoteFolder
-  } = useNotes(settings.deleteTimer, showToast, settings.personalityEnabled, handleEdgeUnlock, activeFolder);
+  } = useNotes(
+    settings.deleteTimer,
+    showToast,
+    settings.personalityEnabled,
+    handleEdgeUnlock,
+    activeFolder,
+    settings.folders
+  );
 
   // Track previous deleteTimer to detect changes
   const previousDeleteTimer = useRef(settings.deleteTimer);
@@ -132,6 +141,12 @@ const AppContent = memo(() => {
       setActiveFolder('all');
     }
   }, [settings.foldersEnabled, activeFolder]);
+
+  useEffect(() => {
+    if (activeFolder !== 'all' && !settings.folders.includes(activeFolder)) {
+      setActiveFolder('all');
+    }
+  }, [activeFolder, settings.folders]);
 
   // PWA Install prompt handling
   useEffect(() => {
@@ -383,6 +398,8 @@ const AppContent = memo(() => {
                 onUpdateNoteDeleteTimer={updateNoteDeleteTimer}
                 onUpdateNoteProperties={updateNoteProperties}
                 onTogglePin={toggleNotePin}
+                onToggleTodo={toggleNoteTodo}
+                onToggleTodoCompletion={toggleTodoCompletion}
                 onUpdateNoteFolder={updateNoteFolder}
               />
             </div>

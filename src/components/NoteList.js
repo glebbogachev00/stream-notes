@@ -19,6 +19,8 @@ const NoteList = ({
   onUpdateNoteDeleteTimer,
   onUpdateNoteProperties,
   onTogglePin,
+  onToggleTodo,
+  onToggleTodoCompletion,
   onUpdateNoteFolder,
   onSaveWithPreview // Add this prop for the preview modal
 }) => {
@@ -61,7 +63,7 @@ const NoteList = ({
     const viewportHeight = window.innerHeight;
     
     // Calculate dynamic menu height based on enabled features
-    let menuItemCount = 4; // pin, copy, save, delete (always present)
+    let menuItemCount = 5; // pin, todo toggle, copy, save, delete (always present)
     if (settings.flowFormattingEnabled) menuItemCount += 1; // format
     if (settings.foldersEnabled && settings.folders.length > 0) menuItemCount += 1; // move
     if (settings.samoModeEnabled) menuItemCount += 1; // samo
@@ -278,12 +280,29 @@ const NoteList = ({
     }).flat();
   }, []);
 
-  // Separate pinned and unpinned notes
-  const pinnedNotes = useMemo(() => notes.filter(note => note.isPinned), [notes]);
-  const unpinnedNotes = useMemo(() => notes.filter(note => !note.isPinned), [notes]);
+  // Separate todos, pinned, and unpinned notes for display
+  const todoNotes = useMemo(() => notes.filter(note => note.isTodo), [notes]);
+  const activeTodoNotes = useMemo(
+    () => todoNotes.filter(note => !note.isTodoCompleted),
+    [todoNotes]
+  );
+  const completedTodoNotes = useMemo(
+    () => todoNotes.filter(note => note.isTodoCompleted),
+    [todoNotes]
+  );
+  const pinnedNotes = useMemo(
+    () => notes.filter(note => note.isPinned && !note.isTodo),
+    [notes]
+  );
+  const unpinnedNotes = useMemo(
+    () => notes.filter(note => !note.isPinned && !note.isTodo),
+    [notes]
+  );
 
   const renderNote = useCallback((note) => {
           const timeInfo = getTimeInfo(note);
+          const isTodoCompleted = note.isTodo && note.isTodoCompleted;
+          const contentClassName = `${theme.text} text-base font-light leading-relaxed whitespace-pre-wrap break-words mb-3 cursor-pointer transition-smooth hover:${theme.textSecondary.replace('text-', 'hover:text-')} ${isTodoCompleted ? 'line-through opacity-60' : ''}`;
           
           return (
             <article
@@ -294,6 +313,36 @@ const NoteList = ({
             >
             <div className="relative">
               <div className="pr-2">
+                {note.isTodo && (
+                  <div className="flex items-center gap-3 mb-3">
+                    <button
+                      onClick={() => onToggleTodoCompletion(note.id)}
+                      className={`flex items-center justify-center w-9 h-9 rounded-full border transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-emerald-400 ${
+                        note.isTodoCompleted
+                          ? 'bg-emerald-500 border-emerald-500 text-white shadow-sm'
+                          : `${theme.border} ${theme.text}`
+                      }`}
+                      aria-pressed={note.isTodoCompleted}
+                      aria-label={note.isTodoCompleted ? 'mark todo as not done' : 'mark todo as done'}
+                    >
+                      {note.isTodoCompleted ? (
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                      ) : (
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <circle cx="12" cy="12" r="7" strokeWidth={2} />
+                        </svg>
+                      )}
+                    </button>
+                    <div className="flex items-center gap-2 text-xs font-light uppercase tracking-wide">
+                      <span className={theme.textTertiary}>todo</span>
+                      {note.isTodoCompleted && (
+                        <span className="text-emerald-500">done</span>
+                      )}
+                    </div>
+                  </div>
+                )}
                 {editingNoteId === note.id ? (
                   <>
                     {/* Controls at top for both mobile and desktop */}
@@ -452,7 +501,7 @@ const NoteList = ({
                         e.preventDefault();
                         handleNoteClick(note.id, e);
                       }}
-                      className={`${theme.text} text-base font-light leading-relaxed whitespace-pre-wrap break-words mb-3 cursor-pointer transition-smooth hover:${theme.textSecondary.replace('text-', 'hover:text-')}`}
+                      className={contentClassName}
                     >
                       {renderFormattedText(shouldTruncateNote(note.content) && !expandedNotes.has(note.id) 
                         ? getTruncatedContent(note.content)
@@ -513,6 +562,19 @@ const NoteList = ({
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
                         </svg>
                         {note.isPinned ? 'unpin' : 'pin'}
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          onToggleTodo(note.id);
+                          setOpenMenuId(null);
+                        }}
+                        className={`w-full px-3 py-2 dynamic-text-base font-light text-left ${theme.textTertiary} hover:text-emerald-500 hover:${theme.bgSecondary} transition-all duration-200 flex items-center gap-2 hover:translate-x-1 active:scale-95`}
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        {note.isTodo ? 'remove' : 'todo'}
                       </button>
 
                       <button
@@ -692,7 +754,7 @@ const NoteList = ({
             </div>
           </article>
         );
-  }, [theme, settings, formatText, formatNote, getTimeInfo, editingNoteId, expandedNotes, openMenuId, folderMenuOpenForNoteId, menuPosition, shouldTruncateNote, getTruncatedContent, renderFormattedText, handleMenuToggle, handleNoteClick, handleNoteKeyDown, handleContentChange, handleEditingFinished, toggleNoteExpansion, onTogglePin, onSaveNote, onUpdateNoteContent, onUpdateNoteDeleteTimer, onUpdateNoteFolder, onTransformToSAMO, onDeleteNote, setOpenMenuId, setFolderMenuOpenForNoteId, setFullscreenNoteId]);
+  }, [theme, settings, formatText, formatNote, getTimeInfo, editingNoteId, expandedNotes, openMenuId, folderMenuOpenForNoteId, menuPosition, shouldTruncateNote, getTruncatedContent, renderFormattedText, handleMenuToggle, handleNoteClick, handleNoteKeyDown, handleContentChange, handleEditingFinished, toggleNoteExpansion, onTogglePin, onToggleTodo, onToggleTodoCompletion, onSaveNote, onUpdateNoteContent, onUpdateNoteDeleteTimer, onUpdateNoteFolder, onTransformToSAMO, onDeleteNote, setOpenMenuId, setFolderMenuOpenForNoteId, setFullscreenNoteId]);
 
   if (notes.length === 0) {
     return (
@@ -707,6 +769,33 @@ const NoteList = ({
 
   return (
     <div className="space-y-6">
+      {todoNotes.length > 0 && (
+        <div className="space-y-4">
+          <div className={`flex items-center gap-2 ${theme.textTertiary} text-xs font-light uppercase tracking-wide`}> 
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+            todos
+          </div>
+          <div className="space-y-6">
+            {activeTodoNotes.map(renderNote)}
+          </div>
+          {completedTodoNotes.length > 0 && (
+            <div className={`border-t ${theme.borderSecondary} pt-4 space-y-4`}>
+              <div className={`flex items-center gap-2 text-xs font-light uppercase tracking-wide text-emerald-500`}>
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                done
+              </div>
+              <div className="space-y-6 opacity-75">
+                {completedTodoNotes.map(renderNote)}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Pinned Notes Section */}
       {pinnedNotes.length > 0 && (
         <>
@@ -761,6 +850,8 @@ export default memo(NoteList, (prevProps, nextProps) => {
     prevProps.onUpdateNoteDeleteTimer === nextProps.onUpdateNoteDeleteTimer &&
     prevProps.onUpdateNoteProperties === nextProps.onUpdateNoteProperties &&
     prevProps.onTogglePin === nextProps.onTogglePin &&
+    prevProps.onToggleTodo === nextProps.onToggleTodo &&
+    prevProps.onToggleTodoCompletion === nextProps.onToggleTodoCompletion &&
     prevProps.onUpdateNoteFolder === nextProps.onUpdateNoteFolder
   );
 });
