@@ -8,7 +8,6 @@ import {
   getUserTag,
   clearUserTag
 } from './tags';
-import { sanitizeInput } from './security';
 
 // Mock localStorage
 const localStorageMock = (() => {

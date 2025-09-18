@@ -45,19 +45,19 @@ describe('security utility', () => {
     });
 
     it('should remove javascript: links', () => {
-      const content = 'A <a href="javascript:alert('XSS')">link</a>';
+      const content = "A <a href=\"javascript:alert('XSS')\">link</a>";
       const sanitized = sanitizeNoteContent(content);
       expect(sanitized).toBe('A <a href="">link</a>');
     });
 
     it('should remove event handlers', () => {
-      const content = '<div onclick="alert('XSS')">Click me</div>';
+      const content = "<div onclick=\"alert('XSS')\">Click me</div>";
       const sanitized = sanitizeNoteContent(content);
       expect(sanitized).toBe('<div >Click me</div>');
     });
 
     it('should handle complex XSS attempts', () => {
-      const content = '<img src="x" onerror="alert('XSS')"> <script src="http://evil.com/xss.js"></script>';
+      const content = "<img src=\"x\" onerror=\"alert('XSS')\"> <script src=\"http://evil.com/xss.js\"></script>";
       const sanitized = sanitizeNoteContent(content);
       expect(sanitized).toBe('<img src="x" > ');
     });

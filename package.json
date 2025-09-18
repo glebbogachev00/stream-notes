@@ -1,8 +1,9 @@
 {
   "name": "stream-notes",
   "version": "1.0.0",
-  "private": true,
+  "private": false,
   "sideEffects": false,
+  "license": "Apache-2.0",
   "dependencies": {
     "@supabase/supabase-js": "^2.43.1",
     "react": "^18.2.0",
@@ -11,7 +12,8 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "DISABLE_ESLINT_PLUGIN=true NODE_ENV=production react-scripts build",
+    "build": "NODE_ENV=production react-scripts build",
+    "lint": "eslint --ext .js,.jsx src",
     "build:analyze": "npm run build && npx webpack-bundle-analyzer build/static/js/*.js",
     "optimize": "echo 'Build optimized for performance'",
     "test": "react-scripts test",

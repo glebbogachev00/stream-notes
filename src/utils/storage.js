@@ -593,6 +593,22 @@ class StorageAdapter {
     
     // Always backup folders before sync
     const originalFolders = getCurrentFolders();
+    const pendingFoldersChange = this.pendingChanges.has('stream-syncable-settings');
+    const desiredFoldersState = pendingFoldersChange ? (() => {
+      try {
+        const pending = this.pendingChanges.get('stream-syncable-settings');
+        if (pending?.value) {
+          const parsed = JSON.parse(pending.value);
+          if (Array.isArray(parsed?.folders)) {
+            return [...parsed.folders];
+          }
+        }
+      } catch (error) {
+        console.warn('[storage] failed to parse pending folders change', error);
+      }
+      const localSettings = parseJSON(localStorage.getItem('stream-syncable-settings'));
+      return Array.isArray(localSettings.folders) ? [...localSettings.folders] : [];
+    })() : null;
     
     try {
       await this.pullRemoteChanges();
@@ -600,23 +616,50 @@ class StorageAdapter {
       
       // After sync, ensure folders are preserved
       const currentFolders = getCurrentFolders();
-      if (originalFolders.length > 0 && currentFolders.length === 0) {
-        console.log('[storage] Restoring folders lost during sync:', originalFolders);
-        const syncableSettings = localStorage.getItem('stream-syncable-settings');
-        try {
-          const parsed = syncableSettings ? JSON.parse(syncableSettings) : {};
-          parsed.folders = originalFolders;
-          localStorage.setItem('stream-syncable-settings', JSON.stringify(parsed));
-          
-          // Trigger UI update
-          if (typeof window !== 'undefined') {
-            const event = new CustomEvent('stream-sync-update', {
-              detail: { keys: ['stream-syncable-settings'] }
-            });
-            window.dispatchEvent(event);
+      if (pendingFoldersChange && desiredFoldersState) {
+        const foldersChanged = JSON.stringify(currentFolders) !== JSON.stringify(desiredFoldersState);
+        if (foldersChanged) {
+          try {
+            const syncableSettingsValue = localStorage.getItem('stream-syncable-settings');
+            const parsedSettings = syncableSettingsValue ? JSON.parse(syncableSettingsValue) : {};
+            parsedSettings.folders = desiredFoldersState;
+            parsedSettings.foldersUpdatedAt = Date.now();
+            const updatedValue = JSON.stringify(parsedSettings);
+            localStorage.setItem('stream-syncable-settings', updatedValue);
+            this.enqueueChange('stream-syncable-settings', updatedValue, null);
+            this.scheduleSync();
+            if (typeof window !== 'undefined') {
+              const event = new CustomEvent('stream-sync-update', {
+                detail: { keys: ['stream-syncable-settings'] }
+              });
+              window.dispatchEvent(event);
+            }
+          } catch (stateError) {
+            console.warn('[storage] failed to reapply folders after sync', stateError);
           }
-        } catch (error) {
-          localStorage.setItem('stream-syncable-settings', JSON.stringify({ folders: originalFolders }));
+        }
+      }
+      if (!pendingFoldersChange && originalFolders.length > 0 && currentFolders.length === 0) {
+        const localSettings = parseJSON(localStorage.getItem('stream-syncable-settings'));
+        const expectedFolders = Array.isArray(localSettings.folders) ? localSettings.folders : [];
+        if (expectedFolders.length > 0) {
+          console.log('[storage] Restoring folders lost during sync:', originalFolders);
+          try {
+            const parsed = localSettings;
+            parsed.folders = originalFolders;
+            localStorage.setItem('stream-syncable-settings', JSON.stringify(parsed));
+
+            if (typeof window !== 'undefined') {
+              const event = new CustomEvent('stream-sync-update', {
+                detail: { keys: ['stream-syncable-settings'] }
+              });
+              window.dispatchEvent(event);
+            }
+          } catch (error) {
+            localStorage.setItem('stream-syncable-settings', JSON.stringify({ folders: originalFolders }));
+          }
+        } else {
+          console.log('[storage] Folders cleared locally; skipping restore.');
         }
       }
       
@@ -626,15 +669,43 @@ class StorageAdapter {
       
       // Even if sync fails, ensure folders are preserved
       const currentFolders = getCurrentFolders();
-      if (originalFolders.length > 0 && currentFolders.length === 0) {
-        console.log('[storage] Restoring folders after sync error:', originalFolders);
-        try {
-          const syncableSettings = localStorage.getItem('stream-syncable-settings');
-          const parsed = syncableSettings ? JSON.parse(syncableSettings) : {};
-          parsed.folders = originalFolders;
-          localStorage.setItem('stream-syncable-settings', JSON.stringify(parsed));
-        } catch (restoreError) {
-          localStorage.setItem('stream-syncable-settings', JSON.stringify({ folders: originalFolders }));
+      if (pendingFoldersChange && desiredFoldersState) {
+        const foldersChanged = JSON.stringify(currentFolders) !== JSON.stringify(desiredFoldersState);
+        if (foldersChanged) {
+          try {
+            const syncableSettingsValue = localStorage.getItem('stream-syncable-settings');
+            const parsedSettings = syncableSettingsValue ? JSON.parse(syncableSettingsValue) : {};
+            parsedSettings.folders = desiredFoldersState;
+            parsedSettings.foldersUpdatedAt = Date.now();
+            const updatedValue = JSON.stringify(parsedSettings);
+            localStorage.setItem('stream-syncable-settings', updatedValue);
+            this.enqueueChange('stream-syncable-settings', updatedValue, null);
+            this.scheduleSync();
+            if (typeof window !== 'undefined') {
+              const event = new CustomEvent('stream-sync-update', {
+                detail: { keys: ['stream-syncable-settings'] }
+              });
+              window.dispatchEvent(event);
+            }
+          } catch (stateError) {
+            console.warn('[storage] failed to reapply folders after sync error', stateError);
+          }
+        }
+      }
+      if (!pendingFoldersChange && originalFolders.length > 0 && currentFolders.length === 0) {
+        const localSettings = parseJSON(localStorage.getItem('stream-syncable-settings'));
+        const expectedFolders = Array.isArray(localSettings.folders) ? localSettings.folders : [];
+        if (expectedFolders.length > 0) {
+          console.log('[storage] Restoring folders after sync error:', originalFolders);
+          try {
+            const parsed = localSettings;
+            parsed.folders = originalFolders;
+            localStorage.setItem('stream-syncable-settings', JSON.stringify(parsed));
+          } catch (restoreError) {
+            localStorage.setItem('stream-syncable-settings', JSON.stringify({ folders: originalFolders }));
+          }
+        } else {
+          console.log('[storage] Folders cleared locally during sync error; skipping restore.');
         }
       }
       
