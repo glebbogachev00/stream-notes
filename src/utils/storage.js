@@ -270,6 +270,8 @@ class StorageAdapter {
     }
 
     if (this.syncEnabled && this.useRemoteSync && (this.metadata.lastSyncedAt || 0) === 0) {
+      // Check for pre-login backup before queuing local data
+      this.restorePreLoginDataIfNeeded();
       this.queueAllLocalData();
     }
   }
@@ -314,6 +316,33 @@ class StorageAdapter {
       deletedAt
     };
     this.pendingChanges.set(key, change);
+  }
+
+  restorePreLoginDataIfNeeded() {
+    try {
+      const backupData = localStorage.getItem('stream-pre-login-backup');
+      if (!backupData) {
+        return;
+      }
+      
+      const backup = JSON.parse(backupData);
+      if (!backup.data) {
+        return;
+      }
+      
+      // Restore data that exists in backup but not currently in localStorage
+      Object.entries(backup.data).forEach(([key, value]) => {
+        const currentValue = localStorage.getItem(key);
+        if (!currentValue || (PRIMARY_KEYS.includes(key) && (currentValue === '[]' || currentValue === '{}'))) {
+          setLocalValue(key, value);
+        }
+      });
+      
+      // Clean up the backup after restoration
+      localStorage.removeItem('stream-pre-login-backup');
+    } catch (error) {
+      console.warn('Failed to restore pre-login backup:', error);
+    }
   }
 
   queueAllLocalData() {
@@ -522,6 +551,7 @@ class StorageAdapter {
         if (PRIMARY_KEYS.includes(item.key)) {
           const localItems = parseCollection(localValue);
           const remoteItems = parseCollection(item.value);
+          // Always preserve local data when remote is empty, regardless of sync timing
           if (localItems.length > 0 && remoteItems.length === 0) {
             this.pendingChanges.set(item.key, {
               key: item.key,
@@ -951,6 +981,7 @@ class StorageAdapter {
         if (PRIMARY_KEYS.includes(key)) {
           const localItems = parseCollection(localValue);
           const remoteItems = parseCollection(value);
+          // Always preserve local data when remote is empty, regardless of sync timing
           if (localItems.length > 0 && remoteItems.length === 0) {
             this.pendingChanges.set(key, {
               key,
