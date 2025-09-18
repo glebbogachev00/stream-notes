@@ -733,7 +733,7 @@ class StorageAdapter {
       this.syncNow().catch(() => {
         // Errors are surfaced through status updates; keep local queue for retry
       });
-    }, 500);
+    }, 1500); // Increased debounce from 500ms to 1.5s for better performance
   }
 
   isSyncEnabled() {

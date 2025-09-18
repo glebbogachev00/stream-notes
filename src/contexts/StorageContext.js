@@ -142,7 +142,7 @@ export const StorageProvider = ({ children }) => {
           if (!isMounted) return;
           setSyncError(error.message || 'Sync failed.');
         });
-      }, 10000);
+      }, 30000); // Reduced frequency from 10s to 30s
     }
 
     return () => {
