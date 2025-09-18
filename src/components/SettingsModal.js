@@ -8,6 +8,7 @@ import { sanitizeInput } from '../utils/security';
 import { useStorage } from '../contexts/StorageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { getSyncHistory, restoreSyncSnapshot, createSnapshotForKey } from '../utils/storage';
+import ConfirmModal from './ConfirmModal';
 
 const SettingsModal = ({ isOpen, onClose, onOpenAuthModal }) => {
   const { theme, switchTheme, themes } = useTheme();
@@ -18,6 +19,7 @@ const SettingsModal = ({ isOpen, onClose, onOpenAuthModal }) => {
   const [tagError, setTagError] = useState('');
   const [newFolder, setNewFolder] = useState('');
   const [latestSavedBackup, setLatestSavedBackup] = useState(null);
+  const [folderPendingDeletion, setFolderPendingDeletion] = useState('');
   const userTag = getUserTag();
 
   const refreshBackupMetadata = useCallback(() => {
@@ -108,8 +110,6 @@ const SettingsModal = ({ isOpen, onClose, onOpenAuthModal }) => {
     updateSettings({ syncEnabled: false, syncKey: '' });
   };
 
-  if (!isOpen) return null;
-
   const handleAddFolder = () => {
     const folderName = newFolder.trim();
     if (folderName && !settings.folders.includes(folderName)) {
@@ -119,8 +119,20 @@ const SettingsModal = ({ isOpen, onClose, onOpenAuthModal }) => {
   };
 
   const handleDeleteFolder = (folderName) => {
-    updateSettings({ folders: settings.folders.filter(f => f !== folderName) });
+    setFolderPendingDeletion(folderName);
   };
+
+  const handleConfirmFolderDeletion = useCallback(() => {
+    if (!folderPendingDeletion) {
+      return;
+    }
+    updateSettings({ folders: settings.folders.filter(f => f !== folderPendingDeletion) });
+    setFolderPendingDeletion('');
+  }, [folderPendingDeletion, settings.folders, updateSettings]);
+
+  const handleCancelFolderDeletion = useCallback(() => {
+    setFolderPendingDeletion('');
+  }, []);
 
   const handleOverlayClick = (e) => {
     if (e.target === e.currentTarget) {
@@ -137,6 +149,8 @@ const SettingsModal = ({ isOpen, onClose, onOpenAuthModal }) => {
       window.location.reload();
     }
   };
+
+  if (!isOpen) return null;
 
   const handleTagChange = () => {
     if (!newUserTag.trim()) {
@@ -678,6 +692,18 @@ const SettingsModal = ({ isOpen, onClose, onOpenAuthModal }) => {
             reset preferences
           </button>
         </div>
+        <ConfirmModal
+          isOpen={!!folderPendingDeletion}
+          title="delete folder"
+          message={folderPendingDeletion
+            ? `removing "${folderPendingDeletion}" will move its notes back to all notes. continue?`
+            : 'removing this folder will move its notes back to all notes.'}
+          confirmLabel="delete"
+          cancelLabel="cancel"
+          onConfirm={handleConfirmFolderDeletion}
+          onCancel={handleCancelFolderDeletion}
+          isDestructive
+        />
       </div>
     </div>
   );

@@ -20,6 +20,7 @@ const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onUpdateNoteProper
     return content.split('\n').length > 3 || content.length > 150;
   }, []);
 
+
   // Handle showMoreByDefault setting - expand notes that should be truncated if the setting is enabled
   useEffect(() => {
     if (settings.showMoreByDefault) {
