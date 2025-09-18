@@ -591,8 +591,7 @@ class StorageAdapter {
 
     this.updateStatus('syncing');
     
-    // Always backup folders before sync
-    const originalFolders = getCurrentFolders();
+    // Always capture folders before sync to detect remote drift
     const pendingFoldersChange = this.pendingChanges.has('stream-syncable-settings');
     const desiredFoldersState = pendingFoldersChange ? (() => {
       try {
@@ -639,30 +638,6 @@ class StorageAdapter {
           }
         }
       }
-      if (!pendingFoldersChange && originalFolders.length > 0 && currentFolders.length === 0) {
-        const localSettings = parseJSON(localStorage.getItem('stream-syncable-settings'));
-        const expectedFolders = Array.isArray(localSettings.folders) ? localSettings.folders : [];
-        if (expectedFolders.length > 0) {
-          console.log('[storage] Restoring folders lost during sync:', originalFolders);
-          try {
-            const parsed = localSettings;
-            parsed.folders = originalFolders;
-            localStorage.setItem('stream-syncable-settings', JSON.stringify(parsed));
-
-            if (typeof window !== 'undefined') {
-              const event = new CustomEvent('stream-sync-update', {
-                detail: { keys: ['stream-syncable-settings'] }
-              });
-              window.dispatchEvent(event);
-            }
-          } catch (error) {
-            localStorage.setItem('stream-syncable-settings', JSON.stringify({ folders: originalFolders }));
-          }
-        } else {
-          console.log('[storage] Folders cleared locally; skipping restore.');
-        }
-      }
-      
       this.updateStatus('synced');
     } catch (error) {
       console.error('[storage] sync error', error);
@@ -692,23 +667,6 @@ class StorageAdapter {
           }
         }
       }
-      if (!pendingFoldersChange && originalFolders.length > 0 && currentFolders.length === 0) {
-        const localSettings = parseJSON(localStorage.getItem('stream-syncable-settings'));
-        const expectedFolders = Array.isArray(localSettings.folders) ? localSettings.folders : [];
-        if (expectedFolders.length > 0) {
-          console.log('[storage] Restoring folders after sync error:', originalFolders);
-          try {
-            const parsed = localSettings;
-            parsed.folders = originalFolders;
-            localStorage.setItem('stream-syncable-settings', JSON.stringify(parsed));
-          } catch (restoreError) {
-            localStorage.setItem('stream-syncable-settings', JSON.stringify({ folders: originalFolders }));
-          }
-        } else {
-          console.log('[storage] Folders cleared locally during sync error; skipping restore.');
-        }
-      }
-      
       this.updateStatus('error');
       throw error;
     }
