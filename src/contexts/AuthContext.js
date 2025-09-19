@@ -36,8 +36,20 @@ export const AuthProvider = ({ children }) => {
 
     const {
       data: { subscription }
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
       if (!isMounted) return;
+      
+      // Log auth events for debugging
+      if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
+        console.log('[Auth]', event, session ? 'with session' : 'no session');
+      }
+      
+      // Handle token refresh failures
+      if (event === 'TOKEN_REFRESHED' && !session) {
+        console.warn('[Auth] Token refresh failed, user will be logged out');
+        setAuthError('Session expired. Please sign in again.');
+      }
+      
       setUser(session?.user ?? null);
       setLoading(false);
     });

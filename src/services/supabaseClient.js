@@ -17,7 +17,13 @@ export const getSupabaseClient = () => {
   cachedClient = createClient(supabaseUrl, supabaseAnonKey, {
     auth: {
       persistSession: true,
-      storageKey: 'stream-auth'
+      storageKey: 'stream-auth',
+      autoRefreshToken: true,
+      detectSessionInUrl: false,
+      // Keep users logged in for days
+      expiryMargin: 1800, // Start refreshing 30 minutes before expiry (more aggressive)
+      storage: window.localStorage,
+      debug: false // Set to true if you need to debug auth issues
     }
   });
 

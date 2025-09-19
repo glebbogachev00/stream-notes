@@ -270,8 +270,6 @@ class StorageAdapter {
     }
 
     if (this.syncEnabled && this.useRemoteSync && (this.metadata.lastSyncedAt || 0) === 0) {
-      // Check for pre-login backup before queuing local data
-      this.restorePreLoginDataIfNeeded();
       this.queueAllLocalData();
     }
   }
@@ -318,32 +316,6 @@ class StorageAdapter {
     this.pendingChanges.set(key, change);
   }
 
-  restorePreLoginDataIfNeeded() {
-    try {
-      const backupData = localStorage.getItem('stream-pre-login-backup');
-      if (!backupData) {
-        return;
-      }
-      
-      const backup = JSON.parse(backupData);
-      if (!backup.data) {
-        return;
-      }
-      
-      // Restore data that exists in backup but not currently in localStorage
-      Object.entries(backup.data).forEach(([key, value]) => {
-        const currentValue = localStorage.getItem(key);
-        if (!currentValue || (PRIMARY_KEYS.includes(key) && (currentValue === '[]' || currentValue === '{}'))) {
-          setLocalValue(key, value);
-        }
-      });
-      
-      // Clean up the backup after restoration
-      localStorage.removeItem('stream-pre-login-backup');
-    } catch (error) {
-      console.warn('Failed to restore pre-login backup:', error);
-    }
-  }
 
   queueAllLocalData() {
     if (!this.useRemoteSync) {
@@ -783,6 +755,7 @@ class StorageAdapter {
     if (PRIMARY_KEYS.includes(key)) {
       const hasLocalData = localItems.length > 0;
       const remoteCleared = remoteItems.length === 0;
+      
       if (hasLocalData && remoteCleared) {
         return {
           mergedValue: localValue || '[]',
@@ -869,13 +842,9 @@ class StorageAdapter {
       }
 
       const remoteTimestamp = getTimestamp(remoteItem);
-      if (!remoteTimestamp || remoteTimestamp > lastSyncTime) {
-        mergedItems.push(remoteItem);
-        localChanged = true;
-      } else {
-        // Remote item predates our last sync; ensure remote receives the local state
-        shouldPush = true;
-      }
+      // Always include remote items that aren't already in local
+      mergedItems.push(remoteItem);
+      localChanged = true;
     });
 
     const mergedValue = JSON.stringify(mergedItems);

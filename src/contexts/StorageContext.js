@@ -31,34 +31,20 @@ export const StorageProvider = ({ children }) => {
       const hasDifferentKey = settings.syncKey !== userId;
 
       if (hasDifferentKey) {
-        // Create a backup before clearing sync metadata to preserve local data
-        try {
-          const hasLocalNotes = localStorage.getItem('stream_notes');
-          const hasLocalSavedNotes = localStorage.getItem('stream_saved_notes');
-          const hasLocalArtNotes = localStorage.getItem('stream_art_notes');
-          
-          if (hasLocalNotes || hasLocalSavedNotes || hasLocalArtNotes) {
-            // Create a pre-sync backup to preserve existing data
-            const backup = {
-              timestamp: Date.now(),
-              syncKey: settings.syncKey,
-              data: {}
-            };
-            
-            ['stream_notes', 'stream_saved_notes', 'stream_art_notes', 'stream-syncable-settings'].forEach(key => {
-              const value = localStorage.getItem(key);
-              if (value) {
-                backup.data[key] = value;
-              }
-            });
-            
-            localStorage.setItem('stream-pre-login-backup', JSON.stringify(backup));
+        // Only clear sync metadata if switching to a different user, not on every login
+        const currentMeta = localStorage.getItem('stream-sync-meta');
+        if (currentMeta) {
+          try {
+            const parsed = JSON.parse(currentMeta);
+            if (parsed.key && parsed.key !== userId) {
+              // Switching users - clear metadata
+              localStorage.removeItem('stream-sync-meta');
+            }
+          } catch (error) {
+            // Invalid metadata - clear it
+            localStorage.removeItem('stream-sync-meta');
           }
-        } catch (error) {
-          console.warn('Failed to create pre-login backup:', error);
         }
-        
-        localStorage.removeItem('stream-sync-meta');
         updates.syncKey = userId;
       }
 
