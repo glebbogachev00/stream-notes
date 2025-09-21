@@ -209,15 +209,11 @@ export const useNotes = (
   }, [notes, saveNotes]);
 
   const updateNoteDeleteTimer = useCallback((id, newDeleteTimerKey) => {
-    const now = Date.now();
-    const maxAgeHours = DELETE_TIMERS[newDeleteTimerKey]?.hours || 24;
-    const expiresAt = maxAgeHours === Infinity ? Infinity : now + (maxAgeHours * 60 * 60 * 1000);
-
     const timestamp = Date.now();
     const updatedNotes = notes.map(note => 
       note.id === id ? {
         ...note,
-        expiresAt: expiresAt,
+        customTimerKey: newDeleteTimerKey,
         hasCustomDeleteTimer: true,
         updatedAt: timestamp
       } : note
@@ -391,11 +387,12 @@ export const useNotes = (
     saveArtNotes(updatedArtNotes);
   }, [artNotes, saveArtNotes]);
 
-  const getTimeInfo = useCallback((note) => {
+  const getTimeInfo = useCallback((note, currentDeleteTimer = deleteTimer) => {
     const now = Date.now();
-    const expiresAt = note.expiresAt || (now + (DELETE_TIMERS[deleteTimer]?.hours || 24) * 60 * 60 * 1000); // Fallback for old notes
+    const timerKey = note.customTimerKey || currentDeleteTimer;
+    const maxAgeHours = DELETE_TIMERS[timerKey]?.hours || 24;
 
-    if (expiresAt === Infinity) {
+    if (maxAgeHours === Infinity) {
       return {
         timeText: 'never expires',
         isExpiringSoon: false,
@@ -405,6 +402,8 @@ export const useNotes = (
       };
     }
 
+    // Always calculate from creation time + current setting
+    const expiresAt = note.createdAt + (maxAgeHours * 60 * 60 * 1000);
     const timeRemainingMs = expiresAt - now;
     const hoursRemaining = timeRemainingMs / (1000 * 60 * 60);
     const minutesRemaining = timeRemainingMs / (1000 * 60);
@@ -418,15 +417,14 @@ export const useNotes = (
       timeText = `${Math.floor(hoursRemaining)}h left`;
     }
 
-    const maxAgeHours = DELETE_TIMERS[deleteTimer]?.hours || 24; // Global setting for comparison
-    const isExpiringSoon = hoursRemaining < (maxAgeHours * 0.2); // Expiring soon if less than 20% of global time left
+    const isExpiringSoon = hoursRemaining < (maxAgeHours * 0.2);
 
     return {
       timeText,
       isExpiringSoon,
       hoursRemaining: Math.floor(hoursRemaining),
       minutesRemaining: Math.floor((hoursRemaining % 1) * 60),
-      deleteTimer: DELETE_TIMERS[deleteTimer]?.name || '24 hours' // Still show global name for context
+      deleteTimer: DELETE_TIMERS[timerKey]?.name || '24 hours'
     };
   }, [deleteTimer]);
 

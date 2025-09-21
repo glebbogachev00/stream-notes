@@ -125,14 +125,14 @@ const AppContent = memo(() => {
   );
 
   // Track previous deleteTimer to detect changes
-  const previousDeleteTimer = useRef(settings.deleteTimer);
+  const previousDeleteTimer = useRef(null);
   
   // Update global delete timer when setting changes
   useEffect(() => {
-    if (previousDeleteTimer.current !== settings.deleteTimer && updateGlobalDeleteTimer) {
+    if (previousDeleteTimer.current !== null && previousDeleteTimer.current !== settings.deleteTimer && updateGlobalDeleteTimer) {
       updateGlobalDeleteTimer(settings.deleteTimer);
-      previousDeleteTimer.current = settings.deleteTimer;
     }
+    previousDeleteTimer.current = settings.deleteTimer;
   }, [settings.deleteTimer, updateGlobalDeleteTimer]);
 
   // Auto-redirect to "All" when folders are disabled while viewing a folder
@@ -391,7 +391,7 @@ const AppContent = memo(() => {
                 onDeleteNote={deleteNote}
                 onSaveNote={saveNote}
                 onTransformToSAMO={handleTransformToArt}
-                getTimeInfo={getTimeInfo}
+                getTimeInfo={(note) => getTimeInfo(note, settings.deleteTimer)}
                 editingNoteId={editingNoteId}
                 onSetEditingNoteId={setEditingNoteId}
                 onUpdateNoteContent={updateNoteContent}
@@ -414,7 +414,7 @@ const AppContent = memo(() => {
                 onUpdateNoteProperties={updateSavedNoteProperties}
                 onToggleSavedNotePin={toggleSavedNotePin}
                 onTransformToSAMO={handleTransformToArt}
-                getTimeInfo={getTimeInfo}
+                getTimeInfo={(note) => getTimeInfo(note, settings.deleteTimer)}
                 onUpdateNoteFolder={updateNoteFolder}
               />
             </>

@@ -33,6 +33,7 @@ AVAILABLE ACTIONS:
 - ENABLE_SETTING: Enable a setting (parameters: [settingName])
 - DISABLE_SETTING: Disable a setting (parameters: [settingName])
 - TOGGLE_SETTING: Toggle a setting (parameters: [settingName])
+- SET_DELETE_TIMER: Change auto-delete timer (parameters: [timerValue])
 - MULTI_COMMAND: Execute multiple commands in sequence (commands: [array of command objects])
 - HELP: Show available commands
 - CHAT: General conversation/questions
@@ -53,6 +54,13 @@ AVAILABLE SETTINGS TO TOGGLE:
 - showHeaderButtons: Show/hide header action buttons
 - showMoreByDefault: Auto-expand long notes
 - personalityEnabled: Enable/disable stream personality
+
+AVAILABLE DELETE TIMERS:
+- 1h: Notes delete after 1 hour
+- 6h: Notes delete after 6 hours
+- 24h: Notes delete after 24 hours (default)
+- 3d: Notes delete after 3 days
+- 7d: Notes delete after 7 days
 
 RESPONSE GUIDELINES:
 - Always respond in stream's voice with naturalResponse
@@ -112,6 +120,8 @@ Examples:
 "enable folders" → ENABLE_SETTING, naturalResponse: "nice! I'll enable folders so you can organize your notes. here we go!"
 "enable folders and add folder test" → MULTI_COMMAND with both commands, naturalResponse: "perfect! I'll enable folders and create that test folder for you 💧"
 "save all my notes and enable flow formatting" → MULTI_COMMAND, naturalResponse: "got it! I'll save everything and turn on flow formatting. want me to go ahead?", needsConfirmation: true
+"set delete timer to 6 hours" → SET_DELETE_TIMER, naturalResponse: "got it! I'll set your notes to delete after 6 hours 💧"
+"change auto delete to 3 days" → SET_DELETE_TIMER, naturalResponse: "perfect! your notes will now auto-delete after 3 days ✨"
 "hey what's up" → CHAT, naturalResponse: "hey there! just here helping with your notes. what's flowing through your mind?"
 "how are you" → CHAT, naturalResponse: "flowing nicely! just here helping with your notes. how are your ideas streaming today? 💧"
 "tell me a joke" → CHAT, naturalResponse: "why did the note go to therapy? because it had too many issues to stream through! 💧 want to create something?"
@@ -558,6 +568,9 @@ export class CommandExecutor {
         case 'TOGGLE_SETTING':
           return await this.toggleSetting(command.parameters[0]);
           
+        case 'SET_DELETE_TIMER':
+          return await this.setDeleteTimer(command.parameters[0]);
+          
         case 'HELP':
           return this.showHelp();
           
@@ -929,6 +942,7 @@ export class CommandExecutor {
 • Enable features: "enable flow formatting" or "turn on folders"
 • Disable features: "disable SAMO mode" or "turn off personality" 
 • Switch themes: "change to dark theme"
+• Set delete timer: "set delete timer to 6 hours" or "change auto delete to 3 days"
 
 **Organization:**
 • Create folders: "create a folder called work" or "make a new folder named personal"
@@ -1221,6 +1235,69 @@ Try me out! 💧`;
       return {
         success: false,
         message: `I ran into an issue toggling ${displayName}. Could you try that again?`
+      };
+    }
+  }
+
+  async setDeleteTimer(timerValue) {
+    if (!timerValue) {
+      return {
+        success: false,
+        message: "Which timer would you like me to set? Try: 1h, 6h, 24h, 3d, or 7d"
+      };
+    }
+
+    // Map natural language to timer keys
+    const timerMap = {
+      '1 hour': '1h',
+      '1h': '1h',
+      'one hour': '1h',
+      'hour': '1h',
+      '6 hours': '6h',
+      '6h': '6h',
+      'six hours': '6h',
+      '24 hours': '24h',
+      '24h': '24h',
+      'one day': '24h',
+      'day': '24h',
+      '3 days': '3d',
+      '3d': '3d',
+      'three days': '3d',
+      '7 days': '7d',
+      '7d': '7d',
+      'one week': '7d',
+      'week': '7d'
+    };
+
+    const normalizedTimer = timerValue.toLowerCase().trim();
+    const mappedTimer = timerMap[normalizedTimer];
+
+    if (!mappedTimer) {
+      return {
+        success: false,
+        message: `I don't recognize "${timerValue}" as a timer option. Try: 1h, 6h, 24h, 3d, or 7d`
+      };
+    }
+
+    try {
+      await this.settingsActions.updateSettings({ deleteTimer: mappedTimer });
+      
+      const timerNames = {
+        '1h': '1 hour', 
+        '6h': '6 hours',
+        '24h': '24 hours',
+        '3d': '3 days',
+        '7d': '7 days'
+      };
+
+      return {
+        success: true,
+        message: `perfect! your notes will now auto-delete after ${timerNames[mappedTimer]} ✨ existing notes will update to the new timer too!`
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: "I had trouble updating the delete timer. Want to try that again?"
       };
     }
   }
