@@ -127,6 +127,25 @@ stream/
 
 Most thoughts are transitional. They serve their purpose and naturally fade from relevance. By automatically clearing old notes, [stream] keeps you focused on current ideas while still preserving what you choose to save.
 
+## Philosophy
+
+[stream] is built on the belief that **most information is ephemeral** and tools should respect the natural flow of human thought.
+
+### The Problem with Traditional Note-Taking
+- Notes accumulate endlessly, creating digital clutter
+- Important ideas get buried in old content
+- The fear of losing something leads to saving everything
+- Organization becomes a chore that disrupts thinking
+
+### The [stream] Approach
+- **Embrace ephemerality**: Most thoughts serve their purpose and naturally fade
+- **Reduce friction**: Start writing immediately without setup or organization
+- **Focus on now**: Auto-expiring notes keep you present-focused
+- **Preserve intentionally**: Consciously choose what deserves permanent storage
+- **Flow over filing**: Let ideas flow naturally without forced categorization
+
+This philosophy creates a note-taking experience that mirrors how we actually think—fluid, temporal, and focused on what matters in the moment.
+
 ## Development
 
 ### Available Scripts
