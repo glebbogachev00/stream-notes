@@ -167,24 +167,21 @@ const AppContent = memo(() => {
 
 
 
-  // Clean slate: hide notes when logged out but sync is enabled
-  const shouldShowNotes = !settings.syncEnabled || user;
-
   const filteredNotes = useMemo(() => {
-    if (!shouldShowNotes || !notes.length) return [];
+    if (!notes.length) return [];
     return notes.filter(note => {
       if (activeFolder === 'all') return !note.folder; // Only show notes without folder in "All"
       return note.folder === activeFolder;
     });
-  }, [notes, activeFolder, shouldShowNotes]);
+  }, [notes, activeFolder]);
 
   const filteredSavedNotes = useMemo(() => {
-    if (!shouldShowNotes || !savedNotes.length) return [];
+    if (!savedNotes.length) return [];
     return savedNotes.filter(note => {
       if (activeFolder === 'all') return !note.folder; // Only show notes without folder in "All"
       return note.folder === activeFolder;
     });
-  }, [savedNotes, activeFolder, shouldShowNotes]);
+  }, [savedNotes, activeFolder]);
 
   // Show onboarding if not completed
   if (!settings.onboardingCompleted) {
@@ -334,7 +331,7 @@ const AppContent = memo(() => {
         <main>
           {activeTab === 'active' && (
             <div className="space-y-8">
-              {shouldShowNotes && <NoteInput onAddNote={addNote} showToast={showToast} />}
+              <NoteInput onAddNote={addNote} showToast={showToast} />
               <NoteList
                 notes={filteredNotes}
                 onDeleteNote={deleteNote}
@@ -350,7 +347,6 @@ const AppContent = memo(() => {
                 onToggleTodo={toggleNoteTodo}
                 onToggleTodoCompletion={toggleTodoCompletion}
                 onUpdateNoteFolder={updateNoteFolder}
-                isLoggedOut={settings.syncEnabled && !user}
               />
             </div>
           )}
@@ -366,7 +362,6 @@ const AppContent = memo(() => {
                 onTransformToSAMO={handleTransformToArt}
                 getTimeInfo={(note) => getTimeInfo(note, settings.deleteTimer)}
                 onUpdateNoteFolder={updateNoteFolder}
-                isLoggedOut={settings.syncEnabled && !user}
               />
             </>
           )}
