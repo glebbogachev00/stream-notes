@@ -267,6 +267,8 @@ const AppContent = memo(() => {
               )}
             </div>
             <div className="flex items-center gap-2">
+              {/* Sync status - Temporarily hidden for Product Hunt launch */}
+              {/* 
               {(() => {
                 const status = syncStatus || getSyncStatus();
                 if (status === 'local') {
@@ -286,6 +288,7 @@ const AppContent = memo(() => {
                   </span>
                 );
               })()}
+              */}
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -300,6 +303,8 @@ const AppContent = memo(() => {
                 </svg>
               </button>
             )}
+            {/* Sync button - Temporarily hidden for Product Hunt launch */}
+            {/* 
             <button
               onClick={handleSyncButtonClick}
               disabled={syncStatus === 'syncing' || authLoading}
@@ -308,6 +313,7 @@ const AppContent = memo(() => {
             >
               {syncStatus === 'synced' ? <CheckIcon /> : <SyncIcon />}
             </button>
+            */}
             <HeaderActionsDropdown onFeedback={() => setIsFeedbackOpen(true)} />
             <button
               onClick={() => setIsSettingsOpen(true)}
@@ -483,12 +489,15 @@ const AppContent = memo(() => {
         <BackToTop />
       </Suspense>
 
+      {/* Sync Auth Modal - Temporarily hidden for Product Hunt launch */}
+      {/* 
       <Suspense fallback={null}>
         <SyncAuthModal
           isOpen={isSyncAuthOpen}
           onClose={() => setIsSyncAuthOpen(false)}
         />
       </Suspense>
+      */}
 
       {/* Stream AI Assistant */}
       <StreamAssistant

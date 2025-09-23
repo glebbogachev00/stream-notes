@@ -217,7 +217,8 @@ const SettingsModal = ({ isOpen, onClose, onOpenAuthModal, showToast }) => {
             Core Settings
           </div>
 
-          {/* Sync */}
+          {/* Sync - Temporarily hidden for Product Hunt launch */}
+          {/* 
           <CollapsibleSection title="sync across devices">
             <div className="space-y-4">
               <div className="space-y-4">
@@ -298,6 +299,7 @@ const SettingsModal = ({ isOpen, onClose, onOpenAuthModal, showToast }) => {
               </div>
             </div>
           </CollapsibleSection>
+          */}
 
           {/* Typography */}
           <CollapsibleSection title="typography">
