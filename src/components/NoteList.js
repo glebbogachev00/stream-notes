@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState, memo, useCallback, useMemo } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useSettings, DELETE_TIMERS } from '../contexts/SettingsContext';
-import { getRandomMessage, EMPTY_STATE_MESSAGES } from '../utils/messages';
+import { getRandomMessage, EMPTY_STATE_MESSAGES, LOGGED_OUT_EMPTY_STATE_MESSAGES } from '../utils/messages';
 import { handleTextareaChange, handleTextareaKeyDown, setupTextareaForEditing, handleTextareaClick } from '../utils/textareaHelpers';
 import TagSignature from './TagSignature';
 import DeleteTimerControl from './DeleteTimerControl';
@@ -22,7 +22,8 @@ const NoteList = ({
   onToggleTodo,
   onToggleTodoCompletion,
   onUpdateNoteFolder,
-  onSaveWithPreview // Add this prop for the preview modal
+  onSaveWithPreview, // Add this prop for the preview modal
+  isLoggedOut = false // Add this prop to know if user is logged out
 }) => {
   const { theme } = useTheme();
   const { settings, formatText, formatNote } = useSettings();
@@ -757,11 +758,12 @@ const NoteList = ({
   }, [theme, settings, formatText, formatNote, getTimeInfo, editingNoteId, expandedNotes, openMenuId, folderMenuOpenForNoteId, menuPosition, shouldTruncateNote, getTruncatedContent, renderFormattedText, handleMenuToggle, handleNoteClick, handleNoteKeyDown, handleContentChange, handleEditingFinished, toggleNoteExpansion, onTogglePin, onToggleTodo, onToggleTodoCompletion, onSaveNote, onUpdateNoteContent, onUpdateNoteDeleteTimer, onUpdateNoteFolder, onTransformToSAMO, onDeleteNote, setOpenMenuId, setFolderMenuOpenForNoteId, setFullscreenNoteId]);
 
   if (notes.length === 0) {
+    const emptyStateMessages = isLoggedOut ? LOGGED_OUT_EMPTY_STATE_MESSAGES : EMPTY_STATE_MESSAGES;
     return (
       <div className="text-center py-16">
         <p className={`text-sm ${theme.textTertiary} font-light`}>
           <span className="empty-state-icon">{getEmptyStateIcon()}</span>
-          {getRandomMessage(EMPTY_STATE_MESSAGES, settings.personalityEnabled)}
+          {getRandomMessage(emptyStateMessages, settings.personalityEnabled)}
         </p>
       </div>
     );

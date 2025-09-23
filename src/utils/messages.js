@@ -15,6 +15,17 @@ export const EMPTY_STATE_MESSAGES = {
   ]
 };
 
+export const LOGGED_OUT_EMPTY_STATE_MESSAGES = {
+  personality: [
+    "Sign in to sync your thoughts across devices",
+    "Ready to capture your ideas? Sign in to get started",
+    "Your notes are waiting - sign in to continue the flow"
+  ],
+  professional: [
+    "Sign in to access your notes"
+  ]
+};
+
 export const INPUT_PLACEHOLDER_MESSAGES = {
   personality: [
     "What's racing through your mind?",

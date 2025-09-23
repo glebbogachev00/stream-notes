@@ -2,10 +2,11 @@ import React, { useState, useRef, useEffect, memo, useCallback, useMemo } from '
 import { useTheme } from '../contexts/ThemeContext';
 import { useSettings } from '../contexts/SettingsContext';
 import { handleTextareaChange, handleTextareaKeyDown, setupTextareaForEditing, handleTextareaClick } from '../utils/textareaHelpers';
+import { getRandomMessage, LOGGED_OUT_EMPTY_STATE_MESSAGES } from '../utils/messages';
 import TagSignature from './TagSignature';
 import FullscreenNoteModal from './FullscreenNoteModal';
 
-const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onUpdateNoteProperties, onToggleSavedNotePin, onTransformToSAMO, onUpdateNoteFolder }) => {
+const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onUpdateNoteProperties, onToggleSavedNotePin, onTransformToSAMO, onUpdateNoteFolder, isLoggedOut = false }) => {
   const { theme } = useTheme();
   const { settings, formatText, formatNote } = useSettings();
   const [editingNoteId, setEditingNoteId] = useState(null);
@@ -267,10 +268,14 @@ const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onUpdateNoteProper
   const unpinnedSavedNotes = useMemo(() => savedNotes.filter(note => !note.isPinned), [savedNotes]);
 
   if (savedNotes.length === 0) {
+    const emptyMessage = isLoggedOut 
+      ? getRandomMessage(LOGGED_OUT_EMPTY_STATE_MESSAGES, settings.personalityEnabled)
+      : "no saved notes";
+    
     return (
       <div className="text-center py-16">
         <p className={`dynamic-text-base ${theme.textTertiary} font-light`}>
-          no saved notes
+          {emptyMessage}
         </p>
       </div>
     );

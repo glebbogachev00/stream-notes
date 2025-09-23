@@ -9,6 +9,7 @@ import { useStorage } from '../contexts/StorageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { getSyncHistory, restoreSyncSnapshot, createSnapshotForKey } from '../utils/storage';
 import ConfirmModal from './ConfirmModal';
+import LogoutConfirmModal from './LogoutConfirmModal';
 
 const SettingsModal = ({ isOpen, onClose, onOpenAuthModal, showToast }) => {
   const { theme, switchTheme, themes, unlockMatrixTheme, unlockEdgeTheme } = useTheme();
@@ -30,6 +31,7 @@ const SettingsModal = ({ isOpen, onClose, onOpenAuthModal, showToast }) => {
   const [newFolder, setNewFolder] = useState('');
   const [latestSavedBackup, setLatestSavedBackup] = useState(null);
   const [folderPendingDeletion, setFolderPendingDeletion] = useState('');
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const userTag = getUserTag();
 
   const refreshBackupMetadata = useCallback(() => {
@@ -115,7 +117,12 @@ const SettingsModal = ({ isOpen, onClose, onOpenAuthModal, showToast }) => {
     updateSettings({ syncEnabled: !settings.syncEnabled });
   };
 
-  const handleSignOut = async () => {
+  const handleSignOut = () => {
+    setShowLogoutConfirm(true);
+  };
+
+  const confirmSignOut = async () => {
+    setShowLogoutConfirm(false);
     await signOut();
     updateSettings({ syncEnabled: false, syncKey: '' });
   };
@@ -728,6 +735,11 @@ const SettingsModal = ({ isOpen, onClose, onOpenAuthModal, showToast }) => {
           onConfirm={handleConfirmFolderDeletion}
           onCancel={handleCancelFolderDeletion}
           isDestructive
+        />
+        <LogoutConfirmModal
+          isOpen={showLogoutConfirm}
+          onClose={() => setShowLogoutConfirm(false)}
+          onConfirm={confirmSignOut}
         />
       </div>
     </div>

@@ -43,8 +43,6 @@ const AppContent = memo(() => {
   const [pendingFromSaved, setPendingFromSaved] = useState(false);
   const [showEdgeUnlock, setShowEdgeUnlock] = useState(false);
   const [activeFolder, setActiveFolder] = useState('all');
-  const [deferredPrompt, setDeferredPrompt] = useState(null);
-  const [showInstallPrompt, setShowInstallPrompt] = useState(false);
   const [isSyncAuthOpen, setIsSyncAuthOpen] = useState(false);
 
   const cycleLogo = () => {
@@ -143,42 +141,6 @@ const AppContent = memo(() => {
     }
   }, [activeFolder, settings.folders]);
 
-  // PWA Install prompt handling
-  useEffect(() => {
-    const handleBeforeInstallPrompt = (e) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
-      setShowInstallPrompt(true);
-    };
-
-    const handleAppInstalled = () => {
-      setDeferredPrompt(null);
-      setShowInstallPrompt(false);
-      showToast('App installed successfully!');
-    };
-
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    window.addEventListener('appinstalled', handleAppInstalled);
-
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-      window.removeEventListener('appinstalled', handleAppInstalled);
-    };
-  }, [showToast]);
-
-  const handleInstallClick = async () => {
-    if (!deferredPrompt) return;
-
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    
-    if (outcome === 'accepted') {
-      showToast('Installing app...');
-    }
-    
-    setDeferredPrompt(null);
-    setShowInstallPrompt(false);
-  };
 
   const handleSyncButtonClick = async () => {
     if (!user) {
@@ -205,21 +167,24 @@ const AppContent = memo(() => {
 
 
 
+  // Clean slate: hide notes when logged out but sync is enabled
+  const shouldShowNotes = !settings.syncEnabled || user;
+
   const filteredNotes = useMemo(() => {
-    if (!notes.length) return [];
+    if (!shouldShowNotes || !notes.length) return [];
     return notes.filter(note => {
       if (activeFolder === 'all') return !note.folder; // Only show notes without folder in "All"
       return note.folder === activeFolder;
     });
-  }, [notes, activeFolder]);
+  }, [notes, activeFolder, shouldShowNotes]);
 
   const filteredSavedNotes = useMemo(() => {
-    if (!savedNotes.length) return [];
+    if (!shouldShowNotes || !savedNotes.length) return [];
     return savedNotes.filter(note => {
       if (activeFolder === 'all') return !note.folder; // Only show notes without folder in "All"
       return note.folder === activeFolder;
     });
-  }, [savedNotes, activeFolder]);
+  }, [savedNotes, activeFolder, shouldShowNotes]);
 
   // Show onboarding if not completed
   if (!settings.onboardingCompleted) {
@@ -369,7 +334,7 @@ const AppContent = memo(() => {
         <main>
           {activeTab === 'active' && (
             <div className="space-y-8">
-              <NoteInput onAddNote={addNote} showToast={showToast} />
+              {shouldShowNotes && <NoteInput onAddNote={addNote} showToast={showToast} />}
               <NoteList
                 notes={filteredNotes}
                 onDeleteNote={deleteNote}
@@ -385,6 +350,7 @@ const AppContent = memo(() => {
                 onToggleTodo={toggleNoteTodo}
                 onToggleTodoCompletion={toggleTodoCompletion}
                 onUpdateNoteFolder={updateNoteFolder}
+                isLoggedOut={settings.syncEnabled && !user}
               />
             </div>
           )}
@@ -400,6 +366,7 @@ const AppContent = memo(() => {
                 onTransformToSAMO={handleTransformToArt}
                 getTimeInfo={(note) => getTimeInfo(note, settings.deleteTimer)}
                 onUpdateNoteFolder={updateNoteFolder}
+                isLoggedOut={settings.syncEnabled && !user}
               />
             </>
           )}
