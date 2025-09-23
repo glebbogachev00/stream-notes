@@ -331,7 +331,7 @@ const AppContent = memo(() => {
             <div className="space-y-8">
               <NoteInput onAddNote={addNote} showToast={showToast} />
               <NoteList
-                notes={user ? filteredNotes : []}
+                notes={filteredNotes}
                 onDeleteNote={deleteNote}
                 onSaveNote={saveNote}
                 onTransformToSAMO={handleTransformToArt}
@@ -345,7 +345,6 @@ const AppContent = memo(() => {
                 onToggleTodo={toggleNoteTodo}
                 onToggleTodoCompletion={toggleTodoCompletion}
                 onUpdateNoteFolder={updateNoteFolder}
-                isLoggedOut={!user}
               />
             </div>
           )}
