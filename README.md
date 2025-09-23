@@ -1,10 +1,10 @@
-# [stream] · self-managing notes
-
 <div align="center">
+  
+  ![stream logo](public/stream-logo-text.png)
   
   **A minimal note-taking app that embraces ephemerality**
   
-  [Live Demo](https://stream-notes.vercel.app) · [Features](#features) · [Quick Start](#quick-start) · [Philosophy](#philosophy)
+  [Live Demo](https://stream-notes.com) · [Features](#features) · [Quick Start](#quick-start) · [Philosophy](#philosophy)
   
 </div>
 
