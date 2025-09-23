@@ -112,6 +112,7 @@ CRITICAL RULES:
 8. If unsure about user intent, ask for clarification in naturalResponse
 9. For jokes/fun requests → use CHAT and be playful with water/stream themes
 10. Be conversational and personable while staying note-focused
+11. For ANY question about easter eggs, secrets, hidden features → always give the easter eggs response with CHAT
 
 Examples:
 "create a note about coffee" → CREATE_NOTE, naturalResponse: "got it! creating a note about coffee 💧"
@@ -129,6 +130,10 @@ Examples:
 "good morning" → CHAT, naturalResponse: "morning! hope your ideas are flowing fresh today. ready to capture some thoughts? 💧"
 "thanks" → CHAT, naturalResponse: "you're welcome! that's what I'm here for. keep those ideas flowing! 💧"
 "what can you do" → HELP, naturalResponse: "I can help you create notes, format them, save them, and manage your stream settings. what sounds good?"
+"hidden easter eggs" → CHAT, naturalResponse: "ah, a curious explorer! here's what I can share:\n\n**Theme Unlocks:**\n• Matrix theme → enable enhanced editing controls\n• Edge theme → enable folders feature\n• Quake theme → create a note with 'rocket jump'\n• Doom theme → create a note with 'rip and tear'\n\n**Other Secrets:**\n• Click the stream logo multiple times for style changes\n• Enable SAMO mode for artistic note transformations\n• Create quotes (with attribution) to unlock special features\n\nthere might be more secrets flowing beneath the surface..."
+"easter eggs" → CHAT, naturalResponse: "ah, a curious explorer! here's what I can share:\n\n**Theme Unlocks:**\n• Matrix theme → enable enhanced editing controls\n• Edge theme → enable folders feature\n• Quake theme → create a note with 'rocket jump'\n• Doom theme → create a note with 'rip and tear'\n\n**Other Secrets:**\n• Click the stream logo multiple times for style changes\n• Enable SAMO mode for artistic note transformations\n• Create quotes (with attribution) to unlock special features\n\nthere might be more secrets flowing beneath the surface..."
+"how do I unlock easter eggs" → CHAT, naturalResponse: "ah, a curious explorer! here's what I can share:\n\n**Theme Unlocks:**\n• Matrix theme → enable enhanced editing controls\n• Edge theme → enable folders feature\n• Quake theme → create a note with 'rocket jump'\n• Doom theme → create a note with 'rip and tear'\n\n**Other Secrets:**\n• Click the stream logo multiple times for style changes\n• Enable SAMO mode for artistic note transformations\n• Create quotes (with attribution) to unlock special features\n\nthere might be more secrets flowing beneath the surface..."
+"unlock easter eggs" → CHAT, naturalResponse: "ah, a curious explorer! here's what I can share:\n\n**Theme Unlocks:**\n• Matrix theme → enable enhanced editing controls\n• Edge theme → enable folders feature\n• Quake theme → create a note with 'rocket jump'\n• Doom theme → create a note with 'rip and tear'\n\n**Other Secrets:**\n• Click the stream logo multiple times for style changes\n• Enable SAMO mode for artistic note transformations\n• Create quotes (with attribution) to unlock special features\n\nthere might be more secrets flowing beneath the surface..."
 
 Remember: Your naturalResponse is the main user interaction - make it count with stream's personality!`;
 
@@ -484,6 +489,19 @@ Remember: Your naturalResponse is the main user interaction - make it count with
         parameters: [content.trim()],
         confidence: 0.8,
         naturalResponse: "got it! creating that note for you 💧",
+        needsConfirmation: false
+      };
+    }
+    
+    // Easter eggs and hidden features
+    const easterEggKeywords = ['easter egg', 'hidden feature', 'secret', 'unlock', 'surprise'];
+    if (easterEggKeywords.some(keyword => lowerInput.includes(keyword))) {
+      return {
+        type: 'CHAT',
+        originalInput: input,
+        parameters: [],
+        confidence: 0.9,
+        naturalResponse: "ah, a curious explorer! here's what I can share:\n\n**Theme Unlocks:**\n• Matrix theme → enable enhanced editing controls\n• Edge theme → enable folders feature\n• Quake theme → create a note with 'rocket jump'\n• Doom theme → create a note with 'rip and tear'\n\n**Other Secrets:**\n• Click the stream logo multiple times for style changes\n• Enable SAMO mode for artistic note transformations\n• Create quotes (with attribution) to unlock special features\n\nthere might be more secrets flowing beneath the surface...",
         needsConfirmation: false
       };
     }

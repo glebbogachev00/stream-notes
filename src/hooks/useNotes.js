@@ -210,11 +210,15 @@ export const useNotes = (
 
   const updateNoteDeleteTimer = useCallback((id, newDeleteTimerKey) => {
     const timestamp = Date.now();
+    const maxAgeHours = DELETE_TIMERS[newDeleteTimerKey]?.hours || 24;
+    const newExpiresAt = maxAgeHours === Infinity ? Infinity : timestamp + (maxAgeHours * 60 * 60 * 1000);
+    
     const updatedNotes = notes.map(note => 
       note.id === id ? {
         ...note,
         customTimerKey: newDeleteTimerKey,
         hasCustomDeleteTimer: true,
+        expiresAt: newExpiresAt,
         updatedAt: timestamp
       } : note
     );
@@ -402,8 +406,8 @@ export const useNotes = (
       };
     }
 
-    // Always calculate from creation time + current setting
-    const expiresAt = note.createdAt + (maxAgeHours * 60 * 60 * 1000);
+    // Use stored expiration time, fallback to calculated if not available
+    const expiresAt = note.expiresAt || (note.createdAt + (maxAgeHours * 60 * 60 * 1000));
     const timeRemainingMs = expiresAt - now;
     const hoursRemaining = timeRemainingMs / (1000 * 60 * 60);
     const minutesRemaining = timeRemainingMs / (1000 * 60);

@@ -8,10 +8,15 @@ const DeleteTimerControl = ({ note, onUpdateNoteDeleteTimer, textSize = 'text-xs
 
   const currentTimerKey = note.customTimerKey || settings.deleteTimer;
 
+  const handleChange = (e) => {
+    onUpdateNoteDeleteTimer(note.id, e.target.value);
+  };
+
   return (
     <select
       value={currentTimerKey}
-      onChange={(e) => onUpdateNoteDeleteTimer(note.id, e.target.value)}
+      onChange={handleChange}
+      onInput={handleChange}
       className={`appearance-none bg-transparent ${theme.text} ${textSize} font-light focus:outline-none pr-2`}
     >
       {Object.entries(DELETE_TIMERS).map(([key, timer]) => (

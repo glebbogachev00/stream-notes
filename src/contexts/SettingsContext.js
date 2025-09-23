@@ -57,7 +57,6 @@ const DEFAULT_SETTINGS = {
   availableThemes: ['white', 'beige', 'dark'], // All themes available by default
   autoSortingEnabled: false,
   showMoreByDefault: false,
-  showHeaderButtons: true,
   flowFormattingEnabled: true
 };
 
@@ -140,7 +139,6 @@ export const SettingsProvider = ({ children }) => {
         availableThemes: settings.availableThemes,
         autoSortingEnabled: settings.autoSortingEnabled,
         showMoreByDefault: settings.showMoreByDefault,
-        showHeaderButtons: settings.showHeaderButtons,
         flowFormattingEnabled: settings.flowFormattingEnabled,
         onboardingCompleted: settings.onboardingCompleted
       };
@@ -186,7 +184,6 @@ export const SettingsProvider = ({ children }) => {
         availableThemes: settings.availableThemes,
         autoSortingEnabled: settings.autoSortingEnabled,
         showMoreByDefault: settings.showMoreByDefault,
-        showHeaderButtons: settings.showHeaderButtons,
         flowFormattingEnabled: settings.flowFormattingEnabled
       }));
       localStorage.setItem('stream-onboarding-completed', settings.onboardingCompleted.toString());

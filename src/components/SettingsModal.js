@@ -10,7 +10,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { getSyncHistory, restoreSyncSnapshot, createSnapshotForKey } from '../utils/storage';
 import ConfirmModal from './ConfirmModal';
 
-const SettingsModal = ({ isOpen, onClose, onOpenAuthModal, showToast }) => {
+const SettingsModal = ({ isOpen, onClose, onOpenAuthModal, showToast, onFeedback }) => {
   const { theme, switchTheme, themes, unlockMatrixTheme, unlockEdgeTheme } = useTheme();
   const { settings, updateSettings, resetSettings, togglePersonality } = useSettings();
   
@@ -313,16 +313,16 @@ const SettingsModal = ({ isOpen, onClose, onOpenAuthModal, showToast }) => {
                 <div className={`dynamic-text-xs ${theme.textTertiary} font-light mb-2`}>Spacing</div>
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => updateSettings({ letterSpacing: Math.max(-1, settings.letterSpacing - 0.5) })}
+                    onClick={() => updateSettings({ letterSpacing: Math.max(-1, (settings.letterSpacing || 0) - 0.5) })}
                     className={`dynamic-text-xs font-light ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} transition-colors`}
                   >
                     [-]
                   </button>
                   <span className={`dynamic-text-xs font-light ${theme.text}`}>
-                    {settings.letterSpacing}px
+                    {(settings.letterSpacing || 0)}px
                   </span>
                   <button
-                    onClick={() => updateSettings({ letterSpacing: Math.min(5, settings.letterSpacing + 0.5) })}
+                    onClick={() => updateSettings({ letterSpacing: Math.min(5, (settings.letterSpacing || 0) + 0.5) })}
                     className={`dynamic-text-xs font-light ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} transition-colors`}
                   >
                     [+]
@@ -677,20 +677,6 @@ const SettingsModal = ({ isOpen, onClose, onOpenAuthModal, showToast }) => {
             </div>
           </CollapsibleSection>
 
-          {/* Header Buttons */}
-          <CollapsibleSection title="header buttons">
-            <div>
-              <button
-                onClick={() => updateSettings({ showHeaderButtons: !settings.showHeaderButtons })}
-                className={`w-full text-left pb-3 border-b transition-all duration-200 ${theme.border} ${theme.text} hover:${theme.textSecondary.replace('text-', 'hover:text-')}`}
-              >
-                <div className="dynamic-text-xs font-light">
-                  {settings.showHeaderButtons ? 'hide support, feedback, and update buttons' : 'show support, feedback, and update buttons'}
-                </div>
-              </button>
-            </div>
-          </CollapsibleSection>
-
           {/* Onboarding */}
           <CollapsibleSection title="onboarding">
             <button
@@ -704,12 +690,40 @@ const SettingsModal = ({ isOpen, onClose, onOpenAuthModal, showToast }) => {
           </CollapsibleSection>
         </div>
 
-        <div className={`mt-6 pt-4 border-t ${theme.borderSecondary} space-y-3`}>
-          <div className={`dynamic-text-xs ${theme.textTertiary} font-light text-center`}>
-            {settings.syncEnabled
-              ? 'Keep your sync id private — anyone with it can see your synced notes.'
-              : '🔒 Your notes stay on this device until you enable sync.'}
+        {/* ACTIONS SECTION */}
+        <div className={`mt-6 pt-4 border-t ${theme.borderSecondary} space-y-4`}>
+          <div className={`${theme.textTertiary} dynamic-text-xs font-light uppercase tracking-wider`}>
+            Actions
           </div>
+          
+          <div className="space-y-2">
+            <button
+              onClick={() => window.open('https://gleb-bogachev.notion.site/updates-stream?source=copy_link', '_blank')}
+              className={`w-full text-left px-3 py-2 dynamic-text-xs font-light ${theme.text} ${theme.buttonHover} transition-colors flex items-center gap-2 rounded-sm`}
+            >
+              <span className={`${theme.textTertiary} w-3 text-center`}>↗</span>
+              view updates
+            </button>
+            
+            <button
+              onClick={onFeedback}
+              className={`w-full text-left px-3 py-2 dynamic-text-xs font-light ${theme.text} ${theme.buttonHover} transition-colors flex items-center gap-2 rounded-sm`}
+            >
+              <span className={`${theme.textTertiary} w-3 text-center`}>?</span>
+              {settings.personalityEnabled ? 'help improve stream' : 'feedback'}
+            </button>
+            
+            <button
+              onClick={() => window.open('https://ko-fi.com/banhmii#avatarModal', '_blank')}
+              className={`w-full text-left px-3 py-2 dynamic-text-xs font-light ${theme.text} ${theme.buttonHover} transition-colors flex items-center gap-2 rounded-sm`}
+            >
+              <span className={`${theme.textTertiary} w-3 text-center`}>♡</span>
+              support project
+            </button>
+          </div>
+        </div>
+
+        <div className={`mt-6 pt-4 border-t ${theme.borderSecondary} space-y-3`}>
           <button
             onClick={handleReset}
             className={`dynamic-text-xs font-light ${theme.textTertiary} ${theme.textDestructive} transition-colors block mx-auto`}

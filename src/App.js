@@ -12,7 +12,6 @@ import ThemeToggle from './components/ThemeToggle';
 import Onboarding from './components/Onboarding';
 import Toast from './components/Toast';
 import FolderFilter from './components/FolderFilter';
-import HeaderActionsDropdown from './components/HeaderActionsDropdown';
 import SyncIcon from './components/icons/SyncIcon';
 import CheckIcon from './components/icons/CheckIcon';
 import StreamAssistant from './components/StreamAssistant';
@@ -259,7 +258,6 @@ const AppContent = memo(() => {
             >
               {syncStatus === 'synced' ? <CheckIcon /> : <SyncIcon />}
             </button>
-            <HeaderActionsDropdown onFeedback={() => setIsFeedbackOpen(true)} />
             <button
               onClick={() => setIsSettingsOpen(true)}
               className={`p-2 ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} transition-colors dynamic-text-base`}
@@ -333,7 +331,7 @@ const AppContent = memo(() => {
             <div className="space-y-8">
               <NoteInput onAddNote={addNote} showToast={showToast} />
               <NoteList
-                notes={filteredNotes}
+                notes={user ? filteredNotes : []}
                 onDeleteNote={deleteNote}
                 onSaveNote={saveNote}
                 onTransformToSAMO={handleTransformToArt}
@@ -347,6 +345,7 @@ const AppContent = memo(() => {
                 onToggleTodo={toggleNoteTodo}
                 onToggleTodoCompletion={toggleTodoCompletion}
                 onUpdateNoteFolder={updateNoteFolder}
+                isLoggedOut={!user}
               />
             </div>
           )}
@@ -390,6 +389,7 @@ const AppContent = memo(() => {
           onClose={() => setIsSettingsOpen(false)} 
           onOpenAuthModal={() => setIsSyncAuthOpen(true)}
           showToast={showToast}
+          onFeedback={() => setIsFeedbackOpen(true)}
         />
       </Suspense>
 
