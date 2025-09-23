@@ -23,7 +23,6 @@ const SettingsModal = lazy(() => import(/* webpackChunkName: "settings" */ './co
 const ArtGallery = lazy(() => import(/* webpackChunkName: "art-gallery" */ './components/ArtGallery'));
 const StyleSelector = lazy(() => import(/* webpackChunkName: "style-selector" */ './components/StyleSelector'));
 const QuoteCollection = lazy(() => import(/* webpackChunkName: "quotes" */ './components/QuoteCollection'));
-const MatrixUnlockNotification = lazy(() => import(/* webpackChunkName: "notifications" */ './components/MatrixUnlockNotification'));
 const EdgeUnlockNotification = lazy(() => import(/* webpackChunkName: "notifications" */ './components/EdgeUnlockNotification'));
 const FeedbackModal = lazy(() => import(/* webpackChunkName: "feedback" */ './components/FeedbackModal'));
 const BackToTop = lazy(() => import(/* webpackChunkName: "utilities" */ './components/BackToTop'));
@@ -42,7 +41,6 @@ const AppContent = memo(() => {
   const [styleSelectorOpen, setStyleSelectorOpen] = useState(false);
   const [pendingTransformId, setPendingTransformId] = useState(null);
   const [pendingFromSaved, setPendingFromSaved] = useState(false);
-  const [showMatrixUnlock, setShowMatrixUnlock] = useState(false);
   const [showEdgeUnlock, setShowEdgeUnlock] = useState(false);
   const [activeFolder, setActiveFolder] = useState('all');
   const [deferredPrompt, setDeferredPrompt] = useState(null);
@@ -70,9 +68,6 @@ const AppContent = memo(() => {
     setPendingFromSaved(false);
   };
 
-  const handleMatrixUnlock = () => {
-    setShowMatrixUnlock(true);
-  };
 
   const handleEdgeUnlock = () => {
     setShowEdgeUnlock(true);
@@ -385,7 +380,7 @@ const AppContent = memo(() => {
         <main>
           {activeTab === 'active' && (
             <div className="space-y-8">
-              <NoteInput onAddNote={addNote} onMatrixUnlock={handleMatrixUnlock} />
+              <NoteInput onAddNote={addNote} showToast={showToast} />
               <NoteList
                 notes={filteredNotes}
                 onDeleteNote={deleteNote}
@@ -443,6 +438,7 @@ const AppContent = memo(() => {
           isOpen={isSettingsOpen} 
           onClose={() => setIsSettingsOpen(false)} 
           onOpenAuthModal={() => setIsSyncAuthOpen(true)}
+          showToast={showToast}
         />
       </Suspense>
 
@@ -473,14 +469,6 @@ const AppContent = memo(() => {
         />
       ))}
 
-      {/* Matrix unlock notification */}
-      {showMatrixUnlock && (
-        <Suspense fallback={null}>
-          <MatrixUnlockNotification 
-            onClose={() => setShowMatrixUnlock(false)} 
-          />
-        </Suspense>
-      )}
       
       {/* Edge unlock notification */}
       {showEdgeUnlock && (

@@ -10,9 +10,19 @@ import { useAuth } from '../contexts/AuthContext';
 import { getSyncHistory, restoreSyncSnapshot, createSnapshotForKey } from '../utils/storage';
 import ConfirmModal from './ConfirmModal';
 
-const SettingsModal = ({ isOpen, onClose, onOpenAuthModal }) => {
-  const { theme, switchTheme, themes } = useTheme();
+const SettingsModal = ({ isOpen, onClose, onOpenAuthModal, showToast }) => {
+  const { theme, switchTheme, themes, unlockMatrixTheme, unlockEdgeTheme } = useTheme();
   const { settings, updateSettings, resetSettings, togglePersonality } = useSettings();
+  
+  // Check and unlock themes for existing users who already have features enabled
+  useEffect(() => {
+    if (settings.enhancedEditingEnabled) {
+      unlockMatrixTheme();
+    }
+    if (settings.foldersEnabled) {
+      unlockEdgeTheme();
+    }
+  }, [settings.enhancedEditingEnabled, settings.foldersEnabled, unlockMatrixTheme, unlockEdgeTheme]);
   const { syncStatus, syncError } = useStorage();
   const { user, signOut, loading: authLoading, isConfigured: authConfigured } = useAuth();
   const [newUserTag, setNewUserTag] = useState('');
@@ -349,46 +359,6 @@ const SettingsModal = ({ isOpen, onClose, onOpenAuthModal }) => {
             </div>
           </CollapsibleSection>
 
-          {/* Personality */}
-          <CollapsibleSection title="personality">
-            <div className="space-y-4">
-              {/* Personality Toggle */}
-              <div>
-                <button
-                  onClick={togglePersonality}
-                  className={`w-full text-left pb-3 border-b transition-all duration-200 ${theme.border} ${theme.text} hover:${theme.textSecondary.replace('text-', 'hover:text-')}`}
-                >
-                  <div className="dynamic-text-xs font-light">
-                    {settings.personalityEnabled ? 'turn off personality - give stream a vacation' : 'bring stream back from vacation'}
-                  </div>
-                </button>
-              </div>
-
-              {/* SAMO */}
-              <div>
-                <button
-                  onClick={() => updateSettings({ samoModeEnabled: !settings.samoModeEnabled })}
-                  className={`w-full text-left pb-3 border-b transition-all duration-200 ${theme.border} ${theme.text} hover:${theme.textSecondary.replace('text-', 'hover:text-')}`}
-                >
-                  <div className="dynamic-text-xs font-light">
-                    {settings.samoModeEnabled ? 'hide samo' : 'show samo'}
-                  </div>
-                </button>
-              </div>
-
-              {/* Steal This Quote */}
-              <div>
-                <button
-                  onClick={() => updateSettings({ stealThisQuoteEnabled: !settings.stealThisQuoteEnabled })}
-                  className={`w-full text-left pb-3 border-b transition-all duration-200 ${theme.border} ${theme.text} hover:${theme.textSecondary.replace('text-', 'hover:text-')}`}
-                >
-                  <div className="dynamic-text-xs font-light">
-                    {settings.stealThisQuoteEnabled ? 'hide steal this quote' : 'show steal this quote'}
-                  </div>
-                </button>
-              </div>
-            </div>
-          </CollapsibleSection>
 
 
           {/* User Tag */}
@@ -512,11 +482,59 @@ const SettingsModal = ({ isOpen, onClose, onOpenAuthModal }) => {
             Add-on Settings
           </div>
 
+          {/* Personality */}
+          <CollapsibleSection title="personality">
+            <div className="space-y-4">
+              {/* Personality Toggle */}
+              <div>
+                <button
+                  onClick={togglePersonality}
+                  className={`w-full text-left pb-3 border-b transition-all duration-200 ${theme.border} ${theme.text} hover:${theme.textSecondary.replace('text-', 'hover:text-')}`}
+                >
+                  <div className="dynamic-text-xs font-light">
+                    {settings.personalityEnabled ? 'turn off personality - give stream a vacation' : 'bring stream back from vacation'}
+                  </div>
+                </button>
+              </div>
+
+              {/* SAMO */}
+              <div>
+                <button
+                  onClick={() => updateSettings({ samoModeEnabled: !settings.samoModeEnabled })}
+                  className={`w-full text-left pb-3 border-b transition-all duration-200 ${theme.border} ${theme.text} hover:${theme.textSecondary.replace('text-', 'hover:text-')}`}
+                >
+                  <div className="dynamic-text-xs font-light">
+                    {settings.samoModeEnabled ? 'hide samo' : 'show samo'}
+                  </div>
+                </button>
+              </div>
+
+              {/* Steal This Quote */}
+              <div>
+                <button
+                  onClick={() => updateSettings({ stealThisQuoteEnabled: !settings.stealThisQuoteEnabled })}
+                  className={`w-full text-left pb-3 border-b transition-all duration-200 ${theme.border} ${theme.text} hover:${theme.textSecondary.replace('text-', 'hover:text-')}`}
+                >
+                  <div className="dynamic-text-xs font-light">
+                    {settings.stealThisQuoteEnabled ? 'hide steal this quote' : 'show steal this quote'}
+                  </div>
+                </button>
+              </div>
+            </div>
+          </CollapsibleSection>
+
           {/* Note Controls */}
           <CollapsibleSection title="note controls">
             <div>
               <button
-                onClick={() => updateSettings({ enhancedEditingEnabled: !settings.enhancedEditingEnabled })}
+                onClick={() => {
+                  const newValue = !settings.enhancedEditingEnabled;
+                  updateSettings({ enhancedEditingEnabled: newValue });
+                  if (newValue) {
+                    unlockMatrixTheme(); // Matrix unlocks when enhanced editing is enabled
+                    showToast('Matrix theme unlocked! Check theme settings.', 5000);
+                  }
+                }}
                 className={`w-full text-left pb-3 border-b transition-all duration-200 ${theme.border} ${theme.text} hover:${theme.textSecondary.replace('text-', 'hover:text-')}`}
               >
                 <div className="dynamic-text-xs font-light">
@@ -582,7 +600,14 @@ const SettingsModal = ({ isOpen, onClose, onOpenAuthModal }) => {
           <CollapsibleSection title="folders">
             <div>
               <button
-                onClick={() => updateSettings({ foldersEnabled: !settings.foldersEnabled })}
+                onClick={() => {
+                  const newValue = !settings.foldersEnabled;
+                  updateSettings({ foldersEnabled: newValue });
+                  if (newValue) {
+                    unlockEdgeTheme(); // Edge unlocks when folders are enabled
+                    showToast('Edge theme unlocked! Check theme settings.', 5000);
+                  }
+                }}
                 className={`w-full text-left pb-3 border-b transition-all duration-200 ${theme.border} ${theme.text} hover:${theme.textSecondary.replace('text-', 'hover:text-')}`}
               >
                 <div className="dynamic-text-xs font-light">

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
-import { useSettings, ORGANIZATION_STYLES, DELETE_TIMERS } from '../contexts/SettingsContext';
+import { useSettings, DELETE_TIMERS } from '../contexts/SettingsContext';
 import { setUserTag, validateUserTag, formatUserTag } from '../utils/tags';
 import { sanitizeInput } from '../utils/security';
 
@@ -16,7 +16,9 @@ const Onboarding = () => {
     deleteTimer: '24h',
     userTag: '',
     securityAcknowledged: false,
-    enhancedEditingEnabled: false
+    enhancedEditingEnabled: false,
+    personalityEnabled: false,
+    foldersEnabled: false
   });
   const [tagError, setTagError] = useState('');
 
@@ -24,10 +26,6 @@ const Onboarding = () => {
     {
       title: settings.personalityEnabled ? "Pick your colors" : "Theme Selection",
       subtitle: settings.personalityEnabled ? "What feels right?" : "Choose your preferred theme."
-    },
-    {
-      title: "Privacy first",
-      subtitle: "Everything stays on your device."
     },
     {
       title: settings.personalityEnabled ? "Your signature" : "Create Your Signature",
@@ -38,34 +36,15 @@ const Onboarding = () => {
       subtitle: settings.personalityEnabled ? "Whatever works" : "Select your font size."
     },
     {
-      title: settings.personalityEnabled ? "Note style" : "Note Organization",
-      subtitle: settings.personalityEnabled ? "How should notes look?" : "Choose your organization style."
-    },
-    {
-      title: settings.personalityEnabled ? "Smart lists" : "Auto-Sorting",
-      subtitle: settings.personalityEnabled ? "Auto-organize short notes?" : "Automatically format lists and tasks."
-    },
-    {
       title: settings.personalityEnabled ? "Auto-cleanup" : "Auto-Delete Timer",
       subtitle: settings.personalityEnabled ? "When should old notes disappear?" : "Set auto-delete duration."
-    },
-    {
-      title: settings.personalityEnabled ? "Add-ons" : "Add-ons",
-      subtitle: settings.personalityEnabled ? "Extra features to enhance your workflow" : "Additional functionality that can be turned off anytime"
-    },
-    {
-      title: settings.personalityEnabled ? "All set!" : "Preview",
-      subtitle: settings.personalityEnabled ? "Ready to start?" : "Review and confirm."
     }
   ];
 
   const handleNext = () => {
     if (currentStep === -1) {
       setCurrentStep(0); // Move from welcome to first step
-    } else if (currentStep === 1) { // Security step
-      setSelections({ ...selections, securityAcknowledged: true }); // Acknowledge security automatically
-      setCurrentStep(currentStep + 1); // Advance to next step
-    } else if (currentStep === 2) { // Tag creation step
+    } else if (currentStep === 1) { // Tag creation step
       if (!selections.userTag.trim()) {
         setTagError('Please enter a tag name');
         return;
@@ -89,7 +68,18 @@ const Onboarding = () => {
     } else {
       // Apply theme selection before completing onboarding
       switchTheme(selections.theme);
-      completeOnboarding(selections);
+      
+      // Set final values with sensible defaults
+      const finalSelections = {
+        ...selections,
+        securityAcknowledged: true,
+        organizationStyle: 'bullets',
+        autoSortingEnabled: false,
+        enhancedEditingEnabled: false,
+        personalityEnabled: false,
+        foldersEnabled: false
+      };
+      completeOnboarding(finalSelections);
     }
   };
 
@@ -216,64 +206,7 @@ const Onboarding = () => {
     );
   };
 
-  const renderStep3 = () => (
-    <div className="space-y-0">
-      {Object.entries(ORGANIZATION_STYLES).map(([key, style]) => (
-        <button
-          key={key}
-          onClick={() => setSelections({ ...selections, organizationStyle: key })}
-          className={`w-full text-left p-3 transition-all duration-200 border-b ${
-            selections.organizationStyle === key
-              ? `${theme.text} ${theme.text.replace('text-', 'border-')} font-medium bg-opacity-10 ${theme.bg === 'bg-white' ? 'bg-black' : theme.bg === 'bg-amber-50' ? 'bg-amber-900' : 'bg-white'}`
-              : `${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} border-transparent`
-          }`}
-        >
-          <div className="text-sm font-light mb-2">
-            {style.name.toLowerCase()}
-          </div>
-          <div className={`text-xs ${theme.textTertiary} font-mono whitespace-pre-line leading-relaxed`}>
-            {style.example}
-          </div>
-        </button>
-      ))}
-    </div>
-  );
 
-  const renderAutoSortingStep = () => (
-    <div className="space-y-0">
-      <button
-        onClick={() => setSelections({ ...selections, autoSortingEnabled: false })}
-        className={`w-full text-left p-4 transition-all duration-200 border-b ${
-          !selections.autoSortingEnabled
-            ? `${theme.text} ${theme.text.replace('text-', 'border-')}`
-            : `${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} border-transparent`
-        }`}
-      >
-        <div className="text-sm font-light mb-2">
-          {settings.personalityEnabled ? "manual" : "Manual"}
-        </div>
-        <div className={`text-xs ${theme.textTertiary} font-light`}>
-          Format lists yourself
-        </div>
-      </button>
-      
-      <button
-        onClick={() => setSelections({ ...selections, autoSortingEnabled: true })}
-        className={`w-full text-left p-4 transition-all duration-200 border-b ${
-          selections.autoSortingEnabled
-            ? `${theme.text} ${theme.text.replace('text-', 'border-')}`
-            : `${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} border-transparent`
-        }`}
-      >
-        <div className="text-sm font-light mb-2">
-          {settings.personalityEnabled ? "smart" : "Smart"}
-        </div>
-        <div className={`text-xs ${theme.textTertiary} font-light`}>
-          Auto-organize short lists
-        </div>
-      </button>
-    </div>
-  );
 
   const renderStep4 = () => (
     <div className="space-y-0">
@@ -296,20 +229,6 @@ const Onboarding = () => {
   );
 
 
-  const renderSecurityStep = () => (
-    <div className="space-y-6 text-center">
-      <div className="space-y-3">
-        <div className="text-4xl mb-4">
-          <svg xmlns="http://www.w3.org/2000/svg" className={`h-12 w-12 mx-auto ${theme.text}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-          </svg>
-        </div>
-        <div className={`text-sm ${theme.textSecondary} font-light leading-relaxed max-w-xs mx-auto space-y-3`}>
-          <p>Local storage only. Complete privacy.</p>
-        </div>
-      </div>
-    </div>
-  );
 
   const renderTagStep = () => (
     <div className="space-y-6">
@@ -362,104 +281,7 @@ const Onboarding = () => {
     </div>
   );
 
-  const renderAddOnsStep = () => (
-    <div className="space-y-0">
-      <button
-        onClick={() => setSelections({ ...selections, enhancedEditingEnabled: false })}
-        className={`w-full text-left p-4 transition-all duration-200 border-b ${
-          !selections.enhancedEditingEnabled
-            ? `${theme.text} ${theme.text.replace('text-', 'border-')}`
-            : `${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} border-transparent`
-        }`}
-      >
-        <div className="text-sm font-light mb-2">
-          {settings.personalityEnabled ? "minimal" : "Minimal"}
-        </div>
-        <div className={`text-xs ${theme.textTertiary} font-light`}>
-          Just write and save
-        </div>
-      </button>
-      
-      <button
-        onClick={() => setSelections({ ...selections, enhancedEditingEnabled: true })}
-        className={`w-full text-left p-4 transition-all duration-200 border-b ${
-          selections.enhancedEditingEnabled
-            ? `${theme.text} ${theme.text.replace('text-', 'border-')}`
-            : `${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} border-transparent`
-        }`}
-      >
-        <div className="text-sm font-light mb-2">
-          {settings.personalityEnabled ? "enhanced" : "Enhanced"}
-        </div>
-        <div className={`text-xs ${theme.textTertiary} font-light`}>
-          Bold, lists, timers, expand
-        </div>
-      </button>
 
-      <div className={`p-4 ${theme.borderSecondary}`}>
-        <div className={`text-xs ${theme.textTertiary} mb-3 font-light`}>
-          enhanced example:
-        </div>
-        <div className={`${theme.text} font-mono whitespace-pre-line text-sm font-light leading-relaxed`}>
-          **Important note** with bold{'\n'}• List item 1{'\n'}• List item 2{'\n'}{'\n'}[bold] [list] [timer] [expand]
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderStep6 = () => {
-    const sampleText = "Buy groceries\nCall mom\nFinish project";
-    const formattedSample = ORGANIZATION_STYLES[selections.organizationStyle].format(
-      sampleText.split('\n')
-    );
-    
-    return (
-      <div className="space-y-6">
-        <div className={`pb-4 border-b ${theme.borderSecondary}`}>
-          <div className={`text-xs ${theme.textTertiary} mb-3 font-light`}>
-            sample note:
-          </div>
-          <div className={`${theme.text} font-mono whitespace-pre-line text-sm font-light leading-relaxed`}>
-            {formattedSample}
-          </div>
-          {selections.userTag && validateUserTag(selections.userTag) && (
-            <div className="flex items-center justify-between mt-3">
-              <div className={`text-xs ${theme.textTertiary} font-light`}>
-                your signature:
-              </div>
-              <span 
-                className={`inline-block text-xs font-medium px-2 py-1 rounded-full ${theme.text}`}
-                style={{ 
-                  backgroundColor: `${theme.text}20`,
-                  border: `1px solid ${theme.text}40`
-                }}
-              >
-                {formatUserTag({ name: selections.userTag })}
-              </span>
-            </div>
-          )}
-          <div className={`text-xs ${theme.textTertiary} mt-3 font-light`}>
-            auto-sorting: {selections.autoSortingEnabled ? 'enabled' : 'disabled'}
-          </div>
-          <div className={`text-xs ${theme.textTertiary} mt-2 font-light`}>
-            enhanced controls: {selections.enhancedEditingEnabled ? 'enabled' : 'disabled'}
-          </div>
-          <div className={`text-xs ${theme.textTertiary} mt-2 font-light`}>
-            deletes in: {DELETE_TIMERS[selections.deleteTimer].name.toLowerCase()}
-          </div>
-        </div>
-        
-        <div className="space-y-4">
-          <div className={`text-xs ${theme.textTertiary} font-light text-center`}>
-            Saved securely on your device.
-          </div>
-          <div className={`text-sm ${theme.text} font-light leading-relaxed text-center`}>
-            {settings.personalityEnabled ? "Ready to go?" : "Ready to start?"}
-          </div>
-        </div>
-      </div>
-    );
-  };
 
   const getFontSizeValue = (fontSize) => {
     const sizes = { lg: 18, xl: 20, xxl: 22 };
@@ -492,14 +314,9 @@ const Onboarding = () => {
 
             <div className="mb-12">
               {currentStep === 0 && renderStep1()}
-              {currentStep === 1 && renderSecurityStep()}
-              {currentStep === 2 && renderTagStep()}
-              {currentStep === 3 && renderFontSizeStep()}
-              {currentStep === 4 && renderStep3()}
-              {currentStep === 5 && renderAutoSortingStep()}
-              {currentStep === 6 && renderStep4()}
-              {currentStep === 7 && renderAddOnsStep()}
-              {currentStep === 8 && renderStep6()}
+              {currentStep === 1 && renderTagStep()}
+              {currentStep === 2 && renderFontSizeStep()}
+              {currentStep === 3 && renderStep4()}
             </div>
           </>
         )}
@@ -521,7 +338,7 @@ const Onboarding = () => {
             onClick={handleNext}
             className={`text-xs font-light ${theme.text} hover:${theme.textSecondary.replace('text-', 'hover:text-')} transition-all duration-200`}
           >
-            {currentStep === -1 ? 'let\'s go!' : currentStep === steps.length - 1 ? (settings.personalityEnabled ? 'start flowing' : 'finish') : 'next'}
+            {currentStep === -1 ? 'let\'s go!' : currentStep === steps.length - 1 ? (settings.personalityEnabled ? 'start flowing' : 'start') : 'next'}
           </button>
         </div>
       </div>

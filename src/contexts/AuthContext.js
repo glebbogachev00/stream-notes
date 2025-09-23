@@ -129,11 +129,28 @@ export const AuthProvider = ({ children }) => {
       setUser(null);
       return;
     }
-    await supabase.auth.signOut();
-    setUser(null);
-    setOtpSent(false);
-    setEmailForOtp('');
-    setAuthError(null);
+    
+    try {
+      // Sign out from Supabase
+      await supabase.auth.signOut();
+      
+      // Force clear any remaining auth data from localStorage
+      localStorage.removeItem('stream-auth');
+      localStorage.removeItem('sb-' + process.env.REACT_APP_SUPABASE_URL?.split('//')[1]?.split('.')[0] + '-auth-token');
+      
+      // Clear local state
+      setUser(null);
+      setOtpSent(false);
+      setEmailForOtp('');
+      setAuthError(null);
+    } catch (error) {
+      console.error('Error during sign out:', error);
+      // Even if sign out fails, clear local state
+      setUser(null);
+      setOtpSent(false);
+      setEmailForOtp('');
+      setAuthError(null);
+    }
   }, [supabase]);
 
   const resetAuthFlow = useCallback(() => {

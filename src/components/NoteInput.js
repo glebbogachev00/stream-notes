@@ -2,13 +2,13 @@ import React, { useState, useRef, useEffect, memo } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useSettings, DELETE_TIMERS } from '../contexts/SettingsContext';
 import { getRotatingMessage, INPUT_PLACEHOLDER_MESSAGES } from '../utils/messages';
-import { detectQuotePattern, unlockMatrix, checkMatrixUnlock } from '../utils/quoteDetection';
 import { autoResize, handleTextareaChange, handleTextareaKeyDown } from '../utils/textareaHelpers';
+import { detectQuakePattern, detectDoomPattern } from '../utils/quoteDetection';
 
-const NoteInput = ({ onAddNote, onMatrixUnlock }) => {
+const NoteInput = ({ onAddNote, showToast }) => {
   const [content, setContent] = useState('');
   const [isFocused, setIsFocused] = useState(false);
-  const { theme, unlockMatrixTheme } = useTheme();
+  const { theme, unlockQuakeTheme, unlockDoomTheme, quakeUnlocked, doomUnlocked } = useTheme();
   const { settings, formatText } = useSettings();
   const [placeholder, setPlaceholder] = useState(() => 
     getRotatingMessage(INPUT_PLACEHOLDER_MESSAGES, settings?.personalityEnabled ?? true)
@@ -37,6 +37,21 @@ const NoteInput = ({ onAddNote, onMatrixUnlock }) => {
       let formattedContent = content;
       if (settings.autoSortingEnabled) {
         formattedContent = formatText(content);
+      }
+      
+      // Check for theme unlock patterns
+      if (!quakeUnlocked && detectQuakePattern(content)) {
+        unlockQuakeTheme();
+        if (showToast) {
+          showToast('Strafe jumping activated! Quake theme unlocked!', 5000);
+        }
+      }
+      
+      if (!doomUnlocked && detectDoomPattern(content)) {
+        unlockDoomTheme();
+        if (showToast) {
+          showToast('Demons eliminated! Doom theme unlocked!', 5000);
+        }
       }
       
       // Add save animation
@@ -71,17 +86,6 @@ const NoteInput = ({ onAddNote, onMatrixUnlock }) => {
     }
   };
 
-  const handlePaste = (e) => {
-    const pastedText = e.clipboardData.getData('text');
-    
-    if (!checkMatrixUnlock() && detectQuotePattern(pastedText)) {
-      unlockMatrix();
-      unlockMatrixTheme();
-      if (onMatrixUnlock) {
-        onMatrixUnlock();
-      }
-    }
-  };
 
   return (
     <section className="mb-8">
@@ -94,7 +98,6 @@ const NoteInput = ({ onAddNote, onMatrixUnlock }) => {
             onKeyDown={(e) => handleTextareaKeyDown(e)}
             onFocus={handleFocus}
             onBlur={handleBlur}
-            onPaste={handlePaste}
             placeholder={isFocused ? "write..." : placeholder}
             className={`w-full text-base font-light resize-none ${theme.text} placeholder:${theme.textSecondary} focus:outline-none transition-all duration-200 ${
               isFocused 

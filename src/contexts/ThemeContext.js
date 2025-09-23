@@ -123,6 +123,54 @@ const THEMES = {
     inputBgDark: 'bg-slate-700',
     panelBg: 'rgba(15, 23, 42, 0.95)',
     separatorColor: 'rgb(12, 188, 231)'
+  },
+  quake: {
+    name: 'quake',
+    bg: 'bg-stone-900',
+    text: 'text-amber-100',
+    textSecondary: 'text-amber-200',
+    textTertiary: 'text-amber-400',
+    border: 'border-amber-600',
+    borderHover: 'hover:border-amber-500',
+    borderSecondary: 'border-stone-700',
+    borderSecondaryHover: 'hover:border-amber-700',
+    buttonHover: 'hover:bg-stone-800',
+    inputBg: 'bg-stone-800',
+    ring: 'ring-amber-500',
+    textDestructive: 'hover:text-red-400',
+    focusColor: 'rgba(245, 158, 11, 0.3)',
+    focusBorder: '#f59e0b',
+    focusColorOuter: 'rgba(245, 158, 11, 0.15)',
+    themeAccent: '#f59e0b',
+    themeAccentLight: '#fbbf24',
+    inputBgLight: 'bg-stone-800',
+    inputBgDark: 'bg-stone-700',
+    panelBg: 'rgba(41, 37, 36, 0.95)',
+    separatorColor: 'rgb(245, 158, 11)'
+  },
+  doom: {
+    name: 'doom',
+    bg: 'bg-red-950',
+    text: 'text-red-50',
+    textSecondary: 'text-red-100',
+    textTertiary: 'text-red-300',
+    border: 'border-red-600',
+    borderHover: 'hover:border-red-500',
+    borderSecondary: 'border-red-800',
+    borderSecondaryHover: 'hover:border-red-700',
+    buttonHover: 'hover:bg-red-900',
+    inputBg: 'bg-red-900',
+    ring: 'ring-red-500',
+    textDestructive: 'hover:text-orange-400',
+    focusColor: 'rgba(239, 68, 68, 0.3)',
+    focusBorder: '#ef4444',
+    focusColorOuter: 'rgba(239, 68, 68, 0.15)',
+    themeAccent: '#ef4444',
+    themeAccentLight: '#f87171',
+    inputBgLight: 'bg-red-900',
+    inputBgDark: 'bg-red-800',
+    panelBg: 'rgba(69, 10, 10, 0.95)',
+    separatorColor: 'rgb(239, 68, 68)'
   }
 };
 
@@ -139,6 +187,14 @@ const checkEdgeUnlock = () => {
   return artNotes.some(note => note.artStyle === 'samo' || note.artStyle === 'stencil');
 };
 
+const checkQuakeUnlock = () => {
+  return localStorage.getItem('stream_quake_unlocked') === 'true';
+};
+
+const checkDoomUnlock = () => {
+  return localStorage.getItem('stream_doom_unlocked') === 'true';
+};
+
 
 export const ThemeProvider = ({ children }) => {
   const [currentTheme, setCurrentTheme] = useState(() => {
@@ -147,6 +203,8 @@ export const ThemeProvider = ({ children }) => {
   });
   const [matrixUnlocked, setMatrixUnlocked] = useState(() => checkMatrixUnlock());
   const [edgeUnlocked, setEdgeUnlocked] = useState(() => checkEdgeUnlock());
+  const [quakeUnlocked, setQuakeUnlocked] = useState(() => checkQuakeUnlock());
+  const [doomUnlocked, setDoomUnlocked] = useState(() => checkDoomUnlock());
 
   useEffect(() => {
     localStorage.setItem('stream_theme', currentTheme);
@@ -166,11 +224,23 @@ export const ThemeProvider = ({ children }) => {
     setEdgeUnlocked(true);
   };
 
+  const unlockQuakeTheme = () => {
+    localStorage.setItem('stream_quake_unlocked', 'true');
+    setQuakeUnlocked(true);
+  };
+
+  const unlockDoomTheme = () => {
+    localStorage.setItem('stream_doom_unlocked', 'true');
+    setDoomUnlocked(true);
+  };
+
   const getAvailableThemes = () => {
     const baseThemes = ['white', 'beige', 'dark'];
     const unlockedThemes = [...baseThemes];
     if (matrixUnlocked) unlockedThemes.push('matrix');
     if (edgeUnlocked) unlockedThemes.push('edge');
+    if (quakeUnlocked) unlockedThemes.push('quake');
+    if (doomUnlocked) unlockedThemes.push('doom');
     return unlockedThemes;
   };
 
@@ -184,7 +254,11 @@ export const ThemeProvider = ({ children }) => {
       unlockMatrixTheme,
       matrixUnlocked,
       unlockEdgeTheme,
-      edgeUnlocked
+      edgeUnlocked,
+      unlockQuakeTheme,
+      quakeUnlocked,
+      unlockDoomTheme,
+      doomUnlocked
     }}>
       {children}
     </ThemeContext.Provider>
