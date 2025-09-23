@@ -1,6 +1,6 @@
 <div align="center">
   
-  ![stream logo](public/stream-logo-text.png)
+  ![stream logo](stream-logo-text.png)
   
   **A minimal note-taking app that embraces ephemerality**
   
