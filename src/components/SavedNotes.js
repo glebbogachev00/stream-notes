@@ -2,13 +2,14 @@ import React, { useState, useRef, useEffect, memo, useCallback, useMemo } from '
 import { useTheme } from '../contexts/ThemeContext';
 import { useSettings } from '../contexts/SettingsContext';
 import { handleTextareaChange, handleTextareaKeyDown, setupTextareaForEditing, handleTextareaClick } from '../utils/textareaHelpers';
+import { toggleBoldFormatting, toggleListFormatting } from '../utils/formatting';
 import { getRandomMessage, LOGGED_OUT_EMPTY_STATE_MESSAGES } from '../utils/messages';
 import TagSignature from './TagSignature';
 import FullscreenNoteModal from './FullscreenNoteModal';
 
 const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onUpdateNoteProperties, onToggleSavedNotePin, onTransformToSAMO, onUpdateNoteFolder, isLoggedOut = false }) => {
   const { theme } = useTheme();
-  const { settings, formatText, formatNote } = useSettings();
+  const { settings, formatNote } = useSettings();
   const [editingNoteId, setEditingNoteId] = useState(null);
   const [openMenuId, setOpenMenuId] = useState(null);
   const [folderMenuOpenForNoteId, setFolderMenuOpenForNoteId] = useState(null);
@@ -114,13 +115,11 @@ const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onUpdateNoteProper
 
   const handleContentChange = useCallback((e, noteId) => {
     handleTextareaChange(e, (value) => {
-      if (value.trim() === '') {
-        onDeleteNote(noteId);
-      } else {
-        onUpdateNote(noteId, value);
-      }
+      // Always update content, don't auto-delete on empty
+      // User can manually delete if they want to  
+      onUpdateNote(noteId, value);
     });
-  }, [onDeleteNote, onUpdateNote]);
+  }, [onUpdateNote]);
 
   const handleEditingFinished = useCallback((noteId, content) => {
     // Disable auto-formatting - user must explicitly use List control
@@ -309,43 +308,22 @@ const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onUpdateNoteProper
                               e.stopPropagation();
                               const textarea = editingTextareaRef.current;
                               if (textarea && textarea.selectionStart !== textarea.selectionEnd) {
-                                const start = textarea.selectionStart;
-                                const end = textarea.selectionEnd;
-                                const selectedText = textarea.value.substring(start, end);
-                                
-                                let newText, newStart, newEnd;
-                                
-                                // Check if selected text is already bold (includes ** in selection)
-                                if (selectedText.startsWith('**') && selectedText.endsWith('**') && selectedText.length > 4) {
-                                  // Remove bold formatting from selected text
-                                  const unboldText = selectedText.slice(2, -2);
-                                  newText = textarea.value.substring(0, start) + unboldText + textarea.value.substring(end);
-                                  newStart = start;
-                                  newEnd = start + unboldText.length;
-                                } else {
-                                  // Check if selection is surrounded by ** (not included in selection)
-                                  const beforeText = textarea.value.substring(Math.max(0, start - 2), start);
-                                  const afterText = textarea.value.substring(end, Math.min(textarea.value.length, end + 2));
-                                  
-                                  if (beforeText === '**' && afterText === '**') {
-                                    // Remove surrounding ** 
-                                    newText = textarea.value.substring(0, start - 2) + selectedText + textarea.value.substring(end + 2);
-                                    newStart = start - 2;
-                                    newEnd = end - 2;
-                                  } else {
-                                    // Add bold formatting
-                                    newText = textarea.value.substring(0, start) + `**${selectedText}**` + textarea.value.substring(end);
-                                    newStart = start + 2;
-                                    newEnd = end + 2;
-                                  }
+                                const { text: updatedText, selectionStart: newStart, selectionEnd: newEnd } = toggleBoldFormatting(
+                                  textarea.value,
+                                  textarea.selectionStart,
+                                  textarea.selectionEnd
+                                );
+
+                                if (updatedText !== textarea.value) {
+                                  onUpdateNote(note.id, updatedText);
+
+                                  setTimeout(() => {
+                                    if (editingTextareaRef.current) {
+                                      editingTextareaRef.current.focus();
+                                      editingTextareaRef.current.setSelectionRange(newStart, newEnd);
+                                    }
+                                  }, 0);
                                 }
-                                
-                                onUpdateNote(note.id, newText);
-                                
-                                setTimeout(() => {
-                                  textarea.focus();
-                                  textarea.setSelectionRange(newStart, newEnd);
-                                }, 0);
                               }
                             }}
                             className={`ml-3 text-xs ${theme.textTertiary} hover:text-yellow-500 transition-colors duration-200 font-light`}
@@ -374,33 +352,31 @@ const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onUpdateNoteProper
                               e.stopPropagation();
                               const textarea = editingTextareaRef.current;
                               if (textarea) {
-                                let textToFormat;
-                                let start, end;
-                                
-                                if (textarea.selectionStart !== textarea.selectionEnd) {
-                                  // User has selected text - format only selection
-                                  start = textarea.selectionStart;
-                                  end = textarea.selectionEnd;
-                                  textToFormat = textarea.value.substring(start, end);
-                                } else {
-                                  // No selection - format entire content
+                                let start = textarea.selectionStart;
+                                let end = textarea.selectionEnd;
+
+                                if (start === end) {
                                   start = 0;
                                   end = textarea.value.length;
-                                  textToFormat = textarea.value;
                                 }
-                                
-                                // Apply list formatting (formatText handles toggle internally)
-                                const processedText = formatText(textToFormat, true);
-                                const newText = textarea.value.substring(0, start) + processedText + textarea.value.substring(end);
-                                
-                                onUpdateNote(note.id, newText);
-                                
-                                setTimeout(() => {
-                                  textarea.focus();
-                                  textarea.setSelectionRange(start, start + processedText.length);
-                                }, 0);
+
+                                const textToFormat = textarea.value.substring(start, end);
+                                const { text: processedText, changed } = toggleListFormatting(textToFormat, settings.organizationStyle);
+
+                                if (changed) {
+                                  const newText = textarea.value.substring(0, start) + processedText + textarea.value.substring(end);
+                                  onUpdateNote(note.id, newText);
+
+                                  setTimeout(() => {
+                                    if (editingTextareaRef.current) {
+                                      const selectionEnd = start + processedText.length;
+                                      editingTextareaRef.current.focus();
+                                      editingTextareaRef.current.setSelectionRange(start, selectionEnd);
+                                    }
+                                  }, 0);
+                                }
                               }
-                            }}
+                          }}
                             className={`ml-3 text-xs ${theme.textTertiary} hover:text-blue-500 transition-colors duration-200 font-light`}
                           >
                             list

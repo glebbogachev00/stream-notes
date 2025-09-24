@@ -3,6 +3,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useSettings, DELETE_TIMERS } from '../contexts/SettingsContext';
 import { getRandomMessage, EMPTY_STATE_MESSAGES, LOGGED_OUT_EMPTY_STATE_MESSAGES } from '../utils/messages';
 import { handleTextareaChange, handleTextareaKeyDown, setupTextareaForEditing, handleTextareaClick } from '../utils/textareaHelpers';
+import { toggleBoldFormatting, toggleListFormatting } from '../utils/formatting';
 import TagSignature from './TagSignature';
 import DeleteTimerControl from './DeleteTimerControl';
 import FullscreenNoteModal from './FullscreenNoteModal';
@@ -131,13 +132,11 @@ const NoteList = ({
 
   const handleContentChange = useCallback((e, noteId) => {
     handleTextareaChange(e, (value) => {
-      if (value.trim() === '') {
-        onDeleteNote(noteId);
-      } else {
-        onUpdateNoteContent(noteId, value);
-      }
+      // Always update content, don't auto-delete on empty
+      // User can manually delete if they want to
+      onUpdateNoteContent(noteId, value);
     });
-  }, [onDeleteNote, onUpdateNoteContent]);
+  }, [onUpdateNoteContent]);
 
   const handleEditingFinished = useCallback(async (noteId, content, event) => {
     if (event && event.relatedTarget && (
@@ -300,14 +299,14 @@ const NoteList = ({
     [notes]
   );
 
-  const renderNote = useCallback((note) => {
+  const renderNote = useCallback((note, customKey = null) => {
           const timeInfo = getTimeInfo(note);
           const isTodoCompleted = note.isTodo && note.isTodoCompleted;
           const contentClassName = `${theme.text} text-base font-light leading-relaxed whitespace-pre-wrap break-words mb-3 cursor-pointer transition-smooth hover:${theme.textSecondary.replace('text-', 'hover:text-')} ${isTodoCompleted ? 'line-through opacity-60' : ''}`;
           
           return (
             <article
-              key={note.id}
+              key={customKey || note.id}
               tabIndex={0}
               onKeyDown={(e) => handleNoteKeyDown(e, note.id)}
               className={`group pb-6 transition-all duration-200 relative ${note.isPinned ? `${theme.bg} ${theme.border} border rounded-lg p-4 mb-4` : ''}`}
@@ -357,48 +356,23 @@ const NoteList = ({
                             e.preventDefault();
                             e.stopPropagation();
                             const textarea = editingTextareaRef.current;
-                            if (textarea) {
-                              // Only apply bold if text is actually selected
-                              if (textarea.selectionStart !== textarea.selectionEnd) {
-                                const start = textarea.selectionStart;
-                                const end = textarea.selectionEnd;
-                                const selectedText = textarea.value.substring(start, end);
-                                
-                                let newText, newStart, newEnd;
-                                
-                                // Check if selected text is already bold (includes ** in selection)
-                                if (selectedText.startsWith('**') && selectedText.endsWith('**') && selectedText.length > 4) {
-                                  // Remove bold formatting from selected text
-                                  const unboldText = selectedText.slice(2, -2);
-                                  newText = textarea.value.substring(0, start) + unboldText + textarea.value.substring(end);
-                                  newStart = start;
-                                  newEnd = start + unboldText.length;
-                                } else {
-                                  // Check if selection is surrounded by ** (not included in selection)
-                                  const beforeText = textarea.value.substring(Math.max(0, start - 2), start);
-                                  const afterText = textarea.value.substring(end, Math.min(textarea.value.length, end + 2));
-                                  
-                                  if (beforeText === '**' && afterText === '**') {
-                                    // Remove surrounding ** 
-                                    newText = textarea.value.substring(0, start - 2) + selectedText + textarea.value.substring(end + 2);
-                                    newStart = start - 2;
-                                    newEnd = end - 2;
-                                  } else {
-                                    // Add bold formatting
-                                    newText = textarea.value.substring(0, start) + `**${selectedText}**` + textarea.value.substring(end);
-                                    newStart = start + 2;
-                                    newEnd = end + 2;
-                                  }
-                                }
-                                
-                                onUpdateNoteContent(note.id, newText);
-                                
+                            if (textarea && textarea.selectionStart !== textarea.selectionEnd) {
+                              const { text: updatedText, selectionStart: newStart, selectionEnd: newEnd } = toggleBoldFormatting(
+                                textarea.value,
+                                textarea.selectionStart,
+                                textarea.selectionEnd
+                              );
+
+                              if (updatedText !== textarea.value) {
+                                onUpdateNoteContent(note.id, updatedText);
+
                                 setTimeout(() => {
-                                  textarea.focus();
-                                  textarea.setSelectionRange(newStart, newEnd);
+                                  if (editingTextareaRef.current) {
+                                    editingTextareaRef.current.focus();
+                                    editingTextareaRef.current.setSelectionRange(newStart, newEnd);
+                                  }
                                 }, 0);
                               }
-                              // If no text is selected, do nothing (user needs to select text first)
                             }
                           }}
                           className={`ml-4 text-xs ${theme.textTertiary} hover:text-yellow-500 transition-colors duration-200 font-light`}
@@ -427,31 +401,29 @@ const NoteList = ({
                             e.stopPropagation();
                             const textarea = editingTextareaRef.current;
                             if (textarea) {
-                              let textToFormat;
-                              let start, end;
-                              
-                              if (textarea.selectionStart !== textarea.selectionEnd) {
-                                // User has selected text - format only selection
-                                start = textarea.selectionStart;
-                                end = textarea.selectionEnd;
-                                textToFormat = textarea.value.substring(start, end);
-                              } else {
-                                // No selection - format entire content
+                              let start = textarea.selectionStart;
+                              let end = textarea.selectionEnd;
+
+                              if (start === end) {
                                 start = 0;
                                 end = textarea.value.length;
-                                textToFormat = textarea.value;
                               }
-                              
-                              // Apply list formatting (formatText handles toggle internally)
-                              const processedText = formatText(textToFormat, true);
-                              const newText = textarea.value.substring(0, start) + processedText + textarea.value.substring(end);
-                              
-                              onUpdateNoteContent(note.id, newText);
-                              
-                              setTimeout(() => {
-                                textarea.focus();
-                                textarea.setSelectionRange(start, start + processedText.length);
-                              }, 0);
+
+                              const textToFormat = textarea.value.substring(start, end);
+                              const { text: processedText, changed } = toggleListFormatting(textToFormat, settings.organizationStyle);
+
+                              if (changed) {
+                                const newText = textarea.value.substring(0, start) + processedText + textarea.value.substring(end);
+                                onUpdateNoteContent(note.id, newText);
+
+                                setTimeout(() => {
+                                  if (editingTextareaRef.current) {
+                                    const selectionEnd = start + processedText.length;
+                                    editingTextareaRef.current.focus();
+                                    editingTextareaRef.current.setSelectionRange(start, selectionEnd);
+                                  }
+                                }, 0);
+                              }
                             }
                           }}
                           className={`ml-4 text-xs ${theme.textTertiary} hover:text-blue-500 transition-colors duration-200 font-light`}
@@ -755,7 +727,7 @@ const NoteList = ({
             </div>
           </article>
         );
-  }, [theme, settings, formatText, formatNote, getTimeInfo, editingNoteId, expandedNotes, openMenuId, folderMenuOpenForNoteId, menuPosition, shouldTruncateNote, getTruncatedContent, renderFormattedText, handleMenuToggle, handleNoteClick, handleNoteKeyDown, handleContentChange, handleEditingFinished, toggleNoteExpansion, onTogglePin, onToggleTodo, onToggleTodoCompletion, onSaveNote, onUpdateNoteContent, onUpdateNoteDeleteTimer, onUpdateNoteFolder, onTransformToSAMO, onDeleteNote, setOpenMenuId, setFolderMenuOpenForNoteId, setFullscreenNoteId]);
+  }, [theme, settings, formatNote, getTimeInfo, editingNoteId, expandedNotes, openMenuId, folderMenuOpenForNoteId, menuPosition, shouldTruncateNote, getTruncatedContent, renderFormattedText, handleMenuToggle, handleNoteClick, handleNoteKeyDown, handleContentChange, handleEditingFinished, toggleNoteExpansion, onTogglePin, onToggleTodo, onToggleTodoCompletion, onSaveNote, onUpdateNoteContent, onUpdateNoteDeleteTimer, onUpdateNoteFolder, onTransformToSAMO, onDeleteNote, setOpenMenuId, setFolderMenuOpenForNoteId, setFullscreenNoteId]);
 
   if (notes.length === 0) {
     const emptyStateMessages = isLoggedOut ? LOGGED_OUT_EMPTY_STATE_MESSAGES : EMPTY_STATE_MESSAGES;
@@ -772,29 +744,9 @@ const NoteList = ({
   return (
     <div className="space-y-6">
       {todoNotes.length > 0 && (
-        <div className="space-y-4">
-          <div className={`flex items-center gap-2 ${theme.textTertiary} text-xs font-light uppercase tracking-wide`}> 
-            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-            todos
-          </div>
-          <div className="space-y-6">
-            {activeTodoNotes.map(renderNote)}
-          </div>
-          {completedTodoNotes.length > 0 && (
-            <div className={`border-t ${theme.borderSecondary} pt-4 space-y-4`}>
-              <div className={`flex items-center gap-2 text-xs font-light uppercase tracking-wide text-emerald-500`}>
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                done
-              </div>
-              <div className="space-y-6 opacity-75">
-                {completedTodoNotes.map(renderNote)}
-              </div>
-            </div>
-          )}
+        <div className="space-y-6">
+          {activeTodoNotes.map(note => renderNote(note, `active-todo-${note.id}`))}
+          {completedTodoNotes.map(note => renderNote(note, `completed-todo-${note.id}`))}
         </div>
       )}
 
@@ -808,7 +760,7 @@ const NoteList = ({
               </svg>
               pinned
             </div>
-            {pinnedNotes.map(renderNote)}
+            {pinnedNotes.map(note => renderNote(note, `pinned-${note.id}`))}
           </div>
           
           {/* Divider */}
@@ -822,7 +774,7 @@ const NoteList = ({
 
       {/* Unpinned Notes Section */}
       <div className="space-y-6">
-        {unpinnedNotes.map(renderNote)}
+        {unpinnedNotes.map(note => renderNote(note, `unpinned-${note.id}`))}
       </div>
       
       <FullscreenNoteModal

@@ -211,17 +211,23 @@ export const useNotes = (
   const updateNoteDeleteTimer = useCallback((id, newDeleteTimerKey) => {
     const timestamp = Date.now();
     const maxAgeHours = DELETE_TIMERS[newDeleteTimerKey]?.hours || 24;
-    const newExpiresAt = maxAgeHours === Infinity ? Infinity : timestamp + (maxAgeHours * 60 * 60 * 1000);
     
-    const updatedNotes = notes.map(note => 
-      note.id === id ? {
+    const updatedNotes = notes.map(note => {
+      if (note.id !== id) return note;
+      
+      // Calculate new expiration time from note's creation time, not current time
+      const newExpiresAt = maxAgeHours === Infinity 
+        ? Infinity 
+        : note.createdAt + (maxAgeHours * 60 * 60 * 1000);
+      
+      return {
         ...note,
         customTimerKey: newDeleteTimerKey,
         hasCustomDeleteTimer: true,
         expiresAt: newExpiresAt,
         updatedAt: timestamp
-      } : note
-    );
+      };
+    });
     saveNotes(updatedNotes);
   }, [notes, saveNotes]);
 

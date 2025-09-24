@@ -358,21 +358,46 @@ export const SettingsProvider = ({ children }) => {
     
     // If force formatting (manual button), format everything as a simple list
     if (forceFormat) {
-      const lines = text.split('\n').map(line => line.trim()).filter(Boolean);
+      const lines = text.split('\n');
       if (lines.length === 0) return text;
       
-      // Check if ALL non-empty lines are already formatted (be more strict)
-      const allFormatted = lines.length > 0 && lines.every(line => {
+      // Check how many non-empty lines are already formatted
+      const nonEmptyLines = lines.filter(line => line.trim() !== '');
+      const formattedLines = nonEmptyLines.filter(line => {
         const trimmed = line.trim();
-        return trimmed === '' || /^(\d+\.|[•\-*])\s/.test(trimmed);
+        return /^(\d+\.|[•\-*])\s/.test(trimmed);
       });
       
+      const hasAnyFormatting = formattedLines.length > 0;
+      const allFormatted = nonEmptyLines.length > 0 && formattedLines.length === nonEmptyLines.length;
+      
       if (allFormatted) {
-        // If all lines are formatted, remove formatting (toggle off)
+        // If ALL lines are formatted, remove formatting (toggle off)
         return removeListFormatting(text);
+      } else if (hasAnyFormatting) {
+        // Mixed formatting: toggle each line individually
+        return lines.map(line => {
+          if (line.trim() === '') {
+            // Preserve empty lines
+            return line;
+          }
+          
+          const trimmed = line.trim();
+          const isFormatted = /^(\d+\.|[•\-*])\s/.test(trimmed);
+          
+          if (isFormatted) {
+            // Remove formatting from this line
+            return line.replace(/^(\s*)(\d+\.|[•\-*])\s*/, '$1');
+          } else {
+            // Add formatting to this line
+            const leadingWhitespace = line.match(/^\s*/)[0];
+            return leadingWhitespace + style.marker + ' ' + trimmed;
+          }
+        }).join('\n');
       } else {
-        // If not all lines are formatted, format everything (toggle on)
-        return style.format(lines);
+        // No existing formatting: apply formatting to non-empty lines
+        const nonEmptyFilteredLines = lines.map(line => line.trim()).filter(Boolean);
+        return style.format(nonEmptyFilteredLines);
       }
     }
 
