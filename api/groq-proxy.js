@@ -26,6 +26,11 @@ export default async function handler(req, res) {
     const data = await response.json();
 
     if (!response.ok) {
+      console.error('[groq-proxy] upstream error', {
+        status: response.status,
+        message: data?.error?.message,
+        raw: data
+      });
       return res.status(response.status).json({
         error: data?.error?.message || 'Groq request failed'
       });

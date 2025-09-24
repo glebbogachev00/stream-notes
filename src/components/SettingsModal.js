@@ -10,7 +10,19 @@ import { useAuth } from '../contexts/AuthContext';
 import { getSyncHistory, restoreSyncSnapshot, createSnapshotForKey } from '../utils/storage';
 import ConfirmModal from './ConfirmModal';
 
-const SettingsModal = ({ isOpen, onClose, onOpenAuthModal, showToast, onFeedback }) => {
+const SettingsModal = ({
+  isOpen,
+  onClose,
+  onOpenAuthModal,
+  showToast,
+  onFeedback,
+  onDeleteAllNotes,
+  onDeleteActiveNotes,
+  hasNotes = true,
+  hasActiveNotes = false,
+  onAfterSignOutKeep = () => {},
+  onAfterSignOutClear = () => {}
+}) => {
   const { theme, switchTheme, themes, unlockMatrixTheme, unlockEdgeTheme } = useTheme();
   const { settings, updateSettings, resetSettings, togglePersonality } = useSettings();
   
@@ -30,7 +42,16 @@ const SettingsModal = ({ isOpen, onClose, onOpenAuthModal, showToast, onFeedback
   const [newFolder, setNewFolder] = useState('');
   const [latestSavedBackup, setLatestSavedBackup] = useState(null);
   const [folderPendingDeletion, setFolderPendingDeletion] = useState('');
+  const [showDeleteAllConfirm, setShowDeleteAllConfirm] = useState(false);
+  const [showActiveDeleteConfirm, setShowActiveDeleteConfirm] = useState(false);
+  const [isDeletingAllNotes, setIsDeletingAllNotes] = useState(false);
+  const [isDeletingActiveNotes, setIsDeletingActiveNotes] = useState(false);
+  const [showSignOutChoice, setShowSignOutChoice] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
   const userTag = getUserTag();
+
+  const canDeleteAll = hasNotes && typeof onDeleteAllNotes === 'function';
+  const canDeleteActive = hasActiveNotes && typeof onDeleteActiveNotes === 'function';
 
   const refreshBackupMetadata = useCallback(() => {
     const history = getSyncHistory('stream_saved_notes');
@@ -115,10 +136,63 @@ const SettingsModal = ({ isOpen, onClose, onOpenAuthModal, showToast, onFeedback
     updateSettings({ syncEnabled: !settings.syncEnabled });
   };
 
-  const handleSignOut = async () => {
-    await signOut();
-    updateSettings({ syncEnabled: false, syncKey: '' });
+  const handleSignOutClick = () => {
+    setShowSignOutChoice(true);
   };
+
+  const handleDeleteAll = useCallback(async () => {
+    if (!onDeleteAllNotes || isDeletingAllNotes) {
+      return;
+    }
+
+    try {
+      setIsDeletingAllNotes(true);
+      await onDeleteAllNotes();
+    } finally {
+      setIsDeletingAllNotes(false);
+      setShowDeleteAllConfirm(false);
+    }
+  }, [onDeleteAllNotes, isDeletingAllNotes]);
+
+  const handleDeleteActiveOnly = useCallback(async () => {
+    if (!onDeleteActiveNotes || isDeletingActiveNotes) {
+      return;
+    }
+
+    try {
+      setIsDeletingActiveNotes(true);
+      await onDeleteActiveNotes();
+      setShowActiveDeleteConfirm(false);
+    } finally {
+      setIsDeletingActiveNotes(false);
+    }
+  }, [onDeleteActiveNotes, isDeletingActiveNotes]);
+
+  const performSignOut = useCallback(async (shouldClear) => {
+    if (isSigningOut) {
+      return;
+    }
+
+    try {
+      setIsSigningOut(true);
+      await signOut();
+      updateSettings({ syncEnabled: false, syncKey: '' });
+      if (shouldClear) {
+        await onAfterSignOutClear();
+      } else {
+        await onAfterSignOutKeep();
+      }
+      setShowSignOutChoice(false);
+      onClose?.();
+    } catch (error) {
+      console.error('sign out failed', error);
+      if (showToast) {
+        showToast(error.message || 'Sign out failed. Please try again.');
+      }
+    } finally {
+      setIsSigningOut(false);
+    }
+  }, [isSigningOut, signOut, updateSettings, onAfterSignOutClear, onAfterSignOutKeep, onClose, showToast]);
 
   const handleAddFolder = () => {
     const folderName = newFolder.trim();
@@ -253,11 +327,11 @@ const SettingsModal = ({ isOpen, onClose, onOpenAuthModal, showToast, onFeedback
                         {settings.syncEnabled ? 'pause syncing' : 'resume syncing'}
                       </button>
                       <button
-                        onClick={handleSignOut}
-                        disabled={authLoading}
+                        onClick={handleSignOutClick}
+                        disabled={authLoading || isSigningOut}
                         className={`dynamic-text-xs font-light px-3 py-2 ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} transition-colors disabled:opacity-60 disabled:cursor-not-allowed`}
                       >
-                        sign out
+                        {isSigningOut ? 'signing out…' : 'sign out'}
                       </button>
                     </div>
                   </div>
@@ -481,6 +555,58 @@ const SettingsModal = ({ isOpen, onClose, onOpenAuthModal, showToast, onFeedback
           <div className={`${theme.textTertiary} dynamic-text-xs font-light uppercase tracking-wider mb-4`}>
             Add-on Settings
           </div>
+
+          <CollapsibleSection title="reset">
+            <div className="space-y-4">
+              <div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!canDeleteActive) {
+                      if (showToast) {
+                        showToast('No active notes to clear.');
+                      }
+                      return;
+                    }
+                    setShowActiveDeleteConfirm(true);
+                  }}
+                  disabled={!canDeleteActive}
+                  className={`w-full text-left px-3 py-2 dynamic-text-xs font-light transition-colors rounded-sm ${
+                    canDeleteActive ? 'text-orange-500 hover:text-orange-400 hover:bg-orange-500/5 cursor-pointer' : `${theme.textTertiary}`
+                  }`}
+                >
+                  panic button: drain active notes
+                </button>
+                <p className={`dynamic-text-xs font-light ${theme.textTertiary}`}>
+                  Deletes every active note instantly. Saved notes and SAMO art stay untouched.
+                </p>
+              </div>
+
+              <div className={`pt-3 border-t ${theme.borderSecondary} space-y-2`}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!canDeleteAll) {
+                      if (showToast) {
+                        showToast('Nothing to clear.');
+                      }
+                      return;
+                    }
+                    setShowDeleteAllConfirm(true);
+                  }}
+                  disabled={!canDeleteAll}
+                  className={`w-full text-left px-3 py-2 dynamic-text-xs font-light transition-colors rounded-sm ${
+                    canDeleteAll ? 'text-red-500 hover:text-red-400 hover:bg-red-500/5 cursor-pointer' : `${theme.textTertiary}`
+                  }`}
+                >
+                  emergency reset: wipe everything
+                </button>
+                <p className={`dynamic-text-xs font-light ${theme.textTertiary}`}>
+                  Deletes every active note, saved note, and SAMO art piece. There is no undo.
+                </p>
+              </div>
+            </div>
+          </CollapsibleSection>
 
           {/* Personality */}
           <CollapsibleSection title="personality">
@@ -731,6 +857,81 @@ const SettingsModal = ({ isOpen, onClose, onOpenAuthModal, showToast, onFeedback
             reset preferences
           </button>
         </div>
+        {showSignOutChoice && (
+          <div className="fixed inset-0 bg-black bg-opacity-20 flex items-center justify-center p-4 z-50">
+            <div className={`${theme.bg} ${theme.border} border max-w-sm w-full p-5 sm:p-6 shadow-lg space-y-4`}>
+              <div className="flex items-start justify-between">
+                <div>
+                  <h2 className={`dynamic-text-lg font-light ${theme.text}`}>sign out?</h2>
+                  <p className={`mt-2 dynamic-text-sm font-light ${theme.textTertiary}`}>
+                    leave your notes on this device, or clear everything so the next sign-in starts fresh.
+                  </p>
+                </div>
+                <button
+                  onClick={() => { if (!isSigningOut) setShowSignOutChoice(false); }}
+                  className={`dynamic-text-xs font-light ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} transition-colors`}
+                  disabled={isSigningOut}
+                >
+                  [close]
+                </button>
+              </div>
+              <div className="space-y-2">
+                <button
+                  type="button"
+                  disabled={isSigningOut}
+                  onClick={() => performSignOut(false)}
+                  className={`w-full px-3 py-2 dynamic-text-xs font-light ${theme.text} ${theme.buttonHover} transition-colors rounded-sm disabled:opacity-60 disabled:cursor-not-allowed`}
+                >
+                  {isSigningOut ? 'signing out…' : 'sign out & keep notes'}
+                </button>
+                <button
+                  type="button"
+                  disabled={isSigningOut}
+                  onClick={() => performSignOut(true)}
+                  className={`w-full px-3 py-2 dynamic-text-xs font-light text-red-500 hover:text-red-400 hover:bg-red-500/5 transition-colors rounded-sm disabled:opacity-60 disabled:cursor-not-allowed`}
+                >
+                  {isSigningOut ? 'clearing & signing…' : 'sign out & clear notes'}
+                </button>
+              </div>
+              <button
+                type="button"
+                onClick={() => { if (!isSigningOut) setShowSignOutChoice(false); }}
+                className={`dynamic-text-xs font-light ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')} transition-colors disabled:opacity-60`}
+                disabled={isSigningOut}
+              >
+                stay signed in
+              </button>
+            </div>
+          </div>
+        )}
+        <ConfirmModal
+          isOpen={showActiveDeleteConfirm}
+          title="drain active notes?"
+          message="This will delete every active note. Saved notes and SAMO art stay untouched."
+          confirmLabel={isDeletingActiveNotes ? 'draining…' : 'drain active'}
+          cancelLabel="keep them"
+          onConfirm={handleDeleteActiveOnly}
+          onCancel={() => {
+            if (!isDeletingActiveNotes) {
+              setShowActiveDeleteConfirm(false);
+            }
+          }}
+          isDestructive
+        />
+        <ConfirmModal
+          isOpen={showDeleteAllConfirm}
+          title="drain the stream?"
+          message="This will delete every active note, saved note, and SAMO art piece. There is no undo."
+          confirmLabel={isDeletingAllNotes ? 'draining…' : 'pull the plug'}
+          cancelLabel="keep my notes"
+          onConfirm={handleDeleteAll}
+          onCancel={() => {
+            if (!isDeletingAllNotes) {
+              setShowDeleteAllConfirm(false);
+            }
+          }}
+          isDestructive
+        />
         <ConfirmModal
           isOpen={!!folderPendingDeletion}
           title="delete folder"

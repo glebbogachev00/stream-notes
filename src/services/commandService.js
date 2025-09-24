@@ -155,7 +155,17 @@ Remember: Your naturalResponse is the main user interaction - make it count with
     });
 
     if (!response.ok) {
-      throw new Error('Failed to parse command with AI');
+      let errorDetails = {};
+      try {
+        errorDetails = await response.json();
+      } catch (parseError) {
+        // Ignore parse failure; we'll fall back to generic message
+      }
+      const errorMessage = errorDetails?.error || `Groq proxy error (${response.status})`;
+      const error = new Error(errorMessage);
+      error.status = response.status;
+      error.details = errorDetails;
+      throw error;
     }
 
     const data = await response.json();
@@ -701,7 +711,7 @@ export class CommandExecutor {
     if (notes.length === 0) {
       return {
         success: false,
-        message: "No notes to delete!"
+        message: "no notes to let go of right now!"
       };
     }
 
@@ -711,44 +721,73 @@ export class CommandExecutor {
       
       return {
         success: true,
-        message: "Latest note deleted!"
+        message: "your latest note drifted downstream."
       };
     } catch (error) {
       return {
         success: false,
-        message: "Failed to delete note. Please try again."
+        message: "couldn't quite let that note go. want to try again?"
       };
     }
   }
 
   async saveAllNotes() {
+    if (typeof this.noteActions.saveAllNotes === 'function') {
+      try {
+        const { savedCount = 0, totalCount = 0 } = await this.noteActions.saveAllNotes();
+        if (totalCount === 0) {
+          return {
+            success: false,
+            message: "no active notes to scoop up just yet!"
+          };
+        }
+
+        const allSaved = savedCount === totalCount;
+        return {
+          success: true,
+          message: allSaved
+            ? `all ${totalCount} notes are tucked safely into saved.`
+            : `scooped up ${savedCount} of ${totalCount} notes into saved. a few slipped away, but most are cozy!`
+        };
+      } catch (error) {
+        console.error('Failed to save all notes:', error);
+        return {
+          success: false,
+          message: "the stream hit a snag while saving everything. mind trying again?"
+        };
+      }
+    }
+
     const notes = this.noteActions.getNotes();
     if (notes.length === 0) {
       return {
         success: false,
-        message: "No active notes to save!"
+        message: "no active notes to scoop up just yet!"
       };
     }
 
     try {
+      const noteIds = notes.map((note) => note.id);
       let savedCount = 0;
-      for (const note of notes) {
+      for (const noteId of noteIds) {
         try {
-          await this.noteActions.saveNote(note.id);
+          await this.noteActions.saveNote(noteId);
           savedCount++;
         } catch (error) {
-          console.warn(`Failed to save note ${note.id}:`, error);
+          console.warn(`Failed to save note ${noteId}:`, error);
         }
       }
-      
+
       return {
         success: true,
-        message: `Saved ${savedCount} of ${notes.length} notes!`
+        message: savedCount === noteIds.length
+          ? `all ${savedCount} notes are tucked safely into saved.`
+          : `scooped up ${savedCount} of ${noteIds.length} notes into saved. a few slipped away, but most are cozy!`
       };
     } catch (error) {
       return {
         success: false,
-        message: "Failed to save notes. Please try again."
+        message: "the stream hit a snag while saving everything. mind trying again?"
       };
     }
   }
@@ -758,7 +797,7 @@ export class CommandExecutor {
     if (notes.length === 0) {
       return {
         success: false,
-        message: "No active notes to save!"
+        message: "no active notes to save just yet!"
       };
     }
 
@@ -768,12 +807,12 @@ export class CommandExecutor {
       
       return {
         success: true,
-        message: "Latest note saved!"
+        message: "tucked your latest note into saved."
       };
     } catch (error) {
       return {
         success: false,
-        message: "Failed to save note. Please try again."
+        message: "the save got a little splashy. mind giving it another go?"
       };
     }
   }

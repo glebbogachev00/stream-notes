@@ -3,6 +3,11 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useSettings } from '../contexts/SettingsContext';
 import { parseCommand, CommandExecutor } from '../services/commandService';
 
+const stripEmojis = (text = '') => {
+  if (typeof text !== 'string') return text;
+  return text.replace(/[\u{1F300}-\u{1F5FF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '');
+};
+
 // Suggested Action Component - Mobile optimized
 const SuggestedAction = ({ icon, title, description, onClick, theme, disabled = false }) => (
   <button
@@ -150,7 +155,7 @@ const StreamAssistant = ({
       if (conversation.length === 0) {
         setConversation([{
           type: 'assistant',
-          message: "Hey! I'm here to help with your notes. I can help you create, format, save, organize your notes, and manage your settings. Just tell me what you'd like to do!",
+          message: stripEmojis("Hey! I'm here to help with your notes. I can help you create, format, save, organize your notes, and manage your settings. Just tell me what you'd like to do!"),
           timestamp: new Date()
         }]);
       }
@@ -179,7 +184,7 @@ const StreamAssistant = ({
     setConversation(prev => {
       const newConversation = [...prev, {
         type,
-        message,
+        message: type === 'assistant' ? stripEmojis(message) : message,
         timestamp: new Date(),
         isHelp,
         isChat
@@ -199,7 +204,7 @@ const StreamAssistant = ({
   const clearChat = () => {
     setConversation([{
       type: 'assistant',
-      message: "Hey! I'm here to help with your notes. I can help you create, format, save, organize your notes, and manage your settings. Just tell me what you'd like to do!",
+      message: stripEmojis("Hey! I'm here to help with your notes. I can help you create, format, save, organize your notes, and manage your settings. Just tell me what you'd like to do!"),
       timestamp: new Date()
     }]);
     setPendingConfirmation(null);

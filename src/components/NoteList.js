@@ -145,16 +145,23 @@ const NoteList = ({
     )) {
       return; // Don't close if focus moved to controls
     }
-    
-    // Apply auto-sorting if enabled (immediate formatting)
-    let processedContent = content;
-    if (settings.autoSortingEnabled) {
-      processedContent = formatText(content);
+
+    const latestValue = editingTextareaRef.current ? editingTextareaRef.current.value : content;
+    if (!latestValue.trim()) {
+      onDeleteNote(noteId);
+      onSetEditingNoteId(null);
+      return;
     }
-    
+
+    // Apply auto-sorting if enabled (immediate formatting)
+    let processedContent = latestValue;
+    if (settings.autoSortingEnabled) {
+      processedContent = formatText(latestValue);
+    }
+
     onUpdateNoteContent(noteId, processedContent);
     onSetEditingNoteId(null);
-  }, [settings.autoSortingEnabled, formatText, onUpdateNoteContent, onSetEditingNoteId]);
+  }, [settings.autoSortingEnabled, formatText, onUpdateNoteContent, onDeleteNote, onSetEditingNoteId]);
 
   const handleNoteClick = useCallback((noteId, event) => {
     // Prevent triggering when clicking on buttons or controls

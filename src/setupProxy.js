@@ -58,6 +58,13 @@ module.exports = function(app) {
       const { status, data } = await callGroq(req.body, apiKey);
 
       if (status < 200 || status >= 300) {
+        if (process.env.NODE_ENV === 'development') {
+          console.error('[setupProxy] groq responded with error', {
+            status,
+            message: data?.error?.message,
+            raw: data
+          });
+        }
         return res.status(status).json({
           error: data?.error?.message || 'Groq request failed'
         });

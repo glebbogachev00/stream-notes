@@ -254,14 +254,74 @@ export const useNotes = (
 
     const updatedSavedNotes = [savedNote, ...savedNotes];
     const updatedNotes = notes.filter(note => note.id !== id);
-    
+
     saveNotes(updatedNotes);
     saveSavedNotes(updatedSavedNotes);
-    
+
     // Show save toast
     if (onToast) {
       onToast(getRandomMessage(SAVE_NOTE_MESSAGES, personalityEnabled));
     }
+  }, [notes, savedNotes, saveNotes, saveSavedNotes, onToast, personalityEnabled, activeFolder]);
+
+  const deleteAllNotes = useCallback(async () => {
+    const count = notes.length;
+    if (count === 0) {
+      return { deletedCount: 0 };
+    }
+
+    await saveNotes([]);
+    return { deletedCount: count };
+  }, [notes, saveNotes]);
+
+  const deleteAllSavedNotes = useCallback(async () => {
+    const count = savedNotes.length;
+    if (count === 0) {
+      return { deletedCount: 0 };
+    }
+
+    await saveSavedNotes([]);
+    return { deletedCount: count };
+  }, [savedNotes, saveSavedNotes]);
+
+  const deleteAllArtNotes = useCallback(async () => {
+    const count = artNotes.length;
+    if (count === 0) {
+      return { deletedCount: 0 };
+    }
+
+    await saveArtNotes([]);
+    return { deletedCount: count };
+  }, [artNotes, saveArtNotes]);
+
+  const saveAllActiveNotes = useCallback(async () => {
+    const totalCount = notes.length;
+    if (totalCount === 0) {
+      return { savedCount: 0, totalCount: 0 };
+    }
+
+    const baseTimestamp = Date.now();
+    const savedBatch = notes.map((note, index) => {
+      const assignedFolder = note.folder || (activeFolder !== 'all' ? activeFolder : undefined);
+      const savedTimestamp = baseTimestamp + index; // Ensure unique timestamps for ordering
+      return {
+        ...note,
+        folder: assignedFolder,
+        savedAt: savedTimestamp,
+        updatedAt: savedTimestamp
+      };
+    });
+
+    const updatedSavedNotes = [...savedBatch, ...savedNotes];
+
+    await saveSavedNotes(updatedSavedNotes);
+    await saveNotes([]);
+
+    if (onToast) {
+      onToast(getRandomMessage(SAVE_NOTE_MESSAGES, personalityEnabled));
+    }
+
+    return { savedCount: totalCount, totalCount };
   }, [notes, savedNotes, saveNotes, saveSavedNotes, onToast, personalityEnabled, activeFolder]);
 
   const deleteSavedNote = useCallback((id) => {
@@ -570,6 +630,10 @@ export const useNotes = (
     updateNoteFolder,
     refreshNotes: loadNotes,
     saveNoteWithPreview,
-    saveBothVersions
+    saveBothVersions,
+    saveAllActiveNotes,
+    deleteAllNotes,
+    deleteAllSavedNotes,
+    deleteAllArtNotes
   };
 };

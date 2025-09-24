@@ -91,6 +91,10 @@ const AppContent = memo(() => {
     addNote,
     deleteNote,
     saveNote,
+    saveAllActiveNotes,
+    deleteAllNotes,
+    deleteAllSavedNotes,
+    deleteAllArtNotes,
     deleteSavedNote,
     updateSavedNoteContent,
     updateSavedNoteProperties,
@@ -159,6 +163,54 @@ const AppContent = memo(() => {
     }
   };
 
+  const handleDeleteAllNotes = useCallback(async () => {
+    setEditingNoteId(null);
+    const { deletedCount: active } = await deleteAllNotes();
+    const { deletedCount: saved } = await deleteAllSavedNotes();
+    const { deletedCount: art } = await deleteAllArtNotes();
+    const total = active + saved + art;
+
+    if (!total) {
+      showToast('Nothing in the stream to drain right now.');
+      return;
+    }
+
+    const parts = [];
+    if (active) parts.push(`${active} note${active === 1 ? '' : 's'}`);
+    if (saved) parts.push(`${saved} saved note${saved === 1 ? '' : 's'}`);
+    if (art) parts.push(`${art} art piece${art === 1 ? '' : 's'}`);
+    const detail = parts.length ? ` (${parts.join(', ')})` : '';
+    showToast(`Drained ${total} item${total === 1 ? '' : 's'}${detail}.`);
+  }, [deleteAllNotes, deleteAllSavedNotes, deleteAllArtNotes, showToast]);
+
+  const handleDeleteActiveNotes = useCallback(async () => {
+    setEditingNoteId(null);
+    const { deletedCount } = await deleteAllNotes();
+
+    if (!deletedCount) {
+      showToast('No active notes to clear.');
+      return;
+    }
+
+    showToast(`Cleared ${deletedCount} active note${deletedCount === 1 ? '' : 's'}.`);
+  }, [deleteAllNotes, showToast]);
+
+  const handleSignOutKeepNotes = useCallback(() => {
+    setEditingNoteId(null);
+    showToast('Signed out. Your notes stay put.');
+  }, [showToast]);
+
+  const handleSignOutClearNotes = useCallback(async () => {
+    setEditingNoteId(null);
+    const { deletedCount: active } = await deleteAllNotes();
+    const { deletedCount: saved } = await deleteAllSavedNotes();
+    const { deletedCount: art } = await deleteAllArtNotes();
+    const total = active + saved + art;
+    showToast(total
+      ? `Signed out and cleared ${total} item${total === 1 ? '' : 's'}.`
+      : 'Signed out. Nothing to clear.');
+  }, [deleteAllNotes, deleteAllSavedNotes, deleteAllArtNotes, showToast]);
+
   const getFontSizeValue = useCallback((fontSize) => {
     const sizes = { lg: 18, xl: 20, xxl: 22 };
     return sizes[fontSize] || 20;
@@ -181,6 +233,9 @@ const AppContent = memo(() => {
       return note.folder === activeFolder;
     });
   }, [savedNotes, activeFolder]);
+
+  const hasAnyNotes = notes.length > 0 || savedNotes.length > 0 || artNotes.length > 0;
+  const hasActiveNotes = notes.length > 0;
 
   // Show onboarding if not completed
   if (!settings.onboardingCompleted) {
@@ -384,11 +439,17 @@ const AppContent = memo(() => {
       
       <Suspense fallback={null}>
         <SettingsModal 
-          isOpen={isSettingsOpen} 
-          onClose={() => setIsSettingsOpen(false)} 
+          isOpen={isSettingsOpen}
+          onClose={() => setIsSettingsOpen(false)}
           onOpenAuthModal={() => setIsSyncAuthOpen(true)}
           showToast={showToast}
           onFeedback={() => setIsFeedbackOpen(true)}
+          onDeleteAllNotes={handleDeleteAllNotes}
+          onDeleteActiveNotes={handleDeleteActiveNotes}
+          hasNotes={hasAnyNotes}
+          hasActiveNotes={hasActiveNotes}
+          onAfterSignOutKeep={handleSignOutKeepNotes}
+          onAfterSignOutClear={handleSignOutClearNotes}
         />
       </Suspense>
 
@@ -447,6 +508,7 @@ const AppContent = memo(() => {
           getSavedNotes: () => savedNotes,
           addNote,
           saveNote,
+          saveAllNotes: saveAllActiveNotes,
           deleteNote,
           updateNoteContent,
           updateNoteFolder
