@@ -4,9 +4,9 @@ import { useTheme } from '../contexts/ThemeContext';
 const PWAInstallGuide = () => {
   const { theme } = useTheme();
   const [showGuide, setShowGuide] = useState(false);
+  const [showInstallLink, setShowInstallLink] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
-  const [dismissed, setDismissed] = useState(false);
 
   useEffect(() => {
     // Check if user is on iOS
@@ -26,9 +26,13 @@ const PWAInstallGuide = () => {
 
     setIsIOS(isIOSDevice);
     setIsStandalone(isInStandaloneMode);
-    setDismissed(hasBeenDismissed);
 
-    // Only show guide for iOS users who haven't installed and haven't dismissed
+    // Show install link for iOS users who haven't installed
+    if (isIOSDevice && !isInStandaloneMode) {
+      setShowInstallLink(true);
+    }
+
+    // Only show guide automatically for iOS users who haven't dismissed and remind later expired
     if (isIOSDevice && !isInStandaloneMode && !hasBeenDismissed && remindLaterExpired) {
       // Show after a delay to not interrupt initial app load
       const timer = setTimeout(() => {
@@ -40,7 +44,6 @@ const PWAInstallGuide = () => {
 
   const handleDismiss = () => {
     setShowGuide(false);
-    setDismissed(true);
     localStorage.setItem('pwa-guide-dismissed', 'true');
   };
 
@@ -51,13 +54,31 @@ const PWAInstallGuide = () => {
     localStorage.setItem('pwa-guide-remind-later', expires.toString());
   };
 
-  // Don't render anything if conditions aren't met
-  if (!isIOS || isStandalone || dismissed || !showGuide) {
+  const handleShowGuide = () => {
+    setShowGuide(true);
+  };
+
+  // Don't render anything if user is not on iOS or app is already installed
+  if (!isIOS || isStandalone) {
     return null;
   }
 
   return (
-    <div className={`fixed bottom-4 left-4 right-4 ${theme.bg} ${theme.border} border rounded-lg p-4 shadow-lg z-50 max-w-sm mx-auto`}>
+    <>
+      {/* Install Link - always visible for iOS users who haven't installed */}
+      {showInstallLink && !showGuide && (
+        <button
+          onClick={handleShowGuide}
+          className={`fixed top-4 right-4 ${theme.textTertiary} hover:${theme.text} text-xs px-2 py-1 rounded transition-colors z-40`}
+          title="Install Stream as PWA"
+        >
+          install
+        </button>
+      )}
+
+      {/* Install Guide Modal */}
+      {showGuide && (
+        <div className={`fixed bottom-4 left-4 right-4 ${theme.bg} ${theme.border} border rounded-lg p-4 shadow-lg z-50 max-w-sm mx-auto`}>
       <div className="flex justify-between items-start mb-3">
         <div className={`${theme.text} text-sm font-medium`}>
           Install Stream
@@ -104,6 +125,8 @@ const PWAInstallGuide = () => {
         </button>
       </div>
     </div>
+      )}
+    </>
   );
 };
 
