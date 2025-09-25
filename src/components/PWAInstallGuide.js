@@ -65,14 +65,14 @@ const PWAInstallGuide = () => {
 
   return (
     <>
-      {/* Install Button - positioned above StreamAssistant on right side */}
+      {/* Install Button - top right corner */}
       {showInstallLink && !showGuide && (
         <button
           onClick={handleShowGuide}
-          className={`fixed bottom-20 right-6 w-12 h-12 ${theme.bg} ${theme.border} border-2 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 z-40 flex items-center justify-center ${theme.text} hover:${theme.textSecondary} hover:scale-110 active:scale-95`}
+          className={`fixed top-4 right-4 w-10 h-10 ${theme.bg} ${theme.border} border rounded-full shadow-md hover:shadow-lg transition-all duration-200 z-40 flex items-center justify-center ${theme.text} hover:${theme.textSecondary} hover:scale-105 active:scale-95`}
           title="Install Stream as PWA (Safari required)"
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m0 0l-4-4m4 4l4-4" />
           </svg>
         </button>
