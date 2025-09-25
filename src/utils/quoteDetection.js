@@ -38,12 +38,3 @@ export const unlockMatrix = () => {
   localStorage.setItem('stream-matrix-unlocked', 'true');
 };
 
-export const detectQuakePattern = (text) => {
-  if (!text || typeof text !== 'string') return false;
-  return text.toLowerCase().includes('rocket jump');
-};
-
-export const detectDoomPattern = (text) => {
-  if (!text || typeof text !== 'string') return false;
-  return text.toLowerCase().includes('rip and tear');
-};

@@ -145,6 +145,18 @@ const AppContent = memo(() => {
     }
   }, [activeFolder, settings.folders]);
 
+  // Listen for theme unlock toast events
+  useEffect(() => {
+    const handleShowToast = (event) => {
+      const { message, duration } = event.detail;
+      showToast(message, duration);
+    };
+
+    window.addEventListener('show-toast', handleShowToast);
+    return () => {
+      window.removeEventListener('show-toast', handleShowToast);
+    };
+  }, [showToast]);
 
   const handleSyncButtonClick = async () => {
     if (!user) {

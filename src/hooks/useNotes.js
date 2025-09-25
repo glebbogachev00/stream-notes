@@ -229,6 +229,14 @@ export const useNotes = (
       };
     });
     saveNotes(updatedNotes);
+    
+    // Unlock quake theme when individual note timer is first used
+    const hasUsedCustomTimer = localStorage.getItem('stream_quake_unlocked') === 'true';
+    if (!hasUsedCustomTimer) {
+      localStorage.setItem('stream_quake_unlocked', 'true');
+      // Dispatch event to notify ThemeContext
+      window.dispatchEvent(new CustomEvent('theme-unlocked', { detail: { theme: 'quake', message: 'Quake theme unlocked!' } }));
+    }
   }, [notes, saveNotes]);
 
   const deleteNote = useCallback((id) => {
@@ -433,8 +441,11 @@ export const useNotes = (
     
     // Check if this unlocks the edge theme
     if (artStyle === 'samo' || artStyle === 'stencil') {
+      const artNotes = JSON.parse(localStorage.getItem('stream_art_notes') || '[]');
+      const hadArtBefore = artNotes.some(note => note.artStyle === 'samo' || note.artStyle === 'stencil');
+      
       unlockEdgeTheme();
-      if (onEdgeUnlock) {
+      if (onEdgeUnlock && !hadArtBefore) {
         onEdgeUnlock();
       }
     }

@@ -3,12 +3,11 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useSettings, DELETE_TIMERS } from '../contexts/SettingsContext';
 import { getRotatingMessage, INPUT_PLACEHOLDER_MESSAGES } from '../utils/messages';
 import { autoResize, handleTextareaChange, handleTextareaKeyDown } from '../utils/textareaHelpers';
-import { detectQuakePattern, detectDoomPattern } from '../utils/quoteDetection';
 
 const NoteInput = ({ onAddNote, showToast }) => {
   const [content, setContent] = useState('');
   const [isFocused, setIsFocused] = useState(false);
-  const { theme, unlockQuakeTheme, unlockDoomTheme, quakeUnlocked, doomUnlocked } = useTheme();
+  const { theme } = useTheme();
   const { settings, formatText } = useSettings();
   const [placeholder, setPlaceholder] = useState(() => 
     getRotatingMessage(INPUT_PLACEHOLDER_MESSAGES, settings?.personalityEnabled ?? true)
@@ -39,20 +38,6 @@ const NoteInput = ({ onAddNote, showToast }) => {
         formattedContent = formatText(content);
       }
       
-      // Check for theme unlock patterns
-      if (!quakeUnlocked && detectQuakePattern(content)) {
-        unlockQuakeTheme();
-        if (showToast) {
-          showToast('Strafe jumping activated! Quake theme unlocked!', 5000);
-        }
-      }
-      
-      if (!doomUnlocked && detectDoomPattern(content)) {
-        unlockDoomTheme();
-        if (showToast) {
-          showToast('Demons eliminated! Doom theme unlocked!', 5000);
-        }
-      }
       
       // Add save animation
       if (textareaRef.current) {

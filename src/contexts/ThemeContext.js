@@ -183,8 +183,11 @@ export const useTheme = () => {
 };
 
 const checkEdgeUnlock = () => {
+  // Check both localStorage flag (for folders unlock) and art notes (for SAMO unlock)
+  const hasFlag = localStorage.getItem('stream_edge_unlocked') === 'true';
   const artNotes = JSON.parse(localStorage.getItem('stream_art_notes') || '[]');
-  return artNotes.some(note => note.artStyle === 'samo' || note.artStyle === 'stencil');
+  const hasArt = artNotes.some(note => note.artStyle === 'samo' || note.artStyle === 'stencil');
+  return hasFlag || hasArt;
 };
 
 const checkQuakeUnlock = () => {
@@ -209,6 +212,28 @@ export const ThemeProvider = ({ children }) => {
   useEffect(() => {
     localStorage.setItem('stream_theme', currentTheme);
   }, [currentTheme]);
+
+  useEffect(() => {
+    // Listen for theme unlock events
+    const handleThemeUnlock = (event) => {
+      const { theme, message } = event.detail;
+      if (theme === 'doom') {
+        setDoomUnlocked(true);
+      } else if (theme === 'quake') {
+        setQuakeUnlocked(true);
+      }
+      
+      // Dispatch toast event for the App component to handle
+      if (message) {
+        window.dispatchEvent(new CustomEvent('show-toast', { detail: { message, duration: 5000 } }));
+      }
+    };
+
+    window.addEventListener('theme-unlocked', handleThemeUnlock);
+    return () => {
+      window.removeEventListener('theme-unlocked', handleThemeUnlock);
+    };
+  }, []);
 
   const switchTheme = (themeName) => {
     if (THEMES[themeName]) {

@@ -577,9 +577,6 @@ const SettingsModal = ({
                 >
                   panic button: drain active notes
                 </button>
-                <p className={`dynamic-text-xs font-light ${theme.textTertiary}`}>
-                  Deletes every active note instantly. Saved notes and SAMO art stay untouched.
-                </p>
               </div>
 
               <div className={`pt-3 border-t ${theme.borderSecondary} space-y-2`}>
@@ -601,9 +598,6 @@ const SettingsModal = ({
                 >
                   emergency reset: wipe everything
                 </button>
-                <p className={`dynamic-text-xs font-light ${theme.textTertiary}`}>
-                  Deletes every active note, saved note, and SAMO art piece. There is no undo.
-                </p>
               </div>
             </div>
           </CollapsibleSection>
@@ -676,8 +670,11 @@ const SettingsModal = ({
                   const newValue = !settings.enhancedEditingEnabled;
                   updateSettings({ enhancedEditingEnabled: newValue });
                   if (newValue) {
-                    unlockMatrixTheme(); // Matrix unlocks when enhanced editing is enabled
-                    showToast('Matrix theme unlocked! Check theme settings.', 5000);
+                    const alreadyUnlocked = localStorage.getItem('stream-matrix-unlocked') === 'true';
+                    if (!alreadyUnlocked) {
+                      localStorage.setItem('stream-matrix-unlocked', 'true');
+                      showToast('Matrix theme unlocked!', 5000);
+                    }
                   }
                 }}
                 className={`w-full text-left pb-3 border-b transition-all duration-200 ${theme.border} ${theme.text} hover:${theme.textSecondary.replace('text-', 'hover:text-')}`}
@@ -749,8 +746,11 @@ const SettingsModal = ({
                   const newValue = !settings.foldersEnabled;
                   updateSettings({ foldersEnabled: newValue });
                   if (newValue) {
-                    unlockEdgeTheme(); // Edge unlocks when folders are enabled
-                    showToast('Edge theme unlocked! Check theme settings.', 5000);
+                    const alreadyUnlocked = localStorage.getItem('stream_edge_unlocked') === 'true';
+                    if (!alreadyUnlocked) {
+                      localStorage.setItem('stream_edge_unlocked', 'true');
+                      showToast('Edge theme unlocked!', 5000);
+                    }
                   }
                 }}
                 className={`w-full text-left pb-3 border-b transition-all duration-200 ${theme.border} ${theme.text} hover:${theme.textSecondary.replace('text-', 'hover:text-')}`}

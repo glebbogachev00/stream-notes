@@ -250,6 +250,19 @@ export const SettingsProvider = ({ children }) => {
       if (Object.prototype.hasOwnProperty.call(newSettings, 'folders')) {
         updates.foldersUpdatedAt = Date.now();
       }
+      
+      // Unlock doom theme when timer is first enabled
+      if (Object.prototype.hasOwnProperty.call(newSettings, 'timerEnabled') && 
+          newSettings.timerEnabled === true && 
+          prev.timerEnabled === false) {
+        const alreadyUnlocked = localStorage.getItem('stream_doom_unlocked') === 'true';
+        if (!alreadyUnlocked) {
+          localStorage.setItem('stream_doom_unlocked', 'true');
+          // Dispatch event to notify ThemeContext
+          window.dispatchEvent(new CustomEvent('theme-unlocked', { detail: { theme: 'doom', message: 'Doom theme unlocked!' } }));
+        }
+      }
+      
       return { ...prev, ...updates };
     });
   };
