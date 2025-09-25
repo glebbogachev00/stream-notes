@@ -65,13 +65,16 @@ const PWAInstallGuide = () => {
 
   return (
     <>
-      {/* Install Link - always visible for iOS users who haven't installed */}
+      {/* Install Button - positioned above StreamAssistant on right side */}
       {showInstallLink && !showGuide && (
         <button
           onClick={handleShowGuide}
-          className={`fixed top-4 right-4 ${theme.textTertiary} hover:${theme.text} text-xs px-2 py-1 rounded transition-colors z-40`}
+          className={`fixed bottom-20 right-6 flex items-center gap-2 px-3 py-2 ${theme.bg} ${theme.border} border rounded-full shadow-lg hover:shadow-xl transition-all duration-200 z-40 ${theme.text} hover:${theme.textSecondary} text-sm hover:scale-105 active:scale-95`}
           title="Install Stream as PWA"
         >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
           install
         </button>
       )}
