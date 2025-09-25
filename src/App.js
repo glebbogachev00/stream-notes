@@ -16,6 +16,7 @@ import SyncIcon from './components/icons/SyncIcon';
 import CheckIcon from './components/icons/CheckIcon';
 import StreamAssistant from './components/StreamAssistant';
 import Timer from './components/Timer';
+import PWAInstallGuide from './components/PWAInstallGuide';
 import { submitFeedback } from './utils/feedback';
 
 // Lazy load non-critical components with preloading hints
@@ -536,6 +537,9 @@ const AppContent = memo(() => {
         }}
         showToast={showToast}
       />
+
+      {/* PWA Install Guide */}
+      <PWAInstallGuide />
 
     </div>
   );
