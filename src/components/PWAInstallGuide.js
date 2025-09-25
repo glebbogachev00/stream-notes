@@ -84,7 +84,7 @@ const PWAInstallGuide = () => {
       </div>
       
       <div className={`${theme.textSecondary} text-xs leading-relaxed mb-4`}>
-        <p className="mb-2">Add Stream to your home screen (Safari required):</p>
+        <p className="mb-2">Add [stream] to your home screen (Safari required):</p>
         <ol className="space-y-1 pl-4">
           <li className="flex items-start">
             <span className="mr-2">1.</span>
