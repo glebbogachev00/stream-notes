@@ -621,6 +621,22 @@ const SettingsModal = ({
             </div>
           </CollapsibleSection>
 
+          {/* Install Icon - Only for iOS */}
+          {/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream && (
+            <CollapsibleSection title="install icon">
+              <div>
+                <button
+                  onClick={() => updateSettings({ installIconEnabled: !settings.installIconEnabled })}
+                  className={`w-full text-left pb-3 border-b transition-all duration-200 ${theme.border} ${theme.text} hover:${theme.textSecondary.replace('text-', 'hover:text-')}`}
+                >
+                  <div className="dynamic-text-xs font-light">
+                    {settings.installIconEnabled ? 'hide install icon' : 'show install icon'}
+                  </div>
+                </button>
+              </div>
+            </CollapsibleSection>
+          )}
+
           {/* Personality */}
           <CollapsibleSection title="personality">
             <div className="space-y-4">

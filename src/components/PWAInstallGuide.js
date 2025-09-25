@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
+import { useSettings } from '../contexts/SettingsContext';
 
 const PWAInstallGuide = () => {
   const { theme } = useTheme();
+  const { settings } = useSettings();
   const [showGuide, setShowGuide] = useState(false);
   const [showInstallLink, setShowInstallLink] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
@@ -23,20 +25,20 @@ const PWAInstallGuide = () => {
     setIsIOS(isIOSDevice);
     setIsStandalone(isInStandaloneMode);
 
-    // Show install link for iOS users who haven't installed
-    if (isIOSDevice && !isInStandaloneMode) {
+    // Show install link for iOS users who haven't installed and have setting enabled
+    if (isIOSDevice && !isInStandaloneMode && settings.installIconEnabled) {
       setShowInstallLink(true);
     }
 
-    // Only show guide automatically for iOS users who haven't dismissed
-    if (isIOSDevice && !isInStandaloneMode && !hasBeenDismissed) {
+    // Only show guide automatically for iOS users who haven't dismissed and have setting enabled
+    if (isIOSDevice && !isInStandaloneMode && !hasBeenDismissed && settings.installIconEnabled) {
       // Show after a delay to not interrupt initial app load
       const timer = setTimeout(() => {
         setShowGuide(true);
       }, 3000);
       return () => clearTimeout(timer);
     }
-  }, []);
+  }, [settings.installIconEnabled]);
 
   const handleDismiss = () => {
     setShowGuide(false);
