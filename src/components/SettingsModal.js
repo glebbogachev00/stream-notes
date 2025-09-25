@@ -608,6 +608,25 @@ const SettingsModal = ({
             </div>
           </CollapsibleSection>
 
+          {/* Timer */}
+          <CollapsibleSection title="timer">
+            <div className="space-y-4">
+              <div>
+                <button
+                  onClick={() => updateSettings({ timerEnabled: !settings.timerEnabled })}
+                  className={`w-full text-left pb-3 border-b transition-all duration-200 ${theme.border} ${theme.text} hover:${theme.textSecondary.replace('text-', 'hover:text-')}`}
+                >
+                  <div className="dynamic-text-xs font-light">
+                    {settings.timerEnabled ? 'hide timer' : 'show timer'}
+                  </div>
+                </button>
+                <p className={`mt-2 dynamic-text-xs font-light ${theme.textTertiary}`}>
+                  minimal focus timer above your notes. supports formats like 5m, 1h30m, 25:00
+                </p>
+              </div>
+            </div>
+          </CollapsibleSection>
+
           {/* Personality */}
           <CollapsibleSection title="personality">
             <div className="space-y-4">

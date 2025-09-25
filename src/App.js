@@ -15,6 +15,7 @@ import FolderFilter from './components/FolderFilter';
 import SyncIcon from './components/icons/SyncIcon';
 import CheckIcon from './components/icons/CheckIcon';
 import StreamAssistant from './components/StreamAssistant';
+import Timer from './components/Timer';
 import { submitFeedback } from './utils/feedback';
 
 // Lazy load non-critical components with preloading hints
@@ -380,6 +381,8 @@ const AppContent = memo(() => {
             )}
           </div>
         </nav>
+
+        <Timer isEnabled={settings.timerEnabled} />
 
         <main>
           {activeTab === 'active' && (
