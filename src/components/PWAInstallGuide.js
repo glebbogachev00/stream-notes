@@ -72,7 +72,7 @@ const PWAInstallGuide = () => {
         <div className={`fixed bottom-4 left-4 right-4 ${theme.bg} ${theme.border} border rounded-lg p-4 shadow-lg z-50 max-w-sm mx-auto`}>
       <div className="flex justify-between items-start mb-3">
         <div className={`${theme.text} text-sm font-medium`}>
-          Install Stream
+          Install [stream]
         </div>
         <button 
           onClick={handleDismiss}
