@@ -123,12 +123,13 @@ const AppContent = memo(() => {
   );
 
   // Track previous deleteTimer to detect changes
-  const previousDeleteTimer = useRef(null);
+  const previousDeleteTimer = useRef(settings.deleteTimer);
   
   // Update global delete timer when setting changes
   useEffect(() => {
-    if (previousDeleteTimer.current !== null && previousDeleteTimer.current !== settings.deleteTimer && updateGlobalDeleteTimer) {
-      updateGlobalDeleteTimer(settings.deleteTimer);
+    if (previousDeleteTimer.current !== settings.deleteTimer && updateGlobalDeleteTimer) {
+      // Pass both old and new timer values to the function
+      updateGlobalDeleteTimer(settings.deleteTimer, previousDeleteTimer.current);
     }
     previousDeleteTimer.current = settings.deleteTimer;
   }, [settings.deleteTimer, updateGlobalDeleteTimer]);

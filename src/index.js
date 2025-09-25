@@ -6,12 +6,10 @@ import App from './App';
 // Register service worker for caching and offline support
 if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
-      .then((registration) => {
-        console.log('SW registered: ', registration);
-      })
-      .catch((registrationError) => {
-        console.log('SW registration failed: ', registrationError);
+    navigator.serviceWorker
+      .register('/sw.js')
+      .catch(() => {
+        // Ignore registration errors to avoid noisy console output
       });
   });
 }

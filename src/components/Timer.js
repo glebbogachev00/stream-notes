@@ -48,8 +48,6 @@ const Timer = ({ isEnabled }) => {
   }, [isRunning, timeLeft]);
 
   const playAlertSound = async () => {
-    console.log('🔔 Timer finished - playing notification...');
-    
     // Method 1: Try Web Audio API (most reliable)
     try {
       const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -96,12 +94,10 @@ const Timer = ({ isEnabled }) => {
         createBeep(880, now + 3.6, 0.4);   // A5 note
         createBeep(1174, now + 4.1, 0.4);  // D6 note
         createBeep(1318, now + 4.6, 0.8);  // E6 note - longest final note
-        
-        console.log('✅ Web Audio API chime played');
         return;
       }
-    } catch (error) {
-      console.log('❌ Web Audio API failed:', error.message);
+    } catch {
+      // Ignore audio API failures and fall back to alternative notification strategies
     }
     
     // Method 2: Simple HTML5 Audio fallback
@@ -134,10 +130,9 @@ const Timer = ({ isEnabled }) => {
         playBeep(3200)    // 3.2s
       ]);
       
-      console.log('✅ HTML5 Audio sequence played');
       return;
-    } catch (error) {
-      console.log('❌ HTML5 Audio failed:', error.message);
+    } catch {
+      // Ignore audio playback failures and try the next fallback option
     }
     
     // Method 3: Browser notification as final fallback
@@ -149,14 +144,11 @@ const Timer = ({ isEnabled }) => {
             icon: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMTAiIHN0cm9rZT0iIzMzNzMzOCIgc3Ryb2tlLXdpZHRoPSIyIi8+CjxwYXRoIGQ9Im0xNSA5LTYgNi00LTQiIHN0cm9rZT0iIzMzNzMzOCIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPC9zdmc+',
             tag: 'timer-finished'
           });
-          console.log('✅ Browser notification shown');
         }
       }
-    } catch (error) {
-      console.log('❌ Notification failed:', error.message);
+    } catch {
+      // Ignore notification failures; they are non-blocking for timer completion
     }
-    
-    console.log('⚠️ All notification methods attempted');
   };
 
   const formatTime = (seconds) => {

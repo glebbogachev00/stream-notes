@@ -84,9 +84,7 @@ const StreamAssistant = ({
           inline: 'nearest'
         });
         return;
-      } catch (e) {
-        console.log('scrollIntoView failed:', e);
-      }
+      } catch {}
     }
     
     // Approach 2: Direct scroll on conversation container
@@ -95,9 +93,7 @@ const StreamAssistant = ({
         const container = conversationRef.current;
         container.scrollTop = container.scrollHeight;
         return;
-      } catch (e) {
-        console.log('Direct scroll failed:', e);
-      }
+      } catch {}
     }
     
     // Approach 3: Query selector approach
@@ -106,9 +102,7 @@ const StreamAssistant = ({
       if (scrollContainer) {
         scrollContainer.scrollTop = scrollContainer.scrollHeight;
       }
-    } catch (e) {
-      console.log('Query selector scroll failed:', e);
-    }
+    } catch {}
   };
 
   useEffect(() => {
@@ -248,9 +242,7 @@ const StreamAssistant = ({
     try {
       // Parse command with AI
       const context = buildContext();
-      console.log('Processing input:', userInput, 'Context:', context);
       const command = await parseCommand(userInput, context);
-      console.log('Parsed command:', command);
       
       // Handle confirmation if needed
       if (command.needsConfirmation) {

@@ -701,25 +701,10 @@ const NoteList = ({
             <div className="mt-3 px-2">
               <div className={`w-full h-0.5 ${
                 (() => {
-                  // Determine the note's actual timer setting (same logic as DeleteTimerControl)
-                  const getCurrentTimerKey = () => {
-                    if (note.expiresAt === undefined) return '24h';
-                    
-                    const now = Date.now();
-                    for (const key in DELETE_TIMERS) {
-                      const timer = DELETE_TIMERS[key];
-                      if (timer.hours !== null && timer.hours !== Infinity) {
-                        const calculatedExpiresAt = now + (timer.hours * 60 * 60 * 1000);
-                        if (Math.abs(note.expiresAt - calculatedExpiresAt) < 5000) {
-                          return key;
-                        }
-                      }
-                    }
-                    return '24h';
-                  };
-                  
-                  // Color based on the note's actual timer setting
-                  const timerKey = getCurrentTimerKey();
+                  const fallbackTimerKey = DELETE_TIMERS[settings.deleteTimer] ? settings.deleteTimer : '24h';
+                  const timerKey = note.customTimerKey && DELETE_TIMERS[note.customTimerKey]
+                    ? note.customTimerKey
+                    : fallbackTimerKey;
                   
                   switch(timerKey) {
                     case '7d': return 'bg-green-400';    // 7 days - green

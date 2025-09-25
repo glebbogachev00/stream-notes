@@ -23,18 +23,22 @@ export const useNotes = (
   const { storage } = useStorage();
   const { unlockEdgeTheme } = useTheme();
 
+  const isValidTimerKey = useCallback((timerKey) => (
+    Boolean(timerKey && DELETE_TIMERS[timerKey])
+  ), []);
+
   const loadNotes = useCallback(async () => {
     try {
       const storedNotes = await storage.get(NOTES_KEY);
       const storedSavedNotes = await storage.get(SAVED_NOTES_KEY);
       const storedArtNotes = await storage.get(ART_NOTES_KEY);
-      
+
       const parsedNotes = storedNotes ? JSON.parse(storedNotes) : [];
       const parsedSavedNotes = storedSavedNotes ? JSON.parse(storedSavedNotes) : [];
       const parsedArtNotes = storedArtNotes ? JSON.parse(storedArtNotes) : [];
-      
+
       const now = Date.now();
-      
+
       const validNotes = parsedNotes.filter(note => {
         // If expiresAt is Infinity, it never expires
         if (note.expiresAt === Infinity) return true;
@@ -47,51 +51,111 @@ export const useNotes = (
         // Use individual expiresAt
         return now < note.expiresAt;
       });
-      
-      if (validNotes.length !== parsedNotes.length) {
-        await storage.set(NOTES_KEY, JSON.stringify(validNotes));
-        if (onToast && parsedNotes.length - validNotes.length > 0) {
+
+      const deletedCount = parsedNotes.length - validNotes.length;
+
+      const sanitizeCollection = (items, { resetExpiry }) => {
+        let timersUpdated = false;
+        const fallbackHours = DELETE_TIMERS[deleteTimer]?.hours || 24;
+        const sourceItems = Array.isArray(items) ? items : [];
+        const sanitizedItems = sourceItems.map((item) => {
+            if (!item || !item.customTimerKey || isValidTimerKey(item.customTimerKey)) {
+              return item;
+            }
+
+            timersUpdated = true;
+
+            if (!resetExpiry) {
+              return {
+                ...item,
+                customTimerKey: null,
+                hasCustomDeleteTimer: false
+              };
+            }
+
+            const createdAt = item.createdAt || now;
+            const expiresAt = fallbackHours === Infinity
+              ? Infinity
+              : createdAt + (fallbackHours * 60 * 60 * 1000);
+
+            return {
+              ...item,
+              customTimerKey: null,
+              hasCustomDeleteTimer: false,
+              expiresAt,
+              updatedAt: now
+            };
+          });
+
+        return {
+          sanitized: sanitizedItems,
+          timersUpdated
+        };
+      };
+
+      const { sanitized: sanitizedNotes, timersUpdated: activeTimersUpdated } = sanitizeCollection(validNotes, { resetExpiry: true });
+      const { sanitized: sanitizedSavedNotes, timersUpdated: savedTimersUpdated } = sanitizeCollection(parsedSavedNotes, { resetExpiry: false });
+      const { sanitized: sanitizedArtNotes, timersUpdated: artTimersUpdated } = sanitizeCollection(parsedArtNotes, { resetExpiry: false });
+
+      const activeNotesState = activeTimersUpdated ? sanitizedNotes : validNotes;
+      const savedNotesState = savedTimersUpdated ? sanitizedSavedNotes : parsedSavedNotes;
+      const artNotesState = artTimersUpdated ? sanitizedArtNotes : parsedArtNotes;
+
+      if (deletedCount > 0 || activeTimersUpdated) {
+        await storage.set(NOTES_KEY, JSON.stringify(sanitizedNotes));
+        if (onToast && deletedCount > 0) {
           onToast(getRandomMessage(AUTO_DELETE_MESSAGES, personalityEnabled));
         }
       }
-      
-      setNotes(validNotes);
-      setSavedNotes(parsedSavedNotes);
-      setArtNotes(parsedArtNotes);
+
+      if (savedTimersUpdated) {
+        await storage.set(SAVED_NOTES_KEY, JSON.stringify(sanitizedSavedNotes));
+      }
+
+      if (artTimersUpdated) {
+        await storage.set(ART_NOTES_KEY, JSON.stringify(sanitizedArtNotes));
+      }
+
+      setNotes(activeNotesState);
+      setSavedNotes(savedNotesState);
+      setArtNotes(artNotesState);
     } catch (error) {
       // Error loading notes, using empty arrays
       setNotes([]);
       setSavedNotes([]);
       setArtNotes([]);
     }
-  }, [deleteTimer, onToast, personalityEnabled, storage]);
+  }, [deleteTimer, onToast, personalityEnabled, storage, isValidTimerKey]);
 
   const saveNotes = useCallback(async (newNotes) => {
+    const previousNotes = notes;
+    setNotes(newNotes);
     try {
       await storage.set(NOTES_KEY, JSON.stringify(newNotes));
-      setNotes(newNotes);
     } catch (error) {
-      // Error saving notes
+      setNotes(previousNotes);
     }
-  }, [storage]);
+  }, [notes, storage]);
 
   const saveSavedNotes = useCallback(async (newSavedNotes) => {
+    const previousSavedNotes = savedNotes;
+    setSavedNotes(newSavedNotes);
     try {
       await storage.set(SAVED_NOTES_KEY, JSON.stringify(newSavedNotes));
-      setSavedNotes(newSavedNotes);
     } catch (error) {
-      // Error saving saved notes
+      setSavedNotes(previousSavedNotes);
     }
-  }, [storage]);
+  }, [savedNotes, storage]);
 
   const saveArtNotes = useCallback(async (newArtNotes) => {
+    const previousArtNotes = artNotes;
+    setArtNotes(newArtNotes);
     try {
       await storage.set(ART_NOTES_KEY, JSON.stringify(newArtNotes));
-      setArtNotes(newArtNotes);
     } catch (error) {
-      // Error saving art notes
+      setArtNotes(previousArtNotes);
     }
-  }, [storage]);
+  }, [artNotes, storage]);
 
   const addNote = useCallback((content) => {
     const sanitizedContent = sanitizeNoteContent(content);
@@ -209,35 +273,39 @@ export const useNotes = (
   }, [notes, saveNotes]);
 
   const updateNoteDeleteTimer = useCallback((id, newDeleteTimerKey) => {
+    const resolvedTimerKey = DELETE_TIMERS[newDeleteTimerKey] ? newDeleteTimerKey : deleteTimer;
+    const useCustomTimer = resolvedTimerKey !== deleteTimer;
+    const targetTimerKey = useCustomTimer ? resolvedTimerKey : deleteTimer;
     const timestamp = Date.now();
-    const maxAgeHours = DELETE_TIMERS[newDeleteTimerKey]?.hours || 24;
-    
+    const maxAgeHours = DELETE_TIMERS[targetTimerKey]?.hours || 24;
+
     const updatedNotes = notes.map(note => {
       if (note.id !== id) return note;
-      
-      // Calculate new expiration time from note's creation time, not current time
-      const newExpiresAt = maxAgeHours === Infinity 
-        ? Infinity 
-        : note.createdAt + (maxAgeHours * 60 * 60 * 1000);
-      
+
+      const newExpiresAt = maxAgeHours === Infinity
+        ? Infinity
+        : timestamp + (maxAgeHours * 60 * 60 * 1000);
+
       return {
         ...note,
-        customTimerKey: newDeleteTimerKey,
-        hasCustomDeleteTimer: true,
+        customTimerKey: useCustomTimer ? resolvedTimerKey : null,
+        hasCustomDeleteTimer: useCustomTimer,
         expiresAt: newExpiresAt,
         updatedAt: timestamp
       };
     });
+
     saveNotes(updatedNotes);
-    
-    // Unlock quake theme when individual note timer is first used
-    const hasUsedCustomTimer = localStorage.getItem('stream_quake_unlocked') === 'true';
-    if (!hasUsedCustomTimer) {
-      localStorage.setItem('stream_quake_unlocked', 'true');
-      // Dispatch event to notify ThemeContext
-      window.dispatchEvent(new CustomEvent('theme-unlocked', { detail: { theme: 'quake', message: 'Quake theme unlocked!' } }));
+
+    if (useCustomTimer) {
+      const hasUsedCustomTimer = localStorage.getItem('stream_quake_unlocked') === 'true';
+      if (!hasUsedCustomTimer) {
+        localStorage.setItem('stream_quake_unlocked', 'true');
+        // Dispatch event to notify ThemeContext
+        window.dispatchEvent(new CustomEvent('theme-unlocked', { detail: { theme: 'quake', message: 'Quake theme unlocked!' } }));
+      }
     }
-  }, [notes, saveNotes]);
+  }, [notes, saveNotes, deleteTimer]);
 
   const deleteNote = useCallback((id) => {
     const updatedNotes = notes.filter(note => note.id !== id);
@@ -470,7 +538,10 @@ export const useNotes = (
 
   const getTimeInfo = useCallback((note, currentDeleteTimer = deleteTimer) => {
     const now = Date.now();
-    const timerKey = note.customTimerKey || currentDeleteTimer;
+    const fallbackTimerKey = DELETE_TIMERS[currentDeleteTimer] ? currentDeleteTimer : deleteTimer;
+    const timerKey = note.customTimerKey && DELETE_TIMERS[note.customTimerKey]
+      ? note.customTimerKey
+      : fallbackTimerKey;
     const maxAgeHours = DELETE_TIMERS[timerKey]?.hours || 24;
 
     if (maxAgeHours === Infinity) {
@@ -484,7 +555,8 @@ export const useNotes = (
     }
 
     // Use stored expiration time, fallback to calculated if not available
-    const expiresAt = note.expiresAt || (note.createdAt + (maxAgeHours * 60 * 60 * 1000));
+    const createdAt = note.createdAt || now;
+    const expiresAt = note.expiresAt || (createdAt + (maxAgeHours * 60 * 60 * 1000));
     const timeRemainingMs = expiresAt - now;
     const hoursRemaining = timeRemainingMs / (1000 * 60 * 60);
     const minutesRemaining = timeRemainingMs / (1000 * 60);
@@ -500,14 +572,16 @@ export const useNotes = (
 
     const isExpiringSoon = hoursRemaining < (maxAgeHours * 0.2);
 
-    return {
+    const result = {
       timeText,
       isExpiringSoon,
       hoursRemaining: Math.floor(hoursRemaining),
       minutesRemaining: Math.floor((hoursRemaining % 1) * 60),
       deleteTimer: DELETE_TIMERS[timerKey]?.name || '24 hours'
     };
-  }, [deleteTimer]);
+
+    return result;
+  }, [deleteTimer]); // Note: This function is called frequently for real-time updates
 
   useEffect(() => {
     loadNotes();
@@ -529,14 +603,27 @@ export const useNotes = (
   }, [loadNotes]);
 
   useEffect(() => {
-    const interval = setInterval(loadNotes, 60000);
-    return () => clearInterval(interval);
-  }, [loadNotes]);
-
-  const updateGlobalDeleteTimer = useCallback((newDeleteTimerKey) => {
-    const now = Date.now();
-    const maxAgeHours = DELETE_TIMERS[newDeleteTimerKey]?.hours || 24;
+    // Check for short timers (under 10 minutes) to use faster cleanup
+    const hasShortTimers = notes.some(note => {
+      const timerKey = note.customTimerKey && DELETE_TIMERS[note.customTimerKey]
+        ? note.customTimerKey
+        : deleteTimer;
+      const hours = DELETE_TIMERS[timerKey]?.hours || 24;
+      return hours < 0.17; // Less than 10 minutes
+    });
     
+    // Use 5-second cleanup for short timers, 60-second for normal timers
+    const cleanupInterval = hasShortTimers ? 5000 : 60000;
+
+    const interval = setInterval(loadNotes, cleanupInterval);
+    return () => clearInterval(interval);
+  }, [loadNotes, notes, deleteTimer]);
+
+  const updateGlobalDeleteTimer = useCallback((newDeleteTimerKey, oldDeleteTimerKey = deleteTimer) => {
+    const targetTimerKey = DELETE_TIMERS[newDeleteTimerKey] ? newDeleteTimerKey : deleteTimer;
+    const now = Date.now();
+    const maxAgeHours = DELETE_TIMERS[targetTimerKey]?.hours || 24;
+
     const timestamp = Date.now();
     const updatedNotes = notes.map(note => {
       // Only update notes that haven't been manually customized
@@ -550,7 +637,7 @@ export const useNotes = (
     });
     
     saveNotes(updatedNotes);
-  }, [notes, saveNotes]);
+  }, [notes, saveNotes, deleteTimer]); // Add deleteTimer dependency
 
   // Preview functionality
   const saveNoteWithPreview = useCallback((id, formattedContent = null) => {

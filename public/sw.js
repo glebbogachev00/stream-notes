@@ -88,8 +88,8 @@ self.addEventListener('fetch', (event) => {
 self.addEventListener('sync', (event) => {
   if (event.tag === 'background-sync') {
     event.waitUntil(
-      // This would sync offline changes when back online
-      console.log('Background sync triggered')
+      // Placeholder for future background sync implementation
+      Promise.resolve()
     );
   }
 });

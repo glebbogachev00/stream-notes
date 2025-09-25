@@ -63,6 +63,10 @@ const DEFAULT_SETTINGS = {
   streamAssistantEnabled: true
 };
 
+const sanitizeDeleteTimer = (timerKey) => (
+  DELETE_TIMERS[timerKey] ? timerKey : DEFAULT_SETTINGS.deleteTimer
+);
+
 export const useSettings = () => {
   const context = useContext(SettingsContext);
   if (!context) {
@@ -112,8 +116,11 @@ export const SettingsProvider = ({ children }) => {
           { ...DEFAULT_SETTINGS, onboardingCompleted };
       }
 
+      const sanitizedDeleteTimer = sanitizeDeleteTimer(baseSettings.deleteTimer);
+
       return {
         ...baseSettings,
+        deleteTimer: sanitizedDeleteTimer,
         syncKey: baseSettings.syncKey || storedSyncKey,
         syncEndpoint: baseSettings.syncEndpoint || cleanSyncEndpoint
       };
@@ -223,20 +230,28 @@ export const SettingsProvider = ({ children }) => {
           const syncableParsed = JSON.parse(syncableSaved);
           const localParsed = localSaved ? JSON.parse(localSaved) : {};
           
-          setSettings((prev) => ({
-            ...prev,
-            ...syncableParsed,
-            ...localParsed // Local settings override syncable ones
-          }));
+          setSettings((prev) => {
+            const merged = {
+              ...prev,
+              ...syncableParsed,
+              ...localParsed // Local settings override syncable ones
+            };
+            merged.deleteTimer = sanitizeDeleteTimer(merged.deleteTimer);
+            return merged;
+          });
         } else {
           // Fallback to legacy stream-settings
           const saved = localStorage.getItem('stream-settings');
           if (saved) {
             const parsed = JSON.parse(saved);
-            setSettings((prev) => ({
-              ...prev,
-              ...parsed
-            }));
+            setSettings((prev) => {
+              const merged = {
+                ...prev,
+                ...parsed
+              };
+              merged.deleteTimer = sanitizeDeleteTimer(merged.deleteTimer);
+              return merged;
+            });
           }
         }
       } catch (error) {
@@ -256,6 +271,10 @@ export const SettingsProvider = ({ children }) => {
       if (Object.prototype.hasOwnProperty.call(newSettings, 'folders')) {
         updates.foldersUpdatedAt = Date.now();
       }
+
+      if (Object.prototype.hasOwnProperty.call(newSettings, 'deleteTimer')) {
+        updates.deleteTimer = sanitizeDeleteTimer(newSettings.deleteTimer);
+      }
       
       // Unlock doom theme when timer is first enabled
       if (Object.prototype.hasOwnProperty.call(newSettings, 'timerEnabled') && 
@@ -269,7 +288,9 @@ export const SettingsProvider = ({ children }) => {
         }
       }
       
-      return { ...prev, ...updates };
+      const nextSettings = { ...prev, ...updates };
+      nextSettings.deleteTimer = sanitizeDeleteTimer(nextSettings.deleteTimer);
+      return nextSettings;
     });
   };
 

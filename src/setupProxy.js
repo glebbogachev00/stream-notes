@@ -41,9 +41,6 @@ const callGroq = (payload, apiKey) => {
 
 module.exports = function(app) {
   app.use('/api/groq-proxy', express.json({ limit: '1mb' }), async (req, res) => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('[setupProxy] received', req.method, req.originalUrl);
-    }
     if (req.method !== 'POST') {
       res.setHeader('Allow', ['POST']);
       return res.status(405).json({ error: 'Method not allowed' });

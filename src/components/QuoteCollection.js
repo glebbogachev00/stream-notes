@@ -68,7 +68,6 @@ const QuoteCollection = () => {
               
               if (successful) {
                 showToast('Quote copied to clipboard!', 'success');
-                console.log('Copy successful (fallback)!');
               } else {
                 throw new Error('execCommand failed');
               }

@@ -62,6 +62,4 @@ app.use((req, res) => {
   res.status(404).json({ error: 'NOT_FOUND' });
 });
 
-app.listen(PORT, () => {
-  console.log(`[stream-sync] listening on port ${PORT}`);
-});
+app.listen(PORT);

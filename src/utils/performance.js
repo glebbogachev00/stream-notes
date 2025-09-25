@@ -90,13 +90,16 @@ export const extractCriticalCSS = () => {
 // Bundle analyzer helper
 export const analyzeBundleSize = () => {
   if (process.env.NODE_ENV === 'development') {
-    console.log('Bundle analysis available in production build only');
-    return;
+    return {
+      available: false,
+      reason: 'Bundle analysis available in production build only'
+    };
   }
   
   // This would integrate with webpack-bundle-analyzer
-  console.log('Bundle analysis:', {
+  return {
+    available: true,
     chunks: window.__webpack_require__ ? Object.keys(window.__webpack_require__.cache) : [],
     timestamp: Date.now()
-  });
+  };
 };

@@ -179,8 +179,6 @@ Remember: Your naturalResponse is the main user interaction - make it count with
     try {
       // Clean the response to extract just the JSON part
       let cleanResponse = aiResponse.trim();
-      console.log('AI Raw Response:', aiResponse);
-      console.log('Cleaned Response:', cleanResponse);
       
       // If the response contains markdown code blocks, extract the JSON
       if (cleanResponse.includes('```json')) {
@@ -229,7 +227,6 @@ Remember: Your naturalResponse is the main user interaction - make it count with
         naturalResponse: parsed.naturalResponse || "I'll help you with that!",
         needsConfirmation: parsed.needsConfirmation || false
       };
-      console.log('Successfully parsed command:', result);
       return result;
     } catch (jsonError) {
       console.warn('JSON parsing failed:', jsonError, 'Raw response:', aiResponse);
@@ -1178,15 +1175,6 @@ Try me out! 💧`;
     const displayName = this.getSettingDisplayName(settingKey);
     const currentSettings = this.settingsActions.getSettings();
     
-    console.log('Enable setting debug:', {
-      originalName: settingName,
-      settingKey: settingKey,
-      displayName: displayName,
-      settingExists: settingKey in currentSettings,
-      currentValue: currentSettings[settingKey],
-      allSettings: Object.keys(currentSettings)
-    });
-
     // Check if setting exists
     if (!(settingKey in currentSettings)) {
       return {
