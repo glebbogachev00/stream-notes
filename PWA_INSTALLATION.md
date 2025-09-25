@@ -15,7 +15,7 @@ Stream can be installed as a Progressive Web App (PWA) for the best mobile exper
    - Go to your Stream app URL
    - **IMPORTANT**: Must be Safari (Chrome/Firefox won't work for PWA installation)
 
-2. **Click on ... (three dots)**
+2. **Click on ...**
    - Look for the three dots menu in Safari
 
 3. **Click on Share button**
@@ -24,8 +24,8 @@ Stream can be installed as a Progressive Web App (PWA) for the best mobile exper
 4. **Click on More (...)**
    - Look for "More" with three dots in the share menu
 
-5. **Click on "Add to Home Screen"**
-   - Select "Add to Home Screen" from the options
+5. **Click on Add to Home Screen**
+   - Select Add to Home Screen from the options
 
 6. **Customize and Add**
    - You can edit the app name if desired

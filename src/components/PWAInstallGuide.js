@@ -103,7 +103,7 @@ const PWAInstallGuide = () => {
           </li>
           <li className="flex items-start">
             <span className="mr-2">2.</span>
-            <span>Click on <strong className={theme.text}>...</strong> (three dots)</span>
+            <span>Click on <strong className={theme.text}>...</strong></span>
           </li>
           <li className="flex items-start">
             <span className="mr-2">3.</span>
@@ -115,7 +115,7 @@ const PWAInstallGuide = () => {
           </li>
           <li className="flex items-start">
             <span className="mr-2">5.</span>
-            <span>Click on <strong className={theme.text}>"Add to Home Screen"</strong></span>
+            <span>Click on <strong className={theme.text}>Add to Home Screen</strong></span>
           </li>
         </ol>
       </div>
