@@ -308,6 +308,11 @@ const StreamAssistant = ({
       .replace(/\n/g, '<br>');
   };
 
+  // Don't render if disabled in settings
+  if (!settings.streamAssistantEnabled) {
+    return null;
+  }
+
   return (
     <>
       {/* Droplet Trigger */}

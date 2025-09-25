@@ -59,7 +59,8 @@ const DEFAULT_SETTINGS = {
   showMoreByDefault: false,
   flowFormattingEnabled: true,
   timerEnabled: false,
-  installIconEnabled: true
+  installIconEnabled: true,
+  streamAssistantEnabled: true
 };
 
 export const useSettings = () => {
@@ -144,6 +145,7 @@ export const SettingsProvider = ({ children }) => {
         flowFormattingEnabled: settings.flowFormattingEnabled,
         timerEnabled: settings.timerEnabled,
         installIconEnabled: settings.installIconEnabled,
+        streamAssistantEnabled: settings.streamAssistantEnabled,
         onboardingCompleted: settings.onboardingCompleted
       };
 
@@ -190,7 +192,8 @@ export const SettingsProvider = ({ children }) => {
         showMoreByDefault: settings.showMoreByDefault,
         flowFormattingEnabled: settings.flowFormattingEnabled,
         timerEnabled: settings.timerEnabled,
-        installIconEnabled: settings.installIconEnabled
+        installIconEnabled: settings.installIconEnabled,
+        streamAssistantEnabled: settings.streamAssistantEnabled
       }));
       localStorage.setItem('stream-onboarding-completed', settings.onboardingCompleted.toString());
       if (settings.syncKey) {

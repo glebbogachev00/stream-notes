@@ -49,8 +49,8 @@ const PWAInstallGuide = () => {
     setShowGuide(true);
   };
 
-  // Don't render anything if user is not on iOS or app is already installed
-  if (!isIOS || isStandalone) {
+  // Don't render anything if user is not on iOS, app is already installed, or setting is disabled
+  if (!isIOS || isStandalone || !settings.installIconEnabled) {
     return null;
   }
 

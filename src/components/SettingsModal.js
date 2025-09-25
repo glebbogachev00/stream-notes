@@ -621,21 +621,36 @@ const SettingsModal = ({
             </div>
           </CollapsibleSection>
 
-          {/* Install Icon - Only for iOS */}
-          {/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream && (
-            <CollapsibleSection title="install icon">
+          {/* Icons */}
+          <CollapsibleSection title="icons">
+            <div className="space-y-4">
+              {/* Talk to Stream Icon */}
               <div>
                 <button
-                  onClick={() => updateSettings({ installIconEnabled: !settings.installIconEnabled })}
+                  onClick={() => updateSettings({ streamAssistantEnabled: !settings.streamAssistantEnabled })}
                   className={`w-full text-left pb-3 border-b transition-all duration-200 ${theme.border} ${theme.text} hover:${theme.textSecondary.replace('text-', 'hover:text-')}`}
                 >
                   <div className="dynamic-text-xs font-light">
-                    {settings.installIconEnabled ? 'hide install icon' : 'show install icon'}
+                    {settings.streamAssistantEnabled ? 'hide talk to stream' : 'show talk to stream'}
                   </div>
                 </button>
               </div>
-            </CollapsibleSection>
-          )}
+
+              {/* Install Icon - Only for iOS */}
+              {/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream && (
+                <div>
+                  <button
+                    onClick={() => updateSettings({ installIconEnabled: !settings.installIconEnabled })}
+                    className={`w-full text-left pb-3 border-b transition-all duration-200 ${theme.border} ${theme.text} hover:${theme.textSecondary.replace('text-', 'hover:text-')}`}
+                  >
+                    <div className="dynamic-text-xs font-light">
+                      {settings.installIconEnabled ? 'hide install icon' : 'show install icon'}
+                    </div>
+                  </button>
+                </div>
+              )}
+            </div>
+          </CollapsibleSection>
 
           {/* Personality */}
           <CollapsibleSection title="personality">
