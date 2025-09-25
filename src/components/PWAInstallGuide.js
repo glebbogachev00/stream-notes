@@ -65,14 +65,14 @@ const PWAInstallGuide = () => {
 
   return (
     <>
-      {/* Install Button - bottom left corner */}
+      {/* Install Button - bottom left corner, same size as StreamAssistant */}
       {showInstallLink && !showGuide && (
         <button
           onClick={handleShowGuide}
-          className={`fixed bottom-4 left-4 w-10 h-10 ${theme.bg} ${theme.border} border rounded-full shadow-md hover:shadow-lg transition-all duration-200 z-40 flex items-center justify-center ${theme.text} hover:${theme.textSecondary} hover:scale-105 active:scale-95`}
+          className={`fixed bottom-6 left-6 w-12 h-12 ${theme.bg} ${theme.border} border-2 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 z-40 flex items-center justify-center ${theme.text} hover:${theme.textSecondary} hover:scale-110 active:scale-95`}
           title="Install Stream as PWA (Safari required)"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m0 0l-4-4m4 4l4-4" />
           </svg>
         </button>
@@ -103,15 +103,19 @@ const PWAInstallGuide = () => {
           </li>
           <li className="flex items-start">
             <span className="mr-2">2.</span>
-            <span>Tap <strong className={theme.text}>Share</strong> button below</span>
+            <span>Click on <strong className={theme.text}>...</strong> (three dots)</span>
           </li>
           <li className="flex items-start">
             <span className="mr-2">3.</span>
-            <span>Scroll down → <strong className={theme.text}>"Add to Home Screen"</strong></span>
+            <span>Click on <strong className={theme.text}>Share</strong> button</span>
           </li>
           <li className="flex items-start">
             <span className="mr-2">4.</span>
-            <span>Tap <strong className={theme.text}>"Add"</strong></span>
+            <span>Click on <strong className={theme.text}>More (...)</strong></span>
+          </li>
+          <li className="flex items-start">
+            <span className="mr-2">5.</span>
+            <span>Click on <strong className={theme.text}>"Add to Home Screen"</strong></span>
           </li>
         </ol>
       </div>

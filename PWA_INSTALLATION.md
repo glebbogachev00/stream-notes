@@ -15,17 +15,21 @@ Stream can be installed as a Progressive Web App (PWA) for the best mobile exper
    - Go to your Stream app URL
    - **IMPORTANT**: Must be Safari (Chrome/Firefox won't work for PWA installation)
 
-2. **Tap the Share Button**
-   - Look for the share icon at the bottom of Safari
-   - It looks like a square with an arrow pointing up
+2. **Click on ... (three dots)**
+   - Look for the three dots menu in Safari
 
-3. **Find "Add to Home Screen"**
-   - Scroll down in the share menu
-   - Tap "Add to Home Screen"
+3. **Click on Share button**
+   - Find and tap the Share option
 
-4. **Customize and Add**
+4. **Click on More (...)**
+   - Look for "More" with three dots in the share menu
+
+5. **Click on "Add to Home Screen"**
+   - Select "Add to Home Screen" from the options
+
+6. **Customize and Add**
    - You can edit the app name if desired
-   - Tap "Add" in the top right
+   - Tap "Add" to complete installation
 
 ### 🎉 Benefits of Installing
 
@@ -61,9 +65,9 @@ Stream can be installed as a Progressive Web App (PWA) for the best mobile exper
 ### 🎨 UI Design Philosophy
 
 The installation features are designed to be:
-- **Clean**: Simple download arrow button without text clutter
-- **Positioned**: Above the "talk to stream" button on the right side
-- **Safari-focused**: Clear messaging that Safari is required
+- **Balanced**: Download button same size as "talk to stream" button
+- **Positioned**: Bottom-left corner for easy thumb access
+- **Safari-focused**: Complete 5-step flow with clear instructions
 - **Non-intrusive**: Only shows when relevant (iOS users who haven't installed)
 - **Themed**: Matches your current app theme perfectly
 - **Respectful**: Won't spam you with repeated prompts
