@@ -19,10 +19,6 @@ const PWAInstallGuide = () => {
 
     // Check if user has dismissed the guide before
     const hasBeenDismissed = localStorage.getItem('pwa-guide-dismissed') === 'true';
-    
-    // Check if user chose "remind later" and it hasn't expired
-    const remindLaterTime = localStorage.getItem('pwa-guide-remind-later');
-    const remindLaterExpired = !remindLaterTime || new Date().getTime() > parseInt(remindLaterTime);
 
     setIsIOS(isIOSDevice);
     setIsStandalone(isInStandaloneMode);
@@ -32,8 +28,8 @@ const PWAInstallGuide = () => {
       setShowInstallLink(true);
     }
 
-    // Only show guide automatically for iOS users who haven't dismissed and remind later expired
-    if (isIOSDevice && !isInStandaloneMode && !hasBeenDismissed && remindLaterExpired) {
+    // Only show guide automatically for iOS users who haven't dismissed
+    if (isIOSDevice && !isInStandaloneMode && !hasBeenDismissed) {
       // Show after a delay to not interrupt initial app load
       const timer = setTimeout(() => {
         setShowGuide(true);
@@ -45,13 +41,6 @@ const PWAInstallGuide = () => {
   const handleDismiss = () => {
     setShowGuide(false);
     localStorage.setItem('pwa-guide-dismissed', 'true');
-  };
-
-  const handleRemindLater = () => {
-    setShowGuide(false);
-    // Set a temporary dismiss that expires after 24 hours
-    const expires = new Date().getTime() + (24 * 60 * 60 * 1000);
-    localStorage.setItem('pwa-guide-remind-later', expires.toString());
   };
 
   const handleShowGuide = () => {
@@ -120,20 +109,6 @@ const PWAInstallGuide = () => {
         </ol>
       </div>
 
-      <div className="flex gap-2">
-        <button
-          onClick={handleRemindLater}
-          className={`flex-1 px-3 py-2 text-xs ${theme.textSecondary} hover:${theme.text} border ${theme.border} rounded transition-colors`}
-        >
-          Remind Later
-        </button>
-        <button
-          onClick={handleDismiss}
-          className={`flex-1 px-3 py-2 text-xs ${theme.text} border ${theme.border} rounded transition-colors ${theme.buttonHover}`}
-        >
-          Got It
-        </button>
-      </div>
     </div>
       )}
     </>
