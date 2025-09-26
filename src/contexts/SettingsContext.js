@@ -60,7 +60,8 @@ const DEFAULT_SETTINGS = {
   flowFormattingEnabled: true,
   timerEnabled: false,
   installIconEnabled: true,
-  streamAssistantEnabled: true
+  streamAssistantEnabled: true,
+  writingModeEnabled: false
 };
 
 const sanitizeDeleteTimer = (timerKey) => (

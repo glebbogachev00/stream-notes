@@ -621,6 +621,23 @@ const SettingsModal = ({
             </div>
           </CollapsibleSection>
 
+          {/* Writing Mode */}
+          <CollapsibleSection title="writing mode">
+            <div>
+              <button
+                onClick={() => updateSettings({ writingModeEnabled: !settings.writingModeEnabled })}
+                className={`w-full text-left pb-3 border-b transition-all duration-200 ${theme.border} ${theme.text} hover:${theme.textSecondary.replace('text-', 'hover:text-')}`}
+              >
+                <div className="dynamic-text-xs font-light">
+                  {settings.writingModeEnabled ? 'disable writing mode' : 'enable writing mode'}
+                </div>
+              </button>
+              <p className={`mt-2 dynamic-text-xs font-light ${theme.textTertiary}`}>
+                adds expand button and active/save note options for initial note creation
+              </p>
+            </div>
+          </CollapsibleSection>
+
           {/* Icons */}
           <CollapsibleSection title="icons">
             <div className="space-y-4">

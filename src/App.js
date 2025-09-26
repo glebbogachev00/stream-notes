@@ -401,7 +401,7 @@ const AppContent = memo(() => {
         <main>
           {activeTab === 'active' && (
             <div className="space-y-8">
-              <NoteInput onAddNote={addNote} showToast={showToast} />
+              <NoteInput onAddNote={addNote} onSaveNote={saveNote} showToast={showToast} />
               <NoteList
                 notes={filteredNotes}
                 onDeleteNote={deleteNote}

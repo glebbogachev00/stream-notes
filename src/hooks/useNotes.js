@@ -157,7 +157,7 @@ export const useNotes = (
     }
   }, [artNotes, storage]);
 
-  const addNote = useCallback((content) => {
+  const addNote = useCallback((content, shouldSaveDirectly = false) => {
     const sanitizedContent = sanitizeNoteContent(content);
     const now = Date.now();
     const maxAgeHours = DELETE_TIMERS[deleteTimer]?.hours || 24;
@@ -176,9 +176,31 @@ export const useNotes = (
       folder: activeFolder !== 'all' ? activeFolder : null,
     };
     
-    const updatedNotes = [newNote, ...notes];
-    saveNotes(updatedNotes);
-  }, [notes, saveNotes, deleteTimer, activeFolder]);
+    if (shouldSaveDirectly) {
+      // Add directly to saved notes instead of active notes
+      const assignedFolder = newNote.folder || (activeFolder !== 'all' ? activeFolder : undefined);
+      
+      const savedNote = {
+        ...newNote,
+        id: `saved_${newNote.id}`,
+        savedAt: now,
+        folder: assignedFolder,
+        expiresAt: Infinity // Saved notes don't expire
+      };
+      
+      const updatedSavedNotes = [savedNote, ...savedNotes];
+      saveSavedNotes(updatedSavedNotes);
+      
+      // Show save toast
+      if (onToast) {
+        onToast("Note saved directly!");
+      }
+    } else {
+      // Normal flow - add to active notes
+      const updatedNotes = [newNote, ...notes];
+      saveNotes(updatedNotes);
+    }
+  }, [notes, savedNotes, saveNotes, saveSavedNotes, deleteTimer, activeFolder, onToast]);
 
   const updateNoteContent = useCallback((id, newContent) => {
     const sanitizedContent = sanitizeNoteContent(newContent);

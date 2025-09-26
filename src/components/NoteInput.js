@@ -3,10 +3,12 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useSettings, DELETE_TIMERS } from '../contexts/SettingsContext';
 import { getRotatingMessage, INPUT_PLACEHOLDER_MESSAGES } from '../utils/messages';
 import { autoResize, handleTextareaChange, handleTextareaKeyDown } from '../utils/textareaHelpers';
+import FullscreenNoteModal from './FullscreenNoteModal';
 
-const NoteInput = ({ onAddNote, showToast }) => {
+const NoteInput = ({ onAddNote, onSaveNote, showToast }) => {
   const [content, setContent] = useState('');
   const [isFocused, setIsFocused] = useState(false);
+  const [isFullscreenOpen, setIsFullscreenOpen] = useState(false);
   const { theme } = useTheme();
   const { settings, formatText } = useSettings();
   const [placeholder, setPlaceholder] = useState(() => 
@@ -29,15 +31,14 @@ const NoteInput = ({ onAddNote, showToast }) => {
     }
   }, [isFocused, settings.personalityEnabled]);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e, saveDirectly = false) => {
     e.preventDefault();
     if (content.trim()) {
-      // Apply auto-sorting if enabled, then save directly
+      // Apply auto-sorting if enabled
       let formattedContent = content;
       if (settings.autoSortingEnabled) {
         formattedContent = formatText(content);
       }
-      
       
       // Add save animation
       if (textareaRef.current) {
@@ -47,7 +48,13 @@ const NoteInput = ({ onAddNote, showToast }) => {
         }, 600);
       }
       
-      onAddNote(formattedContent);
+      if (saveDirectly && onSaveNote) {
+        // Create note in active first, then immediately save it
+        onAddNote(formattedContent, true); // Pass flag to indicate immediate save
+      } else {
+        onAddNote(formattedContent);
+      }
+      
       setContent('');
       textareaRef.current?.blur();
       setIsFocused(false);
@@ -72,10 +79,27 @@ const NoteInput = ({ onAddNote, showToast }) => {
   };
 
 
+
   return (
     <section className="mb-8">
       <form onSubmit={handleSubmit}>
         <div className="relative group">
+          {/* Expand button - only show when focused and writing mode enabled */}
+          {settings.writingModeEnabled && isFocused && (
+            <button
+              type="button"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setIsFullscreenOpen(true);
+              }}
+              className={`absolute top-2 right-2 z-10 px-2 py-1 text-xs ${theme.textTertiary} hover:text-green-500 transition-colors duration-200 font-light`}
+            >
+              [expand]
+            </button>
+          )}
+
           <textarea
             ref={textareaRef}
             value={content}
@@ -85,14 +109,15 @@ const NoteInput = ({ onAddNote, showToast }) => {
             onBlur={handleBlur}
             placeholder={isFocused ? "write..." : placeholder}
             className={`w-full text-base font-light resize-none ${theme.text} placeholder:${theme.textSecondary} focus:outline-none transition-all duration-200 ${
-              isFocused 
+              isFocused
                 ? `min-h-[120px] p-4 rounded-lg ${theme.inputBg} border ${theme.border}` 
                 : `min-h-[40px] border-0 border-b ${theme.border} ${theme.borderHover} p-2 bg-transparent`
             }`}
             style={{ 
               height: isFocused ? 'auto' : '40px',
               willChange: 'height',
-              transform: 'translateZ(0)'
+              transform: 'translateZ(0)',
+              paddingRight: (isFocused && settings.writingModeEnabled) ? '48px' : '8px'
             }}
             rows={1}
             autoComplete="off"
@@ -100,13 +125,37 @@ const NoteInput = ({ onAddNote, showToast }) => {
           />
           
           {isFocused && content.trim() && (
-            <div className="mt-4 flex items-center justify-end">
-              <button
-                type="submit"
-                className={`px-3 py-2 dynamic-text-base typography-title ${theme.text} border ${theme.border} rounded transition-all duration-200 ${theme.buttonHover} hover:${theme.text.replace('text-', 'hover:text-')}`}
-              >
-                save
-              </button>
+            <div className="mt-4 flex items-center justify-between">
+              {settings.writingModeEnabled ? (
+                <div className="flex items-center justify-between w-full">
+                  <div className={`dynamic-text-sm ${theme.textSecondary} font-light`}>
+                    writing mode
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={(e) => handleSubmit(e, false)}
+                      className={`px-3 py-2 dynamic-text-base typography-title ${theme.text} border ${theme.border} rounded transition-all duration-200 hover:text-orange-500`}
+                    >
+                      active
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => handleSubmit(e, true)}
+                      className={`px-3 py-2 dynamic-text-base typography-title ${theme.text} border ${theme.border} rounded transition-all duration-200 hover:text-green-500`}
+                    >
+                      save
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  type="submit"
+                  className={`px-3 py-2 dynamic-text-base typography-title ${theme.text} border ${theme.border} rounded transition-all duration-200 hover:text-green-500`}
+                >
+                  save
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -117,6 +166,22 @@ const NoteInput = ({ onAddNote, showToast }) => {
           Notes expire in {DELETE_TIMERS[settings.deleteTimer]?.name.toLowerCase() || '24 hours'}
         </div>
       )}
+
+      {/* Use existing FullscreenNoteModal */}
+      <FullscreenNoteModal
+        note={{
+          id: 'new-note',
+          content: content,
+          createdAt: Date.now(),
+          updatedAt: Date.now()
+        }}
+        isOpen={isFullscreenOpen}
+        onClose={() => setIsFullscreenOpen(false)}
+        onUpdateNote={(id, newContent) => {
+          setContent(newContent);
+        }}
+        onUpdateNoteProperties={() => {}}
+      />
     </section>
   );
 };
