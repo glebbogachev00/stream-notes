@@ -284,6 +284,7 @@ const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onUpdateNoteProper
     return (
       <article
         key={note.id}
+        data-note-id={note.id}
         tabIndex={0}
         onKeyDown={(e) => handleNoteKeyDown(e, note.id)}
         className={`group pb-6 transition-all duration-200 ${

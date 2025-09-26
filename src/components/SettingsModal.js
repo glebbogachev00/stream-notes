@@ -707,6 +707,21 @@ const SettingsModal = ({
                   </div>
                 </button>
               </div>
+
+            </div>
+          </CollapsibleSection>
+
+          {/* Search */}
+          <CollapsibleSection title="search">
+            <div>
+              <button
+                onClick={() => updateSettings({ searchEnabled: !settings.searchEnabled })}
+                className={`w-full text-left pb-3 border-b transition-all duration-200 ${theme.border} ${theme.text} hover:${theme.textSecondary.replace('text-', 'hover:text-')}`}
+              >
+                <div className="dynamic-text-xs font-light">
+                  {settings.searchEnabled ? 'hide search' : 'show search'}
+                </div>
+              </button>
             </div>
           </CollapsibleSection>
 

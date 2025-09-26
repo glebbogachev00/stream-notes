@@ -314,6 +314,7 @@ const NoteList = ({
           return (
             <article
               key={customKey || note.id}
+              data-note-id={note.id}
               tabIndex={0}
               onKeyDown={(e) => handleNoteKeyDown(e, note.id)}
               className={`group pb-6 transition-all duration-200 relative ${note.isPinned ? `${theme.bg} ${theme.border} border rounded-lg p-4 mb-4` : ''}`}

@@ -149,12 +149,14 @@ const NoteInput = ({ onAddNote, onSaveNote, showToast }) => {
                   </div>
                 </div>
               ) : (
-                <button
-                  type="submit"
-                  className={`px-3 py-2 dynamic-text-base typography-title ${theme.text} border ${theme.border} rounded transition-all duration-200 hover:text-green-500`}
-                >
-                  save
-                </button>
+                <div className="flex justify-end w-full">
+                  <button
+                    type="submit"
+                    className={`px-3 py-2 dynamic-text-base typography-title ${theme.text} border ${theme.border} rounded transition-all duration-200 hover:text-green-500`}
+                  >
+                    save
+                  </button>
+                </div>
               )}
             </div>
           )}

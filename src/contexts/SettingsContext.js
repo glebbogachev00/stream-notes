@@ -47,6 +47,7 @@ const DEFAULT_SETTINGS = {
   samoModeEnabled: false,
   stealThisQuoteEnabled: false,
   stencilModeEnabled: false,
+  searchEnabled: false,
   syncEnabled: false,
   syncEndpoint: DEFAULT_SYNC_ENDPOINT,
   syncKey: '',

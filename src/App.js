@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback, lazy, Suspense, memo } from 'react';
 import { useNotes } from './hooks/useNotes';
+import { useSearch } from './hooks/useSearch';
 import { useToast } from './hooks/useToast';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import { SettingsProvider, useSettings } from './contexts/SettingsContext';
@@ -12,6 +13,7 @@ import ThemeToggle from './components/ThemeToggle';
 import Onboarding from './components/Onboarding';
 import Toast from './components/Toast';
 import FolderFilter from './components/FolderFilter';
+import InlineSearch from './components/InlineSearch';
 import SyncIcon from './components/icons/SyncIcon';
 import CheckIcon from './components/icons/CheckIcon';
 import StreamAssistant from './components/StreamAssistant';
@@ -121,6 +123,64 @@ const AppContent = memo(() => {
     activeFolder,
     settings.folders
   );
+
+  // Search functionality (only when enabled)
+  const {
+    searchQuery,
+    searchResults,
+    updateQuery
+  } = useSearch(
+    settings.searchEnabled ? notes : [], 
+    settings.searchEnabled ? savedNotes : [], 
+    settings.searchEnabled ? artNotes : []
+  );
+
+  // Clear search when disabled
+  useEffect(() => {
+    if (!settings.searchEnabled && searchQuery) {
+      updateQuery('');
+    }
+  }, [settings.searchEnabled, searchQuery, updateQuery]);
+
+  // Handle navigation to notes from search results
+  const handleNavigateToNote = useCallback((note) => {
+    switch (note.type) {
+      case 'active':
+        setActiveTab('active');
+        break;
+      case 'saved':
+        setActiveTab('saved');
+        break;
+      case 'art':
+        setActiveTab('art');
+        break;
+      default:
+        // Fallback to active tab for unknown types
+        setActiveTab('active');
+        break;
+    }
+    // If note has a folder, switch to that folder
+    if (note.folder && note.folder !== activeFolder) {
+      setActiveFolder(note.folder);
+    }
+    
+    // Scroll to the note after a short delay to allow tab/folder change to complete
+    setTimeout(() => {
+      const noteElement = document.querySelector(`[data-note-id="${note.id}"]`);
+      if (noteElement) {
+        noteElement.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'center' 
+        });
+        // Add a subtle highlight effect
+        noteElement.classList.add('search-highlight');
+        setTimeout(() => {
+          noteElement.classList.remove('search-highlight');
+        }, 800);
+      }
+    }, 100);
+  }, [activeFolder, setActiveFolder]);
+
 
   // Track previous deleteTimer to detect changes
   const previousDeleteTimer = useRef(settings.deleteTimer);
@@ -401,6 +461,14 @@ const AppContent = memo(() => {
         <main>
           {activeTab === 'active' && (
             <div className="space-y-8">
+              {settings.searchEnabled && (
+                <InlineSearch
+                  searchQuery={searchQuery}
+                  searchResults={searchResults}
+                  onUpdateQuery={updateQuery}
+                  onNavigateToNote={handleNavigateToNote}
+                />
+              )}
               <NoteInput onAddNote={addNote} onSaveNote={saveNote} showToast={showToast} />
               <NoteList
                 notes={filteredNotes}
@@ -422,7 +490,15 @@ const AppContent = memo(() => {
           )}
 
           {activeTab === 'saved' && (
-            <>
+            <div className="space-y-8">
+              {settings.searchEnabled && (
+                <InlineSearch
+                  searchQuery={searchQuery}
+                  searchResults={searchResults}
+                  onUpdateQuery={updateQuery}
+                  onNavigateToNote={handleNavigateToNote}
+                />
+              )}
               <SavedNotes
                 savedNotes={filteredSavedNotes}
                 onDeleteNote={deleteSavedNote}
@@ -433,7 +509,7 @@ const AppContent = memo(() => {
                 getTimeInfo={(note) => getTimeInfo(note, settings.deleteTimer)}
                 onUpdateNoteFolder={updateNoteFolder}
               />
-            </>
+            </div>
           )}
 
           {activeTab === 'art' && settings.samoModeEnabled && (
@@ -454,6 +530,7 @@ const AppContent = memo(() => {
         </main>
       </div>
       
+
       <Suspense fallback={null}>
         <SettingsModal 
           isOpen={isSettingsOpen}
@@ -541,6 +618,19 @@ const AppContent = memo(() => {
 
       {/* PWA Install Guide */}
       <PWAInstallGuide />
+
+      {/* Search highlight styles */}
+      <style>{`
+        .search-highlight {
+          animation: searchHighlight 0.8s ease-in-out;
+        }
+        
+        @keyframes searchHighlight {
+          0% { background-color: transparent; }
+          50% { background-color: rgba(255, 215, 0, 0.08); }
+          100% { background-color: transparent; }
+        }
+      `}</style>
 
     </div>
   );
