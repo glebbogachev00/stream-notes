@@ -62,7 +62,23 @@ const DEFAULT_SETTINGS = {
   timerEnabled: false,
   installIconEnabled: true,
   streamAssistantEnabled: true,
-  writingModeEnabled: false
+  writingModeEnabled: false,
+  timeAwarenessEnabled: false,
+  timeAwarenessConfig: {
+    birthdate: '',
+    currentAge: '',
+    targetAge: 90,
+    intention: 'live with intention',
+    lifeConditions: [
+      { id: 'sleep', name: 'Sleep', hours: 8, enabled: true },
+      { id: 'work', name: 'Work', hours: 8, enabled: false },
+      { id: 'screen-time', name: 'Screen Time', hours: 4, enabled: false },
+      { id: 'meal-prep', name: 'Meal Prep', hours: 1.5, enabled: false },
+      { id: 'commuting', name: 'Commuting', hours: 1, enabled: false },
+      { id: 'exercise', name: 'Exercise', hours: 1, enabled: false }
+    ],
+    excludeConditions: true
+  }
 };
 
 const sanitizeDeleteTimer = (timerKey) => (
@@ -124,7 +140,11 @@ export const SettingsProvider = ({ children }) => {
         ...baseSettings,
         deleteTimer: sanitizedDeleteTimer,
         syncKey: baseSettings.syncKey || storedSyncKey,
-        syncEndpoint: baseSettings.syncEndpoint || cleanSyncEndpoint
+        syncEndpoint: baseSettings.syncEndpoint || cleanSyncEndpoint,
+        timeAwarenessConfig: {
+          ...DEFAULT_SETTINGS.timeAwarenessConfig,
+          ...(baseSettings.timeAwarenessConfig || {})
+        }
       };
     } catch (error) {
       // Error loading settings, using defaults
@@ -155,6 +175,8 @@ export const SettingsProvider = ({ children }) => {
         timerEnabled: settings.timerEnabled,
         installIconEnabled: settings.installIconEnabled,
         streamAssistantEnabled: settings.streamAssistantEnabled,
+        timeAwarenessEnabled: settings.timeAwarenessEnabled,
+        timeAwarenessConfig: settings.timeAwarenessConfig,
         onboardingCompleted: settings.onboardingCompleted
       };
 
@@ -202,7 +224,9 @@ export const SettingsProvider = ({ children }) => {
         flowFormattingEnabled: settings.flowFormattingEnabled,
         timerEnabled: settings.timerEnabled,
         installIconEnabled: settings.installIconEnabled,
-        streamAssistantEnabled: settings.streamAssistantEnabled
+        streamAssistantEnabled: settings.streamAssistantEnabled,
+        timeAwarenessEnabled: settings.timeAwarenessEnabled,
+        timeAwarenessConfig: settings.timeAwarenessConfig
       }));
       localStorage.setItem('stream-onboarding-completed', settings.onboardingCompleted.toString());
       if (settings.syncKey) {
@@ -239,6 +263,10 @@ export const SettingsProvider = ({ children }) => {
               ...localParsed // Local settings override syncable ones
             };
             merged.deleteTimer = sanitizeDeleteTimer(merged.deleteTimer);
+            merged.timeAwarenessConfig = {
+              ...DEFAULT_SETTINGS.timeAwarenessConfig,
+              ...(merged.timeAwarenessConfig || {})
+            };
             return merged;
           });
         } else {
@@ -252,6 +280,10 @@ export const SettingsProvider = ({ children }) => {
                 ...parsed
               };
               merged.deleteTimer = sanitizeDeleteTimer(merged.deleteTimer);
+              merged.timeAwarenessConfig = {
+                ...DEFAULT_SETTINGS.timeAwarenessConfig,
+                ...(merged.timeAwarenessConfig || {})
+              };
               return merged;
             });
           }
@@ -277,6 +309,13 @@ export const SettingsProvider = ({ children }) => {
       if (Object.prototype.hasOwnProperty.call(newSettings, 'deleteTimer')) {
         updates.deleteTimer = sanitizeDeleteTimer(newSettings.deleteTimer);
       }
+
+      if (Object.prototype.hasOwnProperty.call(newSettings, 'timeAwarenessConfig')) {
+        updates.timeAwarenessConfig = {
+          ...prev.timeAwarenessConfig,
+          ...newSettings.timeAwarenessConfig
+        };
+      }
       
       // Unlock doom theme when timer is first enabled
       if (Object.prototype.hasOwnProperty.call(newSettings, 'timerEnabled') && 
@@ -292,6 +331,10 @@ export const SettingsProvider = ({ children }) => {
       
       const nextSettings = { ...prev, ...updates };
       nextSettings.deleteTimer = sanitizeDeleteTimer(nextSettings.deleteTimer);
+      nextSettings.timeAwarenessConfig = {
+        ...DEFAULT_SETTINGS.timeAwarenessConfig,
+        ...(nextSettings.timeAwarenessConfig || {})
+      };
       return nextSettings;
     });
   };

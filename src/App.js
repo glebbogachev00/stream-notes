@@ -20,6 +20,7 @@ import StreamAssistant from './components/StreamAssistant';
 import Timer from './components/Timer';
 import PWAInstallGuide from './components/PWAInstallGuide';
 import { submitFeedback } from './utils/feedback';
+import TimeAwarenessCard from './components/TimeAwarenessCard';
 
 // Lazy load non-critical components with preloading hints
 const SettingsModal = lazy(() => import(/* webpackChunkName: "settings" */ './components/SettingsModal'));
@@ -30,6 +31,7 @@ const EdgeUnlockNotification = lazy(() => import(/* webpackChunkName: "notificat
 const FeedbackModal = lazy(() => import(/* webpackChunkName: "feedback" */ './components/FeedbackModal'));
 const BackToTop = lazy(() => import(/* webpackChunkName: "utilities" */ './components/BackToTop'));
 const SyncAuthModal = lazy(() => import(/* webpackChunkName: "sync-auth" */ './components/SyncAuthModal'));
+const TimeAwarenessModal = lazy(() => import(/* webpackChunkName: "time-awareness" */ './components/TimeAwarenessModal'));
 
 const AppContent = memo(() => {
   const [activeTab, setActiveTab] = useState('active');
@@ -47,6 +49,7 @@ const AppContent = memo(() => {
   const [showEdgeUnlock, setShowEdgeUnlock] = useState(false);
   const [activeFolder, setActiveFolder] = useState('all');
   const [isSyncAuthOpen, setIsSyncAuthOpen] = useState(false);
+  const [isTimeAwarenessOpen, setIsTimeAwarenessOpen] = useState(false);
 
   const cycleLogo = () => {
     const styles = ['originalText', 'graffiti', 'raindrop'];
@@ -291,6 +294,18 @@ const AppContent = memo(() => {
     return sizes[fontSize] || 20;
   }, []);
 
+  const handleTimeAwarenessSave = useCallback((newConfig) => {
+    console.log('Saving time awareness config:', newConfig);
+    updateSettings({ timeAwarenessConfig: newConfig });
+    showToast('horizon updated');
+  }, [updateSettings, showToast]);
+
+  useEffect(() => {
+    if (!settings.timeAwarenessEnabled && isTimeAwarenessOpen) {
+      setIsTimeAwarenessOpen(false);
+    }
+  }, [settings.timeAwarenessEnabled, isTimeAwarenessOpen]);
+
 
 
   const filteredNotes = useMemo(() => {
@@ -458,6 +473,13 @@ const AppContent = memo(() => {
 
         <Timer isEnabled={settings.timerEnabled} />
 
+        {settings.timeAwarenessEnabled && (
+          <TimeAwarenessCard
+            config={settings.timeAwarenessConfig}
+            onConfigure={() => setIsTimeAwarenessOpen(true)}
+          />
+        )}
+
         <main>
           {activeTab === 'active' && (
             <div className="space-y-8">
@@ -536,6 +558,7 @@ const AppContent = memo(() => {
           isOpen={isSettingsOpen}
           onClose={() => setIsSettingsOpen(false)}
           onOpenAuthModal={() => setIsSyncAuthOpen(true)}
+          onOpenTimeAwareness={() => setIsTimeAwarenessOpen(true)}
           showToast={showToast}
           onFeedback={() => setIsFeedbackOpen(true)}
           onDeleteAllNotes={handleDeleteAllNotes}
@@ -563,6 +586,17 @@ const AppContent = memo(() => {
           noteContent={pendingTransformId ? (notes.find(n => n.id === pendingTransformId) || savedNotes.find(n => n.id === pendingTransformId))?.content : ''}
         />
       </Suspense>
+
+      {settings.timeAwarenessEnabled && (
+        <Suspense fallback={null}>
+          <TimeAwarenessModal
+            isOpen={isTimeAwarenessOpen}
+            onClose={() => setIsTimeAwarenessOpen(false)}
+            onSave={handleTimeAwarenessSave}
+            config={settings.timeAwarenessConfig}
+          />
+        </Suspense>
+      )}
       
       {/* Toast notifications */}
       {toasts.map((toast) => (

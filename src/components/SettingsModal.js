@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useSettings, ORGANIZATION_STYLES, DELETE_TIMERS } from '../contexts/SettingsContext';
 import CollapsibleSection from './CollapsibleSection';
@@ -9,6 +9,11 @@ import { useStorage } from '../contexts/StorageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { getSyncHistory, restoreSyncSnapshot, createSnapshotForKey } from '../utils/storage';
 import ConfirmModal from './ConfirmModal';
+import {
+  calculateTimeAwareness,
+  formatCountdownCopy,
+  formatPercentageLabel
+} from '../utils/timeAwareness';
 
 const SettingsModal = ({
   isOpen,
@@ -21,7 +26,8 @@ const SettingsModal = ({
   hasNotes = true,
   hasActiveNotes = false,
   onAfterSignOutKeep = () => {},
-  onAfterSignOutClear = () => {}
+  onAfterSignOutClear = () => {},
+  onOpenTimeAwareness = () => {}
 }) => {
   const { theme, switchTheme, themes, unlockMatrixTheme, unlockEdgeTheme } = useTheme();
   const { settings, updateSettings, resetSettings, togglePersonality } = useSettings();
@@ -49,6 +55,21 @@ const SettingsModal = ({
   const [showSignOutChoice, setShowSignOutChoice] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
   const userTag = getUserTag();
+
+  const timeAwarenessMetrics = useMemo(
+    () => calculateTimeAwareness(settings.timeAwarenessConfig || {}),
+    [settings.timeAwarenessConfig]
+  );
+  const timeAwarenessSummary = useMemo(
+    () => formatCountdownCopy(timeAwarenessMetrics),
+    [timeAwarenessMetrics]
+  );
+  const timeAwarenessPercentage = useMemo(() => {
+    const percentageValue = timeAwarenessMetrics.excludeConditions
+      ? timeAwarenessMetrics.effectivePercentageComplete
+      : timeAwarenessMetrics.percentageComplete;
+    return formatPercentageLabel(percentageValue);
+  }, [timeAwarenessMetrics]);
 
   const canDeleteAll = hasNotes && typeof onDeleteAllNotes === 'function';
   const canDeleteActive = hasActiveNotes && typeof onDeleteActiveNotes === 'function';
@@ -618,6 +639,45 @@ const SettingsModal = ({
                   minimal focus timer above your notes. supports formats like 5m, 1h30m, 25:00
                 </p>
               </div>
+            </div>
+          </CollapsibleSection>
+
+          <CollapsibleSection title="time horizon">
+            <div className="space-y-4">
+              <div>
+                <button
+                  onClick={() => updateSettings({ timeAwarenessEnabled: !settings.timeAwarenessEnabled })}
+                  className={`w-full text-left pb-3 border-b transition-all duration-200 ${theme.border} ${theme.text} hover:${theme.textSecondary.replace('text-', 'hover:text-')}`}
+                >
+                  <div className="dynamic-text-xs font-light">
+                    {settings.timeAwarenessEnabled ? 'hide horizon reminder' : 'show horizon reminder'}
+                  </div>
+                </button>
+                <p className={`mt-2 dynamic-text-xs font-light ${theme.textTertiary}`}>
+                  gentle life calendar that keeps your intention visible without the doom.
+                </p>
+              </div>
+
+              {settings.timeAwarenessEnabled && (
+                <div className={`rounded-sm border ${theme.border} ${theme.inputBg} px-3 py-3 space-y-2`}>
+                  <p className={`dynamic-text-xs font-light uppercase tracking-[0.24em] ${theme.textTertiary}`}>
+                    preview
+                  </p>
+                  <div className={`dynamic-text-sm font-light ${theme.text}`}>
+                    {timeAwarenessSummary}
+                  </div>
+                  <p className={`dynamic-text-xs font-light ${theme.textSecondary}`}>
+                    {timeAwarenessPercentage}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={onOpenTimeAwareness}
+                    className={`dynamic-text-xs font-light ${theme.text} ${theme.buttonHover} transition-colors rounded-sm px-2 py-1 self-start`}
+                  >
+                    edit horizon
+                  </button>
+                </div>
+              )}
             </div>
           </CollapsibleSection>
 
