@@ -245,10 +245,7 @@ const Timer = ({ isEnabled }) => {
         {/* Timer Display */}
         <div className="flex items-center gap-4">
           <div 
-            className={`font-mono text-2xl font-light transition-all duration-300`}
-            style={{ 
-              color: justFinished ? '#ef4444' : timeLeft === 0 ? 'inherit' : theme.themeAccent
-            }}
+            className={`font-mono text-2xl font-light transition-all duration-300 ${justFinished ? 'text-red-500' : theme.text}`}
           >
             {timeLeft > 0 ? formatTime(timeLeft) : '0:00'}
           </div>
