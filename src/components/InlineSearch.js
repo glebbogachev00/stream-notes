@@ -48,7 +48,9 @@ const InlineSearch = ({ searchQuery, searchResults, onUpdateQuery, onNavigateToN
         onClick={() => handleResultClick(note)}
         className={`w-full text-left p-3 border-b ${theme.border} ${theme.buttonHover} transition-all duration-200 group flex items-start gap-3`}
       >
-        <div className={`text-xs px-2 py-1 rounded ${theme.bgSecondary} ${theme.textTertiary} font-light shrink-0`}>
+        <div className={`text-xs px-2 py-1 rounded ${theme.bgSecondary} ${theme.text} font-light shrink-0`}
+          style={{ opacity: 0.85 }}
+        >
           {note.type}
         </div>
         <div className="flex-1 min-w-0">
@@ -104,13 +106,13 @@ const InlineSearch = ({ searchQuery, searchResults, onUpdateQuery, onNavigateToN
       {showResults && (
         <div className={`absolute top-full left-0 right-0 z-10 mt-1 ${theme.inputBg} border ${theme.border} rounded-lg shadow-lg max-h-96 overflow-y-auto`}>
           {searchQuery.trim() === '' ? (
-            <div className={`text-center py-8 ${theme.textSecondary}`}>
+            <div className={`text-center py-8 ${theme.text}`}>
               <div className="text-sm font-light">
                 Start typing to search your notes
               </div>
             </div>
           ) : searchResults.total === 0 ? (
-            <div className={`text-center py-8 ${theme.textSecondary}`}>
+            <div className={`text-center py-8 ${theme.text}`}>
               <div className="text-sm font-light">
                 No notes found for "{searchQuery}"
               </div>
@@ -119,7 +121,7 @@ const InlineSearch = ({ searchQuery, searchResults, onUpdateQuery, onNavigateToN
             <div>
               {/* Results Summary */}
               <div className={`px-4 py-2 border-b ${theme.border} ${theme.bgSecondary}`}>
-                <div className={`text-xs font-light ${theme.textSecondary}`}>
+                <div className={`text-xs font-light ${theme.text}`}>
                   {searchResults.total} result{searchResults.total !== 1 ? 's' : ''} found
                 </div>
               </div>
