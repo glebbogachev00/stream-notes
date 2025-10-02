@@ -5,7 +5,7 @@ import { getRotatingMessage, INPUT_PLACEHOLDER_MESSAGES } from '../utils/message
 import { autoResize, handleTextareaChange, handleTextareaKeyDown } from '../utils/textareaHelpers';
 import FullscreenNoteModal from './FullscreenNoteModal';
 
-const NoteInput = ({ onAddNote, onSaveNote, showToast }) => {
+const NoteInput = ({ onAddNote, onSaveNote, showToast, isPermanent = false, helperText }) => {
   const [content, setContent] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const [isFullscreenOpen, setIsFullscreenOpen] = useState(false);
@@ -48,12 +48,7 @@ const NoteInput = ({ onAddNote, onSaveNote, showToast }) => {
         }, 600);
       }
       
-      if (saveDirectly && onSaveNote) {
-        // Create note in active first, then immediately save it
-        onAddNote(formattedContent, true); // Pass flag to indicate immediate save
-      } else {
-        onAddNote(formattedContent);
-      }
+      onAddNote(formattedContent, isPermanent || saveDirectly);
       
       setContent('');
       textareaRef.current?.blur();
@@ -79,6 +74,9 @@ const NoteInput = ({ onAddNote, onSaveNote, showToast }) => {
   };
 
 
+
+  const defaultHelper = isPermanent ? null : `Notes expire in ${DELETE_TIMERS[settings.deleteTimer]?.name.toLowerCase() || '24 hours'}`;
+  const helper = helperText !== undefined ? helperText : defaultHelper;
 
   return (
     <section className="mb-8">
@@ -124,7 +122,7 @@ const NoteInput = ({ onAddNote, onSaveNote, showToast }) => {
             spellCheck="false"
           />
           
-          {isFocused && content.trim() && (
+          {isFocused && content.trim() && !isPermanent && (
             <div className="mt-4 flex items-center justify-between">
               {settings.writingModeEnabled ? (
                 <div className="flex items-center justify-between w-full">
@@ -160,12 +158,23 @@ const NoteInput = ({ onAddNote, onSaveNote, showToast }) => {
               )}
             </div>
           )}
+
+          {isFocused && content.trim() && isPermanent && (
+            <div className="mt-4 flex justify-end">
+              <button
+                type="submit"
+                className={`px-3 py-2 dynamic-text-base typography-title ${theme.text} border ${theme.border} rounded transition-all duration-200 hover:text-green-500`}
+              >
+                save
+              </button>
+            </div>
+          )}
         </div>
       </form>
       
-      {!isFocused && (
+      {!isFocused && helper && (
         <div className={`mt-2 dynamic-text-base ${theme.textSecondary} font-light typography-system`}>
-          Notes expire in {DELETE_TIMERS[settings.deleteTimer]?.name.toLowerCase() || '24 hours'}
+          {helper}
         </div>
       )}
 

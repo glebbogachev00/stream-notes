@@ -456,6 +456,37 @@ export const useNotes = (
     saveSavedNotes(updatedSavedNotes);
   }, [savedNotes, saveSavedNotes]);
 
+  const moveSavedNoteToActive = useCallback((id) => {
+    const savedNote = savedNotes.find(note => note.id === id);
+    if (!savedNote) {
+      return;
+    }
+
+    const now = Date.now();
+    const maxAgeHours = DELETE_TIMERS[deleteTimer]?.hours || 24;
+    const expiresAt = maxAgeHours === Infinity
+      ? Infinity
+      : now + (maxAgeHours * 60 * 60 * 1000);
+
+    const { savedAt, ...rest } = savedNote;
+    const activeNote = {
+      ...rest,
+      id: now.toString(),
+      content: sanitizeNoteContent(savedNote.content),
+      createdAt: now,
+      updatedAt: now,
+      expiresAt,
+      customTimerKey: null,
+      hasCustomDeleteTimer: false
+    };
+
+    const updatedNotes = [activeNote, ...notes];
+    const updatedSavedNotes = savedNotes.filter(note => note.id !== id);
+
+    saveNotes(updatedNotes);
+    saveSavedNotes(updatedSavedNotes);
+  }, [savedNotes, notes, deleteTimer, saveNotes, saveSavedNotes]);
+
   const updateNoteFolder = useCallback((id, folder, isSaved) => {
     if (isSaved) {
       const timestamp = Date.now();
@@ -754,6 +785,7 @@ export const useNotes = (
     saveAllActiveNotes,
     deleteAllNotes,
     deleteAllSavedNotes,
-    deleteAllArtNotes
+    deleteAllArtNotes,
+    moveSavedNoteToActive
   };
 };

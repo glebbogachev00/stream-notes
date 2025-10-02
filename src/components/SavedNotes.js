@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, memo, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, memo, useCallback, useMemo, useRef } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useSettings } from '../contexts/SettingsContext';
 import { handleTextareaChange, handleTextareaKeyDown, setupTextareaForEditing, handleTextareaClick } from '../utils/textareaHelpers';
@@ -6,8 +6,20 @@ import { toggleBoldFormatting, toggleListFormatting } from '../utils/formatting'
 import { getRandomMessage, LOGGED_OUT_EMPTY_STATE_MESSAGES } from '../utils/messages';
 import TagSignature from './TagSignature';
 import FullscreenNoteModal from './FullscreenNoteModal';
+import NoteInput from './NoteInput';
 
-const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onUpdateNoteProperties, onToggleSavedNotePin, onTransformToSAMO, onUpdateNoteFolder, isLoggedOut = false }) => {
+const SavedNotes = ({
+  savedNotes,
+  onDeleteNote,
+  onUpdateNote,
+  onUpdateNoteProperties,
+  onToggleSavedNotePin,
+  onTransformToSAMO,
+  onUpdateNoteFolder,
+  onAddSavedNote = () => {},
+  onMoveToActive = () => {},
+  isLoggedOut = false
+}) => {
   const { theme } = useTheme();
   const { settings, formatNote } = useSettings();
   const [editingNoteId, setEditingNoteId] = useState(null);
@@ -49,6 +61,7 @@ const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onUpdateNoteProper
     
     // Calculate dynamic menu height based on enabled features
     let menuItemCount = 3; // pin, copy, delete (always present)
+    menuItemCount += 1; // move back to active button
     if (settings.foldersEnabled && settings.folders.length > 0) menuItemCount += 1; // move
     if (settings.flowFormattingEnabled) menuItemCount += 1; // format
     if (settings.samoModeEnabled) menuItemCount += 1; // samo
@@ -120,6 +133,7 @@ const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onUpdateNoteProper
       onUpdateNote(noteId, value);
     });
   }, [onUpdateNote]);
+
 
   const handleEditingFinished = useCallback((noteId, content) => {
     // Disable auto-formatting - user must explicitly use List control
@@ -265,20 +279,10 @@ const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onUpdateNoteProper
   // Separate pinned and unpinned saved notes
   const pinnedSavedNotes = useMemo(() => savedNotes.filter(note => note.isPinned), [savedNotes]);
   const unpinnedSavedNotes = useMemo(() => savedNotes.filter(note => !note.isPinned), [savedNotes]);
-
-  if (savedNotes.length === 0) {
-    const emptyMessage = isLoggedOut 
-      ? getRandomMessage(LOGGED_OUT_EMPTY_STATE_MESSAGES, settings.personalityEnabled)
-      : "no saved notes";
-    
-    return (
-      <div className="text-center py-16">
-        <p className={`dynamic-text-base ${theme.textTertiary} font-light`}>
-          {emptyMessage}
-        </p>
-      </div>
-    );
-  }
+  const isEmpty = savedNotes.length === 0;
+  const emptyMessage = isLoggedOut 
+    ? getRandomMessage(LOGGED_OUT_EMPTY_STATE_MESSAGES, settings.personalityEnabled)
+    : "no saved notes";
 
   const renderSavedNote = (note) => {
     return (
@@ -519,6 +523,20 @@ const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onUpdateNoteProper
                       )}
 
                       <button
+                        onClick={() => {
+                          onMoveToActive(note.id);
+                          setFolderMenuOpenForNoteId(null);
+                          setOpenMenuId(null);
+                        }}
+                        className={`w-full px-3 py-2 dynamic-text-base font-light text-left ${theme.textTertiary} hover:text-green-500 hover:${theme.bgSecondary} transition-all duration-200 flex items-center gap-2 hover:translate-x-1 active:scale-95`}
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 2L3 14h7l-1 8 10-12h-7l1-8z" />
+                        </svg>
+                        active
+                      </button>
+
+                      <button
                         onClick={async (e) => {
                           const textToCopy = note.content;
                           const button = e.target.closest('button');
@@ -646,41 +664,58 @@ const SavedNotes = ({ savedNotes, onDeleteNote, onUpdateNote, onUpdateNoteProper
 
   return (
     <div className="space-y-6">
-      {/* Pinned Saved Notes Section */}
-      {pinnedSavedNotes.length > 0 && (
+      <NoteInput
+        onAddNote={(content, saveDirect = false) => {
+          onAddSavedNote(content, saveDirect || true);
+        }}
+        onSaveNote={() => {}}
+        showToast={() => {}}
+        isPermanent
+        helperText="Notes saved for keeping"
+      />
+
+      {isEmpty ? (
+        <div className="text-center py-12">
+          <p className={`dynamic-text-base ${theme.textTertiary} font-light`}>
+            {emptyMessage}
+          </p>
+        </div>
+      ) : (
         <>
-          <div className="space-y-6">
-            <div className={`flex items-center gap-2 ${theme.textTertiary} text-xs font-light`}>
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-              </svg>
-              pinned
-            </div>
-            {pinnedSavedNotes.map(renderSavedNote)}
-          </div>
-          
-          {/* Divider */}
-          {unpinnedSavedNotes.length > 0 && (
-            <div className={`border-t ${theme.borderSecondary} pt-6`}>
-              <div className={`text-xs font-light ${theme.textTertiary} mb-6`}>saved</div>
-            </div>
+          {pinnedSavedNotes.length > 0 && (
+            <>
+              <div className="space-y-6">
+                <div className={`flex items-center gap-2 ${theme.textTertiary} text-xs font-light`}>
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                  </svg>
+                  pinned
+                </div>
+                {pinnedSavedNotes.map(renderSavedNote)}
+              </div>
+
+              {unpinnedSavedNotes.length > 0 && (
+                <div className={`border-t ${theme.borderSecondary} pt-6`}>
+                  <div className={`text-xs font-light ${theme.textTertiary} mb-6`}>saved</div>
+                </div>
+              )}
+            </>
           )}
+
+          <div className="space-y-6">
+            {unpinnedSavedNotes.map(renderSavedNote)}
+          </div>
         </>
       )}
 
-      {/* Unpinned Saved Notes Section */}
-      <div className="space-y-6">
-        {unpinnedSavedNotes.map(renderSavedNote)}
-      </div>
-        
-        <FullscreenNoteModal
-          note={savedNotes.find(n => n.id === fullscreenNoteId)}
-          isOpen={!!fullscreenNoteId}
-          onClose={() => setFullscreenNoteId(null)}
-          onUpdateNote={onUpdateNote}
-          onUpdateNoteProperties={onUpdateNoteProperties}
-          isActiveNote={false}
-        />
+      <FullscreenNoteModal
+        note={savedNotes.find(n => n.id === fullscreenNoteId)}
+        isOpen={!!fullscreenNoteId}
+        onClose={() => setFullscreenNoteId(null)}
+        onUpdateNote={onUpdateNote}
+        onUpdateNoteProperties={onUpdateNoteProperties}
+        isActiveNote={false}
+      />
     </div>
   );
 };

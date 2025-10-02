@@ -103,6 +103,7 @@ const AppContent = memo(() => {
     updateSavedNoteContent,
     updateSavedNoteProperties,
     toggleSavedNotePin,
+    moveSavedNoteToActive,
     transformToArt,
     deleteArtNote,
     updateArtNoteContent,
@@ -508,6 +509,8 @@ const AppContent = memo(() => {
                 onTransformToSAMO={handleTransformToArt}
                 getTimeInfo={(note) => getTimeInfo(note, settings.deleteTimer)}
                 onUpdateNoteFolder={updateNoteFolder}
+                onAddSavedNote={(content) => addNote(content, true)}
+                onMoveToActive={moveSavedNoteToActive}
               />
             </div>
           )}
