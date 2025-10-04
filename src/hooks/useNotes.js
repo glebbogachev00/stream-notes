@@ -15,7 +15,8 @@ export const useNotes = (
   personalityEnabled = true,
   onEdgeUnlock = null,
   activeFolder = 'all',
-  knownFolders = []
+  knownFolders = [],
+  foldersUpdatedAt = 0
 ) => {
   const [notes, setNotes] = useState([]);
   const [savedNotes, setSavedNotes] = useState([]);
@@ -508,7 +509,14 @@ export const useNotes = (
       return;
     }
 
+    const foldersTimestamp = Number(foldersUpdatedAt) || 0;
     const normalizedFolders = new Set(knownFolders.map((folder) => (folder || '').toLowerCase()));
+
+    // Only sanitize when we actually have a folder list or the user explicitly changed it (non-zero timestamp)
+    const shouldSanitize = normalizedFolders.size > 0 || foldersTimestamp > 0;
+    if (!shouldSanitize) {
+      return;
+    }
 
     const normalize = (value) => (value || '').toLowerCase();
 
@@ -537,7 +545,7 @@ export const useNotes = (
     if (savedChanged) {
       saveSavedNotes(sanitizedSavedNotes);
     }
-  }, [knownFolders, notes, savedNotes, saveNotes, saveSavedNotes]);
+  }, [knownFolders, notes, savedNotes, saveNotes, saveSavedNotes, foldersUpdatedAt]);
 
   const transformToArt = useCallback((id, fromSaved = false, artStyle = 'samo') => {
     const sourceNotes = fromSaved ? savedNotes : notes;

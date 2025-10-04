@@ -122,7 +122,8 @@ const AppContent = memo(() => {
     settings.personalityEnabled,
     handleEdgeUnlock,
     activeFolder,
-    settings.folders
+    settings.folders,
+    settings.foldersUpdatedAt
   );
 
   // Search functionality (only when enabled)

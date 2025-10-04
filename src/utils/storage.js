@@ -490,14 +490,18 @@ class StorageAdapter {
     const remoteKeys = new Set();
 
     items.forEach((item) => {
-      remoteKeys.add(item.key);
+      const key = item.key;
+      remoteKeys.add(key);
+
+      // Clear any stale pending change for this key before applying remote data
+      this.pendingChanges.delete(key);
 
       if (item.deletedAt) {
-        if (localStorage.getItem(item.key) !== null) {
-          localStorage.removeItem(item.key);
-          updatedKeys.push(item.key);
+        if (localStorage.getItem(key) !== null) {
+          localStorage.removeItem(key);
+          updatedKeys.push(key);
         }
-        this.pendingChanges.delete(item.key);
+        this.pendingChanges.delete(key);
         return;
       }
 
@@ -505,28 +509,28 @@ class StorageAdapter {
         return;
       }
 
-      if (ARRAY_MERGE_KEYS.has(item.key)) {
-        const { mergedValue, localChanged, shouldPush } = this.mergeCollectionValue(item.key, item.value);
+      if (ARRAY_MERGE_KEYS.has(key)) {
+        const { mergedValue, localChanged, shouldPush } = this.mergeCollectionValue(key, item.value);
         if (localChanged) {
-          updatedKeys.push(item.key);
+          updatedKeys.push(key);
         }
         if (shouldPush) {
-          this.pendingChanges.set(item.key, {
-            key: item.key,
+          this.pendingChanges.set(key, {
+            key,
             value: mergedValue,
             updatedAt: Date.now(),
             deletedAt: null
           });
         }
       } else {
-        const localValue = localStorage.getItem(item.key);
-        if (PRIMARY_KEYS.includes(item.key)) {
+        const localValue = localStorage.getItem(key);
+        if (PRIMARY_KEYS.includes(key)) {
           const localItems = parseCollection(localValue);
           const remoteItems = parseCollection(item.value);
           // Always preserve local data when remote is empty, regardless of sync timing
           if (localItems.length > 0 && remoteItems.length === 0) {
-            this.pendingChanges.set(item.key, {
-              key: item.key,
+            this.pendingChanges.set(key, {
+              key,
               value: localValue,
               updatedAt: Date.now(),
               deletedAt: null
@@ -534,24 +538,24 @@ class StorageAdapter {
             return;
           }
         }
-        if (item.key === 'stream-syncable-settings') {
+        if (key === 'stream-syncable-settings') {
           const merged = mergeSyncableSettings(localValue, item.value);
           if (merged !== item.value) {
-            this.pendingChanges.set(item.key, {
-              key: item.key,
+            this.pendingChanges.set(key, {
+              key,
               value: merged,
               updatedAt: Date.now(),
               deletedAt: null
             });
           }
           if (localValue !== merged) {
-            setLocalValue(item.key, merged);
-            updatedKeys.push(item.key);
+            setLocalValue(key, merged);
+            updatedKeys.push(key);
           }
         } else {
           if (localValue !== item.value) {
-            setLocalValue(item.key, item.value);
-            updatedKeys.push(item.key);
+            setLocalValue(key, item.value);
+            updatedKeys.push(key);
           }
         }
       }
@@ -841,7 +845,6 @@ class StorageAdapter {
         return;
       }
 
-      const remoteTimestamp = getTimestamp(remoteItem);
       // Always include remote items that aren't already in local
       mergedItems.push(remoteItem);
       localChanged = true;
@@ -919,12 +922,14 @@ class StorageAdapter {
       remoteKeys.add(key);
       maxTimestamp = Math.max(maxTimestamp, updatedAt, deletedAt || 0);
 
+      // Drop any stale queued change for this key before reconciling remote data
+      this.pendingChanges.delete(key);
+
       if (deletedAt) {
         if (localStorage.getItem(key) !== null) {
           removeLocalValue(key);
           updatedKeys.push(key);
         }
-        this.pendingChanges.delete(key);
         return;
       }
 
