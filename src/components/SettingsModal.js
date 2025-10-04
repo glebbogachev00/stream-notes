@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
-import { useSettings, ORGANIZATION_STYLES, DELETE_TIMERS } from '../contexts/SettingsContext';
+import { useSettings, DELETE_TIMERS } from '../contexts/SettingsContext';
 import CollapsibleSection from './CollapsibleSection';
 import FontSizeControl from './FontSizeControl';
 import { getUserTag, setUserTag, validateUserTag, formatUserTag, clearUserTag } from '../utils/tags';
@@ -9,6 +9,7 @@ import { useStorage } from '../contexts/StorageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { getSyncHistory, restoreSyncSnapshot, createSnapshotForKey } from '../utils/storage';
 import ConfirmModal from './ConfirmModal';
+import AddOnLibrary from './AddOnLibrary';
 
 const SettingsModal = ({
   isOpen,
@@ -24,7 +25,7 @@ const SettingsModal = ({
   onAfterSignOutClear = () => {}
 }) => {
   const { theme, switchTheme, themes, unlockMatrixTheme, unlockEdgeTheme } = useTheme();
-  const { settings, updateSettings, resetSettings, togglePersonality } = useSettings();
+  const { settings, updateSettings, resetSettings, removeAddOnFromSettings } = useSettings();
   
   // Check and unlock themes for existing users who already have features enabled
   useEffect(() => {
@@ -48,10 +49,9 @@ const SettingsModal = ({
   const [isDeletingActiveNotes, setIsDeletingActiveNotes] = useState(false);
   const [showSignOutChoice, setShowSignOutChoice] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
+  const [isAddOnLibraryOpen, setIsAddOnLibraryOpen] = useState(false);
   const userTag = getUserTag();
 
-  const canDeleteAll = hasNotes && typeof onDeleteAllNotes === 'function';
-  const canDeleteActive = hasActiveNotes && typeof onDeleteActiveNotes === 'function';
 
   const refreshBackupMetadata = useCallback(() => {
     const history = getSyncHistory('stream_saved_notes');
@@ -218,6 +218,60 @@ const SettingsModal = ({
     setFolderPendingDeletion('');
   }, []);
 
+  // Available add-ons mapping
+  const addOnMapping = {
+    timer: {
+      title: 'timer',
+      settingKey: 'timerEnabled',
+      description: 'minimal focus timer above your notes. supports formats like 5m, 1h30m, 25:00'
+    },
+    writingMode: {
+      title: 'writing mode', 
+      settingKey: 'writingModeEnabled',
+      description: 'adds expand button and active/save note options for initial note creation'
+    },
+    streamAssistant: {
+      title: 'icons',
+      settingKey: 'streamAssistantEnabled', 
+      description: 'AI assistant to help with notes and settings'
+    },
+    search: {
+      title: 'search',
+      settingKey: 'searchEnabled',
+      description: 'search through all your notes quickly'
+    },
+    folders: {
+      title: 'folders',
+      settingKey: 'foldersEnabled',
+      description: 'organize notes into custom folders'
+    },
+    enhancedEditing: {
+      title: 'note controls',
+      settingKey: 'enhancedEditingEnabled',
+      description: 'enhanced editing controls for all your notes'
+    },
+    autoSorting: {
+      title: settings.personalityEnabled ? 'smart lists' : 'auto-sorting',
+      settingKey: 'autoSortingEnabled',
+      description: 'smart formatting and organization for lists'
+    },
+    flowFormatting: {
+      title: 'flow formatting',
+      settingKey: 'flowFormattingEnabled',
+      description: 'automatic text flow formatting as you type'
+    }
+  };
+
+  const removeAddOn = (addOnId) => {
+    const addOn = addOnMapping[addOnId];
+    if (addOn) {
+      // Disable the feature
+      updateSettings({ [addOn.settingKey]: false });
+      // Remove from settings
+      removeAddOnFromSettings(addOnId);
+    }
+  };
+
   const handleOverlayClick = (e) => {
     if (e.target === e.currentTarget) {
       onClose();
@@ -258,12 +312,6 @@ const SettingsModal = ({
     }
   };
 
-  const handleResetOnboarding = () => {
-    if (window.confirm('This will reset your onboarding status and show the onboarding process again. Continue?')) {
-      updateSettings({ onboardingCompleted: false }); // Set onboardingCompleted to false
-      window.location.reload(); // Reload the page to show onboarding
-    }
-  };
 
   return (
     <div 
@@ -550,352 +598,102 @@ const SettingsModal = ({
 
         </div>
 
-        {/* ADD-ON SETTINGS - Collapsible Sections */}
+        {/* ADD-ON SETTINGS - Dynamic Sections */}
         <div className="space-y-4">
           <div className={`${theme.textTertiary} dynamic-text-xs font-light uppercase tracking-wider mb-4`}>
             Add-on Settings
           </div>
 
-          <CollapsibleSection title="reset">
-            <div className="space-y-4">
-              <div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (!canDeleteActive) {
-                      if (showToast) {
-                        showToast('No active notes to clear.');
-                      }
-                      return;
-                    }
-                    setShowActiveDeleteConfirm(true);
-                  }}
-                  disabled={!canDeleteActive}
-                  className={`w-full text-left px-3 py-2 dynamic-text-xs font-light transition-colors rounded-sm ${
-                    canDeleteActive ? 'text-orange-500 hover:text-orange-400 hover:bg-orange-500/5 cursor-pointer' : `${theme.textTertiary}`
-                  }`}
-                >
-                  panic button: drain active notes
-                </button>
-              </div>
-
-              <div className={`pt-3 border-t ${theme.borderSecondary} space-y-2`}>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (!canDeleteAll) {
-                      if (showToast) {
-                        showToast('Nothing to clear.');
-                      }
-                      return;
-                    }
-                    setShowDeleteAllConfirm(true);
-                  }}
-                  disabled={!canDeleteAll}
-                  className={`w-full text-left px-3 py-2 dynamic-text-xs font-light transition-colors rounded-sm ${
-                    canDeleteAll ? 'text-red-500 hover:text-red-400 hover:bg-red-500/5 cursor-pointer' : `${theme.textTertiary}`
-                  }`}
-                >
-                  emergency reset: wipe everything
-                </button>
-              </div>
-            </div>
-          </CollapsibleSection>
-
-          {/* Timer */}
-          <CollapsibleSection title="timer">
-            <div className="space-y-4">
-              <div>
-                <button
-                  onClick={() => updateSettings({ timerEnabled: !settings.timerEnabled })}
-                  className={`w-full text-left pb-3 border-b transition-all duration-200 ${theme.border} ${theme.text} hover:${theme.textSecondary.replace('text-', 'hover:text-')}`}
-                >
-                  <div className="dynamic-text-xs font-light">
-                    {settings.timerEnabled ? 'hide timer' : 'show timer'}
-                  </div>
-                </button>
-                <p className={`mt-2 dynamic-text-xs font-light ${theme.textTertiary}`}>
-                  minimal focus timer above your notes. supports formats like 5m, 1h30m, 25:00
-                </p>
-              </div>
-            </div>
-          </CollapsibleSection>
-
-          {/* Writing Mode */}
-          <CollapsibleSection title="writing mode">
-            <div>
-              <button
-                onClick={() => updateSettings({ writingModeEnabled: !settings.writingModeEnabled })}
-                className={`w-full text-left pb-3 border-b transition-all duration-200 ${theme.border} ${theme.text} hover:${theme.textSecondary.replace('text-', 'hover:text-')}`}
+          {/* Dynamic Add-ons */}
+          {settings.addOnsInSettings.map(addOnId => {
+            const addOn = addOnMapping[addOnId];
+            if (!addOn) return null;
+            
+            return (
+              <CollapsibleSection 
+                key={addOnId}
+                title={addOn.title}
+                showRemove={true}
+                isEnabled={settings[addOn.settingKey]}
+                onRemove={() => removeAddOn(addOnId)}
               >
-                <div className="dynamic-text-xs font-light">
-                  {settings.writingModeEnabled ? 'disable writing mode' : 'enable writing mode'}
-                </div>
-              </button>
-              <p className={`mt-2 dynamic-text-xs font-light ${theme.textTertiary}`}>
-                adds expand button and active/save note options for initial note creation
-              </p>
-            </div>
-          </CollapsibleSection>
-
-          {/* Icons */}
-          <CollapsibleSection title="icons">
-            <div className="space-y-4">
-              {/* Talk to Stream Icon */}
-              <div>
-                <button
-                  onClick={() => updateSettings({ streamAssistantEnabled: !settings.streamAssistantEnabled })}
-                  className={`w-full text-left pb-3 border-b transition-all duration-200 ${theme.border} ${theme.text} hover:${theme.textSecondary.replace('text-', 'hover:text-')}`}
-                >
-                  <div className="dynamic-text-xs font-light">
-                    {settings.streamAssistantEnabled ? 'hide talk to stream' : 'show talk to stream'}
-                  </div>
-                </button>
-              </div>
-
-              {/* Install Icon - Only for iOS */}
-              {/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream && (
-                <div>
-                  <button
-                    onClick={() => updateSettings({ installIconEnabled: !settings.installIconEnabled })}
-                    className={`w-full text-left pb-3 border-b transition-all duration-200 ${theme.border} ${theme.text} hover:${theme.textSecondary.replace('text-', 'hover:text-')}`}
-                  >
-                    <div className="dynamic-text-xs font-light">
-                      {settings.installIconEnabled ? 'hide install icon' : 'show install icon'}
-                    </div>
-                  </button>
-                </div>
-              )}
-            </div>
-          </CollapsibleSection>
-
-          {/* Personality */}
-          <CollapsibleSection title="personality">
-            <div className="space-y-4">
-              {/* Personality Toggle */}
-              <div>
-                <button
-                  onClick={togglePersonality}
-                  className={`w-full text-left pb-3 border-b transition-all duration-200 ${theme.border} ${theme.text} hover:${theme.textSecondary.replace('text-', 'hover:text-')}`}
-                >
-                  <div className="dynamic-text-xs font-light">
-                    {settings.personalityEnabled ? 'turn off personality - give stream a vacation' : 'bring stream back from vacation'}
-                  </div>
-                </button>
-              </div>
-
-              {/* SAMO */}
-              <div>
-                <button
-                  onClick={() => updateSettings({ samoModeEnabled: !settings.samoModeEnabled })}
-                  className={`w-full text-left pb-3 border-b transition-all duration-200 ${theme.border} ${theme.text} hover:${theme.textSecondary.replace('text-', 'hover:text-')}`}
-                >
-                  <div className="dynamic-text-xs font-light">
-                    {settings.samoModeEnabled ? 'hide samo' : 'show samo'}
-                  </div>
-                </button>
-              </div>
-
-              {/* Steal This Quote */}
-              <div>
-                <button
-                  onClick={() => updateSettings({ stealThisQuoteEnabled: !settings.stealThisQuoteEnabled })}
-                  className={`w-full text-left pb-3 border-b transition-all duration-200 ${theme.border} ${theme.text} hover:${theme.textSecondary.replace('text-', 'hover:text-')}`}
-                >
-                  <div className="dynamic-text-xs font-light">
-                    {settings.stealThisQuoteEnabled ? 'hide steal this quote' : 'show steal this quote'}
-                  </div>
-                </button>
-              </div>
-
-            </div>
-          </CollapsibleSection>
-
-          {/* Search */}
-          <CollapsibleSection title="search">
-            <div>
-              <button
-                onClick={() => updateSettings({ searchEnabled: !settings.searchEnabled })}
-                className={`w-full text-left pb-3 border-b transition-all duration-200 ${theme.border} ${theme.text} hover:${theme.textSecondary.replace('text-', 'hover:text-')}`}
-              >
-                <div className="dynamic-text-xs font-light">
-                  {settings.searchEnabled ? 'hide search' : 'show search'}
-                </div>
-              </button>
-            </div>
-          </CollapsibleSection>
-
-          {/* Note Controls */}
-          <CollapsibleSection title="note controls">
-            <div>
-              <button
-                onClick={() => {
-                  const newValue = !settings.enhancedEditingEnabled;
-                  updateSettings({ enhancedEditingEnabled: newValue });
-                  if (newValue) {
-                    const alreadyUnlocked = localStorage.getItem('stream-matrix-unlocked') === 'true';
-                    if (!alreadyUnlocked) {
-                      localStorage.setItem('stream-matrix-unlocked', 'true');
-                      showToast('Matrix theme unlocked!', 5000);
-                    }
-                  }
-                }}
-                className={`w-full text-left pb-3 border-b transition-all duration-200 ${theme.border} ${theme.text} hover:${theme.textSecondary.replace('text-', 'hover:text-')}`}
-              >
-                <div className="dynamic-text-xs font-light">
-                  {settings.enhancedEditingEnabled ? 'disable all editing controls' : 'enable all editing controls'}
-                </div>
-              </button>
-            </div>
-          </CollapsibleSection>
-
-          {/* Lists */}
-          <CollapsibleSection title={settings.personalityEnabled ? "lists" : "list formatting"}>
-            <div className="space-y-2">
-              {Object.entries(ORGANIZATION_STYLES).map(([key, style]) => (
-                <button
-                  key={key}
-                  onClick={() => updateSettings({ organizationStyle: key })}
-                  className={`w-full text-left pb-3 border-b transition-all duration-200 ${
-                    settings.organizationStyle === key
-                      ? `${theme.border} ${theme.text}`
-                      : `${theme.borderSecondary} ${theme.textTertiary} hover:${theme.text.replace('text-', 'hover:text-')}`
-                  }`}
-                >
-                  <div className="dynamic-text-xs font-light mb-1">
-                    {style.name.toLowerCase()}
-                  </div>
-                  <div className={`dynamic-text-xs ${theme.textTertiary} font-mono whitespace-pre-line leading-tight`}>
-                    {style.example}
-                  </div>
-                </button>
-              ))}
-            </div>
-          </CollapsibleSection>
-
-          {/* Auto-Sorting */}
-          <CollapsibleSection title={settings.personalityEnabled ? "smart lists" : "auto-sorting"}>
-            <div>
-              <button
-                onClick={() => updateSettings({ autoSortingEnabled: !settings.autoSortingEnabled })}
-                className={`w-full text-left pb-3 border-b transition-all duration-200 ${theme.border} ${theme.text} hover:${theme.textSecondary.replace('text-', 'hover:text-')}`}
-              >
-                <div className="dynamic-text-xs font-light">
-                  {settings.autoSortingEnabled ? 'disable smart formatting' : 'enable smart formatting'}
-                </div>
-              </button>
-            </div>
-          </CollapsibleSection>
-
-          {/* Show More by Default */}
-          <CollapsibleSection title={settings.personalityEnabled ? "expand notes" : "show more by default"}>
-            <div>
-              <button
-                onClick={() => updateSettings({ showMoreByDefault: !settings.showMoreByDefault })}
-                className={`w-full text-left pb-3 border-b transition-all duration-200 ${theme.border} ${theme.text} hover:${theme.textSecondary.replace('text-', 'hover:text-')}`}
-              >
-                <div className="dynamic-text-xs font-light">
-                  {settings.showMoreByDefault ? 'disable auto-expansion' : 'enable auto-expansion'}
-                </div>
-              </button>
-            </div>
-          </CollapsibleSection>
-
-          {/* Folders */}
-          <CollapsibleSection title="folders">
-            <div>
-              <button
-                onClick={() => {
-                  const newValue = !settings.foldersEnabled;
-                  updateSettings({ foldersEnabled: newValue });
-                  if (newValue) {
-                    const alreadyUnlocked = localStorage.getItem('stream_edge_unlocked') === 'true';
-                    if (!alreadyUnlocked) {
-                      localStorage.setItem('stream_edge_unlocked', 'true');
-                      showToast('Edge theme unlocked!', 5000);
-                    }
-                  }
-                }}
-                className={`w-full text-left pb-3 border-b transition-all duration-200 ${theme.border} ${theme.text} hover:${theme.textSecondary.replace('text-', 'hover:text-')}`}
-              >
-                <div className="dynamic-text-xs font-light">
-                  {settings.foldersEnabled ? 'disable folders' : 'enable folders'}
-                </div>
-              </button>
-            </div>
-            {settings.foldersEnabled && (
-              <div className="space-y-4 pt-4">
-                <div>
-                  <div className={`dynamic-text-xs ${theme.textTertiary} font-light mb-2`}>Create new folder</div>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="text"
-                      value={newFolder}
-                      onChange={(e) => setNewFolder(e.target.value)}
-                      placeholder="new folder name"
-                      className={`flex-grow bg-transparent ${theme.text} text-sm font-light focus:outline-none border-b ${theme.borderSecondary} pb-1`}
-                    />
+                <div className="space-y-4">
+                  <div>
                     <button
-                      onClick={handleAddFolder}
-                      disabled={!newFolder.trim()}
-                      className={`px-2 py-1 dynamic-text-xs font-light ${
-                        newFolder.trim()
-                          ? `${theme.text} hover:${theme.textSecondary.replace('text-', 'hover:text-')}`
-                          : theme.textTertiary
-                      } transition-colors`}
+                      onClick={() => updateSettings({ [addOn.settingKey]: !settings[addOn.settingKey] })}
+                      className={`w-full text-left pb-3 border-b transition-all duration-200 ${theme.border} ${theme.text} hover:${theme.textSecondary.replace('text-', 'hover:text-')}`}
                     >
-                      add
+                      <div className="dynamic-text-xs font-light">
+                        {settings[addOn.settingKey] ? `disable ${addOn.title}` : `enable ${addOn.title}`}
+                      </div>
                     </button>
                   </div>
-                </div>
-                <div>
-                  <div className={`dynamic-text-xs ${theme.textTertiary} font-light mb-2`}>Existing folders</div>
-                  <div className="space-y-2">
-                    {settings.folders.map((folder) => (
-                      <div key={folder} className="flex items-center justify-between">
-                        <span className={`dynamic-text-sm ${theme.text}`}>{folder}</span>
-                        <button
-                          onClick={() => handleDeleteFolder(folder)}
-                          className={`text-xs ${theme.textTertiary} hover:text-red-500 transition-colors`}
-                        >
-                          delete
-                        </button>
+                  <p className={`dynamic-text-xs font-light ${theme.textTertiary}`}>
+                    {addOn.description}
+                  </p>
+                  {/* Special handling for folders */}
+                  {addOnId === 'folders' && settings.foldersEnabled && (
+                    <div className="space-y-4 pt-4">
+                      <div>
+                        <div className={`dynamic-text-xs ${theme.textTertiary} font-light mb-2`}>Create new folder</div>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            value={newFolder}
+                            onChange={(e) => setNewFolder(e.target.value)}
+                            placeholder="new folder name"
+                            className={`flex-grow bg-transparent ${theme.text} text-sm font-light focus:outline-none border-b ${theme.borderSecondary} pb-1`}
+                          />
+                          <button
+                            onClick={handleAddFolder}
+                            disabled={!newFolder.trim()}
+                            className={`px-2 py-1 dynamic-text-xs font-light ${
+                              newFolder.trim()
+                                ? `${theme.text} hover:${theme.textSecondary.replace('text-', 'hover:text-')}`
+                                : theme.textTertiary
+                            } transition-colors`}
+                          >
+                            add
+                          </button>
+                        </div>
                       </div>
-                    ))}
-                    {settings.folders.length === 0 && (
-                      <p className={`dynamic-text-xs ${theme.textTertiary} font-light`}>no folders yet.</p>
-                    )}
-                  </div>
+                      <div>
+                        <div className={`dynamic-text-xs ${theme.textTertiary} font-light mb-2`}>Existing folders</div>
+                        <div className="space-y-2">
+                          {settings.folders.map((folder) => (
+                            <div key={folder} className="flex items-center justify-between">
+                              <span className={`dynamic-text-sm ${theme.text}`}>{folder}</span>
+                              <button
+                                onClick={() => handleDeleteFolder(folder)}
+                                className={`text-xs ${theme.textTertiary} hover:text-red-500 transition-colors`}
+                              >
+                                delete
+                              </button>
+                            </div>
+                          ))}
+                          {settings.folders.length === 0 && (
+                            <p className={`dynamic-text-xs ${theme.textTertiary} font-light`}>no folders yet.</p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
-            )}
-          </CollapsibleSection>
+              </CollapsibleSection>
+            );
+          })}
 
-          {/* Flow Formatting */}
-          <CollapsibleSection title="flow formatting">
-            <div>
-              <button
-                onClick={() => updateSettings({ flowFormattingEnabled: !settings.flowFormattingEnabled })}
-                className={`w-full text-left pb-3 border-b transition-all duration-200 ${theme.border} ${theme.text} hover:${theme.textSecondary.replace('text-', 'hover:text-')}`}
-              >
-                <div className="dynamic-text-xs font-light">
-                  {settings.flowFormattingEnabled ? 'disable flow formatting' : 'enable flow formatting'}
-                </div>
-              </button>
+          {/* Empty state */}
+          {settings.addOnsInSettings.length === 0 && (
+            <div className={`text-center py-8 ${theme.textTertiary}`}>
+              <div className={`dynamic-text-sm font-light ${theme.text} mb-2`}>
+                No add-ons in settings
+              </div>
+              <div className={`dynamic-text-xs font-light`}>
+                Use the add-on library to add features here.
+              </div>
             </div>
-          </CollapsibleSection>
-
-          {/* Onboarding */}
-          <CollapsibleSection title="onboarding">
-            <button
-              onClick={handleResetOnboarding}
-              className={`w-full text-left pb-3 border-b transition-all duration-200 ${theme.border} ${theme.text} hover:${theme.textSecondary.replace('text-', 'hover:text-')}`}
-            >
-              <div className="dynamic-text-xs font-light">
-                do it again (for fun)
-              </div>
-            </button>
-          </CollapsibleSection>
+          )}
         </div>
 
         {/* ACTIONS SECTION */}
@@ -905,6 +703,14 @@ const SettingsModal = ({
           </div>
           
           <div className="space-y-2">
+            <button
+              onClick={() => setIsAddOnLibraryOpen(true)}
+              className={`w-full text-left px-3 py-2 dynamic-text-xs font-light ${theme.text} ${theme.buttonHover} transition-colors flex items-center gap-2 rounded-sm`}
+            >
+              <span className={`${theme.textTertiary} w-3 text-center`}>+</span>
+              add-on library
+            </button>
+            
             <button
               onClick={() => window.open('https://gleb-bogachev.notion.site/updates-stream?source=copy_link', '_blank')}
               className={`w-full text-left px-3 py-2 dynamic-text-xs font-light ${theme.text} ${theme.buttonHover} transition-colors flex items-center gap-2 rounded-sm`}
@@ -1025,6 +831,11 @@ const SettingsModal = ({
           onConfirm={handleConfirmFolderDeletion}
           onCancel={handleCancelFolderDeletion}
           isDestructive
+        />
+        
+        <AddOnLibrary
+          isOpen={isAddOnLibraryOpen}
+          onClose={() => setIsAddOnLibraryOpen(false)}
         />
       </div>
     </div>

@@ -598,6 +598,7 @@ const AppContent = memo(() => {
         />
       </Suspense>
 
+
       {/* Stream AI Assistant */}
       <StreamAssistant
         noteActions={{
