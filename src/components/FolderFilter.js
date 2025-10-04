@@ -64,6 +64,8 @@ const FolderFilter = ({ activeFolder, setActiveFolder }) => {
     </svg>
   );
 
+  const inputWidthCh = Math.min(24, Math.max(10, (newFolderName.length || 0) + 6));
+
   return (
     <div className="mb-4 overflow-x-auto whitespace-nowrap pb-2">
       <div className="flex items-center gap-2">
@@ -104,8 +106,8 @@ const FolderFilter = ({ activeFolder, setActiveFolder }) => {
                 value={newFolderName}
                 onChange={(event) => setNewFolderName(event.target.value)}
                 onKeyDown={handleInputKeyDown}
-                placeholder="folder name"
-                className={`bg-transparent focus:outline-none border-b ${theme.borderSecondary} pb-1 min-w-[120px]`}
+                className={`bg-transparent focus:outline-none border-b ${theme.borderSecondary} pb-1`}
+                style={{ width: `${inputWidthCh}ch` }}
               />
               <button
                 type="submit"

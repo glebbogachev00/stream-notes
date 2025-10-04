@@ -282,11 +282,13 @@ const AppContent = memo(() => {
     const { deletedCount: active } = await deleteAllNotes();
     const { deletedCount: saved } = await deleteAllSavedNotes();
     const { deletedCount: art } = await deleteAllArtNotes();
+    updateSettings({ folders: [] });
+    setActiveFolder('all');
     const total = active + saved + art;
     showToast(total
       ? `Signed out and cleared ${total} item${total === 1 ? '' : 's'}.`
       : 'Signed out. Nothing to clear.');
-  }, [deleteAllNotes, deleteAllSavedNotes, deleteAllArtNotes, showToast]);
+  }, [deleteAllNotes, deleteAllSavedNotes, deleteAllArtNotes, showToast, updateSettings]);
 
   const getFontSizeValue = useCallback((fontSize) => {
     const sizes = { lg: 18, xl: 20, xxl: 22 };
