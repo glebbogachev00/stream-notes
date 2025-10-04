@@ -62,8 +62,7 @@ const DEFAULT_SETTINGS = {
   timerEnabled: false,
   installIconEnabled: true,
   streamAssistantEnabled: true,
-  writingModeEnabled: false,
-  addOnsInSettings: ['timer', 'writingMode', 'streamAssistant', 'search', 'folders', 'enhancedEditing'] // Default add-ons in settings
+  writingModeEnabled: false
 };
 
 const sanitizeDeleteTimer = (timerKey) => (
@@ -156,8 +155,7 @@ export const SettingsProvider = ({ children }) => {
         timerEnabled: settings.timerEnabled,
         installIconEnabled: settings.installIconEnabled,
         streamAssistantEnabled: settings.streamAssistantEnabled,
-        onboardingCompleted: settings.onboardingCompleted,
-        addOnsInSettings: settings.addOnsInSettings
+        onboardingCompleted: settings.onboardingCompleted
       };
 
       // Local-only settings - device-specific preferences
@@ -296,20 +294,6 @@ export const SettingsProvider = ({ children }) => {
       nextSettings.deleteTimer = sanitizeDeleteTimer(nextSettings.deleteTimer);
       return nextSettings;
     });
-  };
-
-  const addAddOnToSettings = (addOnId) => {
-    setSettings(prev => ({
-      ...prev,
-      addOnsInSettings: [...prev.addOnsInSettings.filter(id => id !== addOnId), addOnId]
-    }));
-  };
-
-  const removeAddOnFromSettings = (addOnId) => {
-    setSettings(prev => ({
-      ...prev,
-      addOnsInSettings: prev.addOnsInSettings.filter(id => id !== addOnId)
-    }));
   };
 
   const completeOnboarding = (onboardingSettings) => {
@@ -579,8 +563,6 @@ export const SettingsProvider = ({ children }) => {
       formatNote,
       removeListFormatting,
       shouldOrganizeText,
-      addAddOnToSettings,
-      removeAddOnFromSettings,
       ORGANIZATION_STYLES,
       DELETE_TIMERS
     }}>
